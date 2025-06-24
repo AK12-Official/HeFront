@@ -6,4 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: npm install
+      - run: npm test       # 运行测试
+      - run: npm run build  # 构建生产代码
       - run: echo "This is a test workflow"

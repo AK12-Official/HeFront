@@ -18,11 +18,17 @@ jobs:
           node-version: '18.x'
           cache: 'npm'
 
-      - name: Install and Build
-      - run: npm install
-      # - run: npm test       # 运行测试
-      - run: npm run build # 构建生产代码
-      - run: echo "Linux Test Complete"
+      - name: Install dependencies
+        run: npm install
+
+      # - name: Run tests
+      #   run: npm test
+
+      - name: Build project
+        run: npm run build
+
+      - name: Complete
+        run: echo "Linux Test Complete"
 
   windows-test:
     runs-on: windows-latest
@@ -52,7 +58,9 @@ jobs:
 
       - name: Build project
         run: npm run build
-        echo: 'Windows Test Complete'
+
+      - name: Complete
+        run: echo "Windows Test Complete"
 
       # - name: Upload build artifacts
       #   uses: actions/upload-artifact@v3

@@ -1,8 +1,10 @@
 <template>
   <div>
-    <h1>电商页面</h1>
+    <h1>占位</h1>
+
   </div>
 </template>
+
 
 <script setup lang="ts">
 

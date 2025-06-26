@@ -19,10 +19,19 @@ export default defineConfigWithVueTs(
 
   pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,
-  
+
   {
     ...pluginVitest.configs.recommended,
     files: ['src/**/__tests__/*'],
   },
+
+  // 添加自定义规则
+  {
+    rules: {
+      'vue/multi-word-component-names': 'off', // 关闭组件名必须多词的限制
+    },
+  },
+
+
   skipFormatting,
 )

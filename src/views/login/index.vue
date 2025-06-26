@@ -12,6 +12,9 @@
       </el-form-item>
     </el-form>
   </el-card>
+  <!-- 暂时的登录页面，后续会完善 -->
+  <!-- 比如说保持首页的背景之类的 -->
+  <!-- 真实API的对接之类的 -->
 </template>
 
 <script setup lang="ts">

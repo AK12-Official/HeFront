@@ -12,24 +12,26 @@
           <span class="icon qq"></span>
         </div>
         <div class="footer-links">
-          友情链接：
-          <a href="https://www.baidu.com/">百度</a> |
-          <a href="https://www.sina.com.cn/">新浪</a> |
+          <span class="links-label">友情链接：</span>
+          <a href="https://www.baidu.com/">百度</a>
+          <span class="separator">|</span>
+          <a href="https://www.sina.com.cn/">新浪</a>
+          <span class="separator">|</span>
           <a href="https://www.163.com/">网易</a>
         </div>
       </div>
       <!-- 中间 项目介绍 -->
       <div class="footer-section center">
-        <div><a href="#">项目介绍</a></div>
-        <div><a href="#">平台介绍</a></div>
-        <div><a href="#">团队介绍</a></div>
-        <div><a href="#">关于我们</a></div>
+        <div class="nav-item"><a href="#">项目介绍</a></div>
+        <div class="nav-item"><a href="#">平台介绍</a></div>
+        <div class="nav-item"><a href="#">团队介绍</a></div>
+        <div class="nav-item"><a href="#">关于我们</a></div>
       </div>
       <!-- 右侧 服务范围 -->
       <div class="footer-section right">
-        <div><a href="#">服务范围</a></div>
-        <div><a href="#">平台成果</a></div>
-        <div><a href="#">新闻动态</a></div>
+        <div class="nav-item"><a href="#">服务范围</a></div>
+        <div class="nav-item"><a href="#">平台成果</a></div>
+        <div class="nav-item"><a href="#">新闻动态</a></div>
       </div>
     </div>
   </footer>
@@ -41,6 +43,7 @@
   color: #fff;
   padding: 40px 0 20px 0;
   font-size: 14px;
+  line-height: 1.6;
 }
 
 .footer-container {
@@ -66,8 +69,17 @@
   text-decoration: underline;
 }
 
+/* 新增：增加垂直间距 */
+.contact-item {
+  margin-bottom: 12px;
+}
+
+.nav-item {
+  margin-bottom: 12px;
+}
+
 .footer-icons {
-  margin: 10px 0;
+  margin: 16px 0;
 }
 
 .icon {

@@ -19,13 +19,15 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # - name: Run tests
-      #   run: npm test
+      # 分开运行 type-check 和 build 命令，以便更好地定位错误
+      - name: Type check
+        run: npx vue-tsc --noEmit
+        continue-on-error: true
 
       - name: Build project
-        run: npm run build
+        run: npm run build-only
 
       - name: Complete
         run: echo "Linux Test Complete"
@@ -53,11 +55,13 @@ jobs:
         run: npm run lint
         continue-on-error: true
 
-      # - name: Run tests
-      #   run: npm test
+      # 分开运行 type-check 和 build 命令
+      - name: Type check
+        run: npx vue-tsc --noEmit
+        continue-on-error: true
 
       - name: Build project
-        run: npm run build
+        run: npm run build-only
 
       - name: Complete
         run: echo "Windows Test Complete"

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 declare module '*.vue' {
   import type { DefineComponent } from 'vue'
   const component: DefineComponent<object, object, unknown>
@@ -13,8 +14,9 @@ declare module '@/views/*' {
 
 
 declare module 'element-plus' {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   export const ElNotification: any;
+  export const ElMessage: any;
   // 可以添加更多组件
 }
 

@@ -23,5 +23,15 @@ export const Routes = [
     path: '/square',
     component: () => import('@/views/square/index.vue'),
     name: 'square',
+  },
+  { //视频
+    path: '/video',
+    component: () => import('@/views/video/index.vue'),
+    name: 'square',
+  },
+  { //我的
+    path: '/me',
+    component: () => import('@/views/me/index.vue'),
+    name: 'square',
   }
 ]

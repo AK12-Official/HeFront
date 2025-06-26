@@ -11,6 +11,13 @@ declare module '@/views/*' {
   export default component
 }
 
+
+declare module 'element-plus' {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  export const ElNotification: any;
+  // 可以添加更多组件
+}
+
 // 为全局变量提供类型声明
 declare const __APP_TITLE__: string
 

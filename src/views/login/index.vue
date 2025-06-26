@@ -19,12 +19,13 @@
 
 <script setup lang="ts">
 
+import { reqLogin } from '@/api/user';
 import { ElNotification } from 'element-plus';
 import { ref, reactive } from 'vue';
 // import { reqLogin } from '../../api/user';
 // import { LoginResponse } from '../../api/types';
-// import { useRouter } from 'vue-router';
-// const router = useRouter();
+import { useRouter } from 'vue-router';
+const router = useRouter();
 
 const loginForms = ref();
 const loginForm = reactive({
@@ -61,31 +62,27 @@ const rules = {
 };
 
 const login = async () => {
-  ElNotification({
-    type: 'info',
-    message: "Login functionality is not implemented yet.",
-    title: `Notice`,
-  });
 
-  // await loginForms.value.validate();
+  await loginForms.value.validate();
 
-  // const result: LoginResponse = await reqLogin(loginForm);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result: any = await reqLogin(loginForm);
 
-  // if (result.code === 200) {
-  //   ElNotification({
-  //     type: 'success',
-  //     message: "Welcome Home",
-  //     title: `Hi`,
-  //   })
-  //   localStorage.setItem('token', result.data);
-  //   router.push('/');
-  // } else {
-  //   ElNotification({
-  //     type: 'error',
-  //     message: (error as Error).message
-  //   })
+  if (result.code === 200) {
+    ElNotification({
+      type: 'success',
+      message: "Welcome Home",
+      title: `Hi`,
+    })
+    localStorage.setItem('token', result.data);
+    router.push('/');
+  } else {
+    ElNotification({
+      type: 'error',
+      message: result.message || '登录失败'
+    })
 
-  // }
+  }
 };
 </script>
 

@@ -8,19 +8,34 @@ import HeaderNav from './components/HeaderNav.vue';
 </script>
 
 <template>
-  <HeaderNav />
-  <RouterView />
-  <FooterInfo />
+  <div class="layout">
+    <HeaderNav class="header-nav" />
+    <main class="main-content">
+      <RouterView />
+    </main>
+    <FooterInfo class="footer-info" />
+  </div>
 </template>
 
 <style scoped>
-.footer {
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  /* 其他样式 */
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header-nav {
+  height: 70px;
+  flex-shrink: 0;
+}
+
+.footer-info {
+  flex-shrink: 0;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 </style>
-
-

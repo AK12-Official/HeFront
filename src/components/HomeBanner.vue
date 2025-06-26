@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <h1>主页面</h1>
+  <div class="header-nav">
+    <h1>主内容区</h1>
   </div>
 </template>
 

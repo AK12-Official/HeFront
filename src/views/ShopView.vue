@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>主页面</h1>
+    <h1>电商页面</h1>
   </div>
 </template>
 

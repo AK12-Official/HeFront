@@ -21,3 +21,4 @@ import FooterInfo from './components/FooterInfo.vue';
 }
 </style>
 
+

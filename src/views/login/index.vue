@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 
-import { reqLogin } from '@/api/user';
+import { reqLogin } from '@/api/auth';
 import { ElNotification } from 'element-plus';
 import { ref, reactive } from 'vue';
 // import { reqLogin } from '../../api/user';

@@ -6,7 +6,7 @@
       <p>
         本项目旨在帮助因病致贫、无力治病的患者，搭建一个多功能的互助平台，并通过平台流量实现现金予患者自主
       </p>
-      <el-button type="primary">Donate</el-button>
+      <el-button type="primary" @click="changeDonatVisibility">Donate</el-button>
     </div>
     <!-- 右侧积分区块 -->
     <div class="score-section">
@@ -21,10 +21,31 @@
       </div>
     </div>
   </div>
+
+  <el-dialog v-model="dialogVisible" width="480px" :close-on-click-modal="false">
+    <template #header>
+      <span>感谢您的奉献与支持！</span>
+    </template>
+    <div>
+      <p>您的捐赠将帮助更多需要帮助的人。</p>
+      <img src="../../../public/img/vx_gzh.jpg" alt="捐款二维码">
+    </div>
+    <template #footer>
+      <el-button @click="changeDonatVisibility">关闭</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 // 这里可以后续引入接口获取积分等
+import { ref } from 'vue';
+
+
+
+const dialogVisible = ref(false);
+const changeDonatVisibility = () => {
+  dialogVisible.value = !dialogVisible.value;
+};
 </script>
 
 <style scoped>

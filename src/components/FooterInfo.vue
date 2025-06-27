@@ -91,6 +91,34 @@
   margin-right: 8px;
 }
 
+.wechat {
+  position: relative;
+  cursor: pointer;
+}
+
+.wechat::after {
+  content: "";
+  position: absolute;
+  display: none;
+  width: 150px;
+  height: 150px;
+  background-image: url('../../public/img/vx_gzh.jpg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.wechat:hover::after {
+  display: block;
+}
+
 .wechat::before {
   content: "微";
   display: inline-block;

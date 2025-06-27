@@ -1,4 +1,5 @@
 //对 axios 进行二次封装：使用请求拦截器、响应拦截器
+// import useUserStore from "@/store/modules/user";
 import axios from "axios";
 import { ElMessage } from "element-plus";
 
@@ -9,13 +10,18 @@ const request = axios.create({
   timeout: 5000 // 超时时间的设置
 });
 
-//step 2:给axios实例添加请求与响应拦截器
-// 暂时没有配置项需要处理
-// request.interceptors.request.use((config) => {
-//     //config配置对象，有headers属性 请求头，给服务器端携带公共的参数
-//     //返回配置对象
-//     return config
-// });
+// step 2:给axios实例添加请求与响应拦截器
+request.interceptors.request.use((config) => {
+  // config配置对象，有headers属性 请求头，给服务器端携带公共的参数
+  // const userStore = useUserStore(); //获取用户小仓库
+  // // 仅在用户已登录情况下添加 token
+  // if (userStore.isLoggedIn) {
+  //   // 添加 Authorization 请求头，使用标准的 Bearer 认证方案
+  //   config.headers.Authorization = `Bearer ${userStore.state.accessToken}`;
+  // }
+  // 返回配置对象
+  return config
+});
 
 //step 3:响应拦截器
 request.interceptors.response.use((response) => {

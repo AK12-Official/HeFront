@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
         [env.VITE_APP_API_URL]: {
           target: env.VITE_SERVE, // 使用环境变量-暂时未配置，开发期间会先用mock代替
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, '')
+          // rewrite: (path) => path.replace(/^\/api/, '')
         }
       }
     },

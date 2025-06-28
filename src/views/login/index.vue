@@ -80,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { register as registerAPI, sendVerificationCode, loginWithCode } from '@/api/auth';
+import { register as registerAPI, sendVerificationCode } from '@/api/auth';
 import useUserStore from '@/store/modules/user';
 import { ElNotification, ElMessage } from 'element-plus';
 import { ref, reactive } from 'vue';
@@ -186,7 +186,7 @@ const login = async () => {
         password: loginForm.password
       });
     } else {
-      await loginWithCode({
+      await userStore.userLoginCode({
         phone: loginForm.phone,
         code: loginForm.code
       });

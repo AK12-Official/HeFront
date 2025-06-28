@@ -17,7 +17,15 @@
             fill="#F56C6C" />
         </svg>
         <div class="score-text">您的爱心积分</div>
-        <div class="score-value">610</div>
+
+        <!-- 已登录状态显示积分 -->
+        <div v-if="userStore.isLoggedIn" class="score-value">610</div>
+
+        <!-- 未登录状态显示提示和登录按钮 -->
+        <div v-else class="score-not-logged">
+          <div class="login-tip">未登录无法显示</div>
+          <el-button type="primary" size="small" @click="goToLogin">立即登录</el-button>
+        </div>
       </div>
     </div>
   </div>
@@ -32,6 +40,7 @@
     </div>
     <template #footer>
       <el-button @click="changeDonatVisibility">关闭</el-button>
+      <el-button @click="logout" type="danger">登出(没地方放先写这里，主要是测试先)</el-button>
     </template>
   </el-dialog>
 </template>
@@ -39,12 +48,27 @@
 <script setup lang="ts">
 // 这里可以后续引入接口获取积分等
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import useUserStore from '@/store/modules/user';
 
-
-
+const router = useRouter();
+const userStore = useUserStore();
 const dialogVisible = ref(false);
+
+// 方法：控制捐赠对话框显示
 const changeDonatVisibility = () => {
   dialogVisible.value = !dialogVisible.value;
+};
+
+// 方法：跳转到登录页面
+const goToLogin = () => {
+  router.push('/login');
+};
+
+// 方法：登出
+const logout = () => {
+  userStore.userLogout();
+  // router.push('/login');
 };
 </script>
 
@@ -107,6 +131,20 @@ const changeDonatVisibility = () => {
   font-size: 32px;
   color: #F56C6C;
   font-weight: bold;
+}
+
+/* 未登录状态的样式 */
+.score-not-logged {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-tip {
+  font-size: 16px;
+  color: #909399;
+  font-style: italic;
 }
 
 p,

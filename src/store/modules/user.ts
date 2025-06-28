@@ -11,6 +11,7 @@ const useUserStore = defineStore('User', () => {
     accessToken: getToken('ACCESS_TOKEN'), // 从 localStorage 初始化 token
     refreshToken: getToken('REFRESH_TOKEN'), // 用户登录成功后返回的refreshToken
     expiresIn: getToken('expiresIn'), // token的过期时间
+    score: 610, // 用户积分
   });
 
   // 监听 localStorage 的变化，确保多标签页之间的状态一致性

@@ -27,11 +27,11 @@ export const Routes = [
   { //视频
     path: '/video',
     component: () => import('@/views/video/index.vue'),
-    name: 'square',
+    name: 'video',
   },
   { //我的
     path: '/me',
     component: () => import('@/views/me/index.vue'),
-    name: 'square',
+    name: 'me',
   }
 ]

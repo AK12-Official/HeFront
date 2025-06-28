@@ -1,30 +1,39 @@
 <template>
   <header class="header-nav">
     <div class="logo-area">
-      <span class="logo">Logo</span>
-      <span class="project-name">&ProjectName</span>
+      <img src="@/assets/Logo/csulogo.svg" alt="logo" class="logo-img">
     </div>
     <nav class="nav-menu">
       <a v-for="item in navs" :key="item.name" :href="item.path" :class="{ active: item.active }" class="nav-link">
-        <span>{{ item.name }}</span>
-        <!-- 图标可以用img或iconfont，这里先用img -->
         <img v-if="item.icon" :src="item.icon" class="nav-icon" alt="" />
+        <span class="nav-text">{{ item.name }}</span>
       </a>
     </nav>
   </header>
 </template>
 
 <script setup lang="ts">
+import homeIcon from '@/assets/icons/首页.svg'
+import videoIcon from '@/assets/icons/视频.svg'
+import shopIcon from '@/assets/icons/商城.svg'
+import squareIcon from '@/assets/icons/广场.svg'
+import meIcon from '@/assets/icons/我的.svg'
+
 const navs = [
-  { name: '首页', path: '/', active: true, icon: '/icons/home.svg' },
-  { name: '视频', path: '/video', active: false, icon: '/icons/video.svg' },
-  { name: '商城', path: '/shop', active: false, icon: '/icons/shop.svg' },
-  { name: '广场', path: '/square', active: false, icon: '/icons/square.svg' },
-  { name: '我的', path: '/me', active: false, icon: '/icons/user.svg' }
+  { name: '首页', path: '/', active: true, icon: homeIcon },
+  { name: '视频', path: '/video', active: false, icon: videoIcon },
+  { name: '商城', path: '/shop', active: false, icon: shopIcon },
+  { name: '广场', path: '/square', active: false, icon: squareIcon },
+  { name: '我的', path: '/me', active: false, icon: meIcon }
 ]
 </script>
 
 <style scoped>
+.logo-img {
+  width: 60px;
+  height: auto;
+}
+
 .header-nav {
   display: flex;
   align-items: center;
@@ -32,7 +41,7 @@ const navs = [
   height: 70px;
   background: #fff;
   border-bottom: 1px solid #eaeaea;
-  padding: 0 40px;
+  padding: 0 20px;
 }
 
 .logo-area {
@@ -41,6 +50,7 @@ const navs = [
   font-size: 32px;
   color: #42a5f5;
   font-weight: 500;
+  padding-top: 10px;
 }
 
 .project-name {
@@ -51,6 +61,7 @@ const navs = [
   display: flex;
   align-items: center;
   gap: 48px;
+  margin-right: 20px;
 }
 
 .nav-link {
@@ -69,9 +80,16 @@ const navs = [
   color: #42a5f5;
 }
 
+.nav-text {
+  font-size: 16px;
+  color: #000;
+}
+
 .nav-icon {
   width: 18px;
   height: 18px;
-  margin-top: 2px;
+  margin-bottom: 4px;
+  color: #666;
+  fill: #666;
 }
 </style>

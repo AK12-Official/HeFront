@@ -2,7 +2,7 @@
   <div class="home-container">
     <!-- 左侧介绍区块 -->
     <div class="intro-section">
-      <h1>Introduction</h1>
+      <h1>越分享、越丰盈</h1>
       <p>
         本项目旨在帮助因病致贫、无力治病的患者，搭建一个多功能的互助平台，并通过平台流量实现现金予患者自主
       </p>
@@ -52,7 +52,7 @@ const changeDonatVisibility = () => {
 .home-container {
   display: flex;
   height: 100vh;
-  background: url('@/assets/your-bg.jpg') no-repeat center/cover;
+  background: url('../../assets/pictures/BG1.jpg') no-repeat center/cover;
   position: relative;
 }
 
@@ -107,5 +107,10 @@ const changeDonatVisibility = () => {
   font-size: 32px;
   color: #F56C6C;
   font-weight: bold;
+}
+
+p,
+span {
+  letter-spacing: 0.1em;
 }
 </style>

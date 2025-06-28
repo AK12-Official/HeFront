@@ -1,17 +1,19 @@
 <template>
-  <el-card class="centered-card">
-    <el-form class="login_form" :model="loginForm" :rules="rules" ref="loginForms">
-      <el-form-item prop="username" :rules="rules.username">
-        <el-input v-model="loginForm.username" placeholder="UserName"></el-input>
-      </el-form-item>
-      <el-form-item prop="password" :rules="rules.password">
-        <el-input type="password" v-model="loginForm.password" placeholder="Password"></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button class="login_btn" type="primary" size="default" @click="login()">登录</el-button>
-      </el-form-item>
-    </el-form>
-  </el-card>
+  <div class="login-center">
+    <el-card class="centered-card">
+      <el-form class="login_form" :model="loginForm" :rules="rules" ref="loginForms">
+        <el-form-item prop="username" :rules="rules.username">
+          <el-input v-model="loginForm.username" placeholder="UserName"></el-input>
+        </el-form-item>
+        <el-form-item prop="password" :rules="rules.password">
+          <el-input type="password" v-model="loginForm.password" placeholder="Password"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button class="login_btn" type="primary" size="default" @click="login()">登录</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+  </div>
   <!-- 暂时的登录页面，后续会完善 -->
   <!-- 比如说保持首页的背景之类的 -->
   <!-- 真实API的对接之类的 -->
@@ -96,22 +98,24 @@ body {
   font-family: Arial, sans-serif;
 }
 
-/* 卡片样式 */
+.login-center {
+  min-height: 100vh;
+  /* 或100vh-Header/Footer高度 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: url('@/assets/pictures/BG2.jpg') center center/cover no-repeat;
+}
+
 .centered-card {
   width: 400px;
-  margin: 100px auto;
-  /* 居中 */
   padding: 20px;
   border: 1px solid #dcdfe6;
-  /* 边框颜色 */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  /* 阴影效果 */
   border-radius: 10px;
-  /* 圆角 */
-  background-color: #fff;
-  /* 白色背景 */
+  background-color: rgba(255, 255, 255, 0.5); /* 更透明一点 */
+  backdrop-filter: blur(8px); /* 毛玻璃模糊 */
   text-align: center;
-  /* 内容居中 */
 }
 
 /* 表单样式 */

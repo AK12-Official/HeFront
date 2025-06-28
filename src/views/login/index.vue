@@ -1,51 +1,128 @@
 <template>
   <div class="login-center">
     <el-card class="centered-card">
-      <el-form class="login_form" :model="loginForm" :rules="rules" ref="loginForms">
-        <el-form-item prop="username" :rules="rules.username">
-          <el-input v-model="loginForm.username" placeholder="UserName"></el-input>
+      <!-- 标题和切换按钮 -->
+      <div class="login-header">
+        <h2>{{ currentMode === 'login' ? '用户登录' : '用户注册' }}</h2>
+        <div class="mode-switch">
+          <el-button :type="currentMode === 'login' ? 'primary' : 'default'" @click="switchMode('login')" size="small"
+            class="switch-btn">
+            登录
+          </el-button>
+          <el-button :type="currentMode === 'register' ? 'primary' : 'default'" @click="switchMode('register')"
+            size="small" class="switch-btn">
+            注册
+          </el-button>
+        </div>
+      </div>
+
+      <!-- 登录表单 -->
+      <el-form v-if="currentMode === 'login'" class="login_form" :model="loginForm" :rules="loginRules"
+        ref="loginForms">
+        <el-form-item prop="phone">
+          <el-input v-model="loginForm.phone" placeholder="请输入手机号"></el-input>
         </el-form-item>
-        <el-form-item prop="password" :rules="rules.password">
-          <el-input type="password" v-model="loginForm.password" placeholder="Password"></el-input>
+
+        <!-- 登录方式切换 -->
+        <div style="text-align:center;margin-bottom:10px;">
+          <el-radio-group v-model="loginType" size="small">
+            <el-radio-button label="password">密码登录</el-radio-button>
+            <el-radio-button label="code">验证码登录</el-radio-button>
+          </el-radio-group>
+        </div>
+
+        <!-- 密码登录 -->
+        <el-form-item v-if="loginType === 'password'" prop="password">
+          <el-input type="password" v-model="loginForm.password" placeholder="请输入密码"></el-input>
         </el-form-item>
+
+        <!-- 验证码登录 -->
+        <el-form-item v-if="loginType === 'code'" prop="code">
+          <div style="display: flex; gap: 8px;">
+            <el-input v-model="loginForm.code" placeholder="请输入验证码"></el-input>
+            <el-button type="primary" @click="sendCode" :disabled="countdown > 0" style="min-width: 100px;">
+              {{ countdown > 0 ? countdown + 's' : '发送验证码' }}
+            </el-button>
+          </div>
+        </el-form-item>
+
         <el-form-item>
           <el-button class="login_btn" type="primary" size="default" @click="login()">登录</el-button>
         </el-form-item>
       </el-form>
+
+      <!-- 注册表单 -->
+      <el-form v-if="currentMode === 'register'" class="login_form" :model="registerForm" :rules="registerRules"
+        ref="registerForms">
+        <el-form-item prop="phone">
+          <el-input v-model="registerForm.phone" placeholder="请输入手机号"></el-input>
+        </el-form-item>
+        <el-form-item prop="code">
+          <div style="display: flex; gap: 8px;">
+            <el-input v-model="registerForm.code" placeholder="请输入验证码"></el-input>
+            <el-button type="primary" @click="sendCode" :disabled="countdown > 0" style="min-width: 100px;">
+              {{ countdown > 0 ? countdown + 's' : '发送验证码' }}
+            </el-button>
+          </div>
+        </el-form-item>
+        <el-form-item prop="password">
+          <el-input type="password" v-model="registerForm.password" placeholder="请输入密码"></el-input>
+        </el-form-item>
+        <el-form-item prop="confirmPassword">
+          <el-input type="password" v-model="registerForm.confirmPassword" placeholder="请确认密码"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button class="login_btn" type="primary" size="default" @click="register()">注册</el-button>
+        </el-form-item>
+      </el-form>
     </el-card>
   </div>
-  <!-- 暂时的登录页面，后续会完善 -->
-  <!-- 比如说保持首页的背景之类的 -->
-  <!-- 真实API的对接之类的 -->
 </template>
 
 <script setup lang="ts">
-
-import { reqLogin } from '@/api/auth';
-import { ElNotification } from 'element-plus';
+import { register as registerAPI, sendVerificationCode, loginWithCode } from '@/api/auth';
+import useUserStore from '@/store/modules/user';
+import { ElNotification, ElMessage } from 'element-plus';
 import { ref, reactive } from 'vue';
-// import { reqLogin } from '../../api/user';
-// import { LoginResponse } from '../../api/types';
 import { useRouter } from 'vue-router';
+
 const router = useRouter();
+const userStore = useUserStore();
+
+const currentMode = ref<'login' | 'register'>('login');
+const loginType = ref<'password' | 'code'>('password');
 
 const loginForms = ref();
+const registerForms = ref();
+
 const loginForm = reactive({
-  username: '',
-  password: ''
+  phone: '',
+  password: '',
+  code: ''
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const valadatorUsername = (rule: any, value: any, callback: any) => {
-  if (value.length >= 5) {
-    callback();
+const registerForm = reactive({
+  phone: '',
+  code: '',
+  password: '',
+  confirmPassword: ''
+});
+
+const countdown = ref(0);
+let timer: number | null = null;
+
+const validatePhone = (_: unknown, value: string, callback: (error?: Error) => void) => {
+  const phoneRegex = /^1[3-9]\d{9}$/;
+  if (!value) {
+    callback(new Error('请输入手机号'));
+  } else if (!phoneRegex.test(value)) {
+    callback(new Error('请输入正确的手机号'));
   } else {
-    callback(new Error('账号长度至少为5位'));
+    callback();
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const validatorPassword = (rule: any, value: any, callback: any) => {
+const validatorPassword = (_: unknown, value: string, callback: (error?: Error) => void) => {
   if (value.length >= 6 && value.length <= 15) {
     callback();
   } else {
@@ -53,37 +130,126 @@ const validatorPassword = (rule: any, value: any, callback: any) => {
   }
 };
 
-// 定义表单验证规则
-const rules = {
-  username: [
-    { validator: valadatorUsername, trigger: 'change' }
+const validatorConfirmPassword = (_: unknown, value: string, callback: (error?: Error) => void) => {
+  if (value === registerForm.password) {
+    callback();
+  } else {
+    callback(new Error('两次输入的密码不一致'));
+  }
+};
+
+const loginRules = {
+  phone: [
+    { validator: validatePhone, trigger: 'blur' }
   ],
   password: [
-    { validator: validatorPassword, trigger: 'change' }
+    { validator: validatorPassword, trigger: 'blur' }
+  ],
+  code: [
+    { required: true, message: '请输入验证码', trigger: 'blur' }
   ]
 };
 
+const registerRules = {
+  phone: [
+    { validator: validatePhone, trigger: 'blur' }
+  ],
+  code: [
+    { required: true, message: '请输入验证码', trigger: 'blur' }
+  ],
+  password: [
+    { validator: validatorPassword, trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { validator: validatorConfirmPassword, trigger: 'blur' }
+  ]
+};
+
+const switchMode = (mode: 'login' | 'register') => {
+  currentMode.value = mode;
+  if (mode === 'login') {
+    Object.assign(loginForm, { phone: '', password: '' });
+  } else {
+    Object.assign(registerForm, { phone: '', code: '', password: '', confirmPassword: '' });
+  }
+};
+
 const login = async () => {
+  if (!loginForms.value) return;
 
   await loginForms.value.validate();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result: any = await reqLogin(loginForm);
+  try {
+    if (loginType.value === 'password') {
+      await userStore.userLoginPwd({
+        phone: loginForm.phone,
+        password: loginForm.password
+      });
+    } else {
+      await loginWithCode({
+        phone: loginForm.phone,
+        code: loginForm.code
+      });
+      // 你可以根据实际情况决定是否要存token等
+    }
 
-  if (result.code === 200) {
     ElNotification({
       type: 'success',
-      message: "Welcome Home",
-      title: `Hi`,
-    })
-    localStorage.setItem('token', result.data);
+      message: "登录成功",
+      title: "欢迎回来",
+    });
+
     router.push('/');
-  } else {
+  } catch (error) {
     ElNotification({
       type: 'error',
-      message: result.message || '登录失败'
-    })
+      message: error instanceof Error ? error.message : '登录失败'
+    });
+  }
+};
 
+const register = async () => {
+  if (!registerForms.value) return;
+
+  await registerForms.value.validate();
+
+  try {
+    await registerAPI(registerForm);
+
+    ElNotification({
+      type: 'success',
+      message: "注册成功，请登录",
+      title: "注册成功",
+    });
+
+    switchMode('login');
+    loginForm.phone = registerForm.phone;
+  } catch (error) {
+    ElNotification({
+      type: 'error',
+      message: error instanceof Error ? error.message : '注册失败'
+    });
+  }
+};
+
+const sendCode = async () => {
+  if (!registerForm.phone) {
+    ElMessage.warning('请先输入手机号');
+    return;
+  }
+  try {
+    await sendVerificationCode({ phone: registerForm.phone, codeType: 'REGISTER' });
+    ElMessage.success('验证码已发送');
+    countdown.value = 60;
+    timer = window.setInterval(() => {
+      countdown.value--;
+      if (countdown.value <= 0 && timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }, 1000);
+  } catch {
+    ElMessage.error('验证码发送失败');
   }
 };
 </script>
@@ -100,7 +266,6 @@ body {
 
 .login-center {
   min-height: 100vh;
-  /* 或100vh-Header/Footer高度 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -113,26 +278,45 @@ body {
   border: 1px solid #dcdfe6;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-radius: 10px;
-  background-color: rgba(255, 255, 255, 0.5); /* 更透明一点 */
-  backdrop-filter: blur(8px); /* 毛玻璃模糊 */
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
   text-align: center;
 }
 
-/* 表单样式 */
+.login-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.login-header h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.mode-switch {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.switch-btn {
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
 .login_form {
   margin-top: 20px;
 }
 
-/* 输入框样式 */
 .el-input {
   width: 100%;
 }
 
-/* 按钮样式 */
 .login_btn {
   width: 100%;
   background-color: #409eff;
-  /* 按钮主色 */
   color: #fff;
   font-weight: bold;
   border-radius: 5px;
@@ -141,11 +325,9 @@ body {
 
 .login_btn:hover {
   background-color: #66b1ff;
-  /* 按钮悬停颜色 */
   color: #fff;
 }
 
-/* 卡片标题样式 */
 .centered-card h1 {
   font-size: 24px;
   color: #333;

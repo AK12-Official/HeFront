@@ -5,14 +5,14 @@ import type { LoginCodeParams, LoginPasswordParams, RegisterParams, ResetPasswor
 
 
 enum API {
-  LOGIN_URL = 'user/login',         //fake
-  SEND_CODE_URL = 'auth/send-code',
-  REGISTER_URL = 'auth/register',
-  LOGIN_CODE_URL = 'auth/login-code',
-  LOGIN_PASSWORD_URL = 'auth/login-password',
-  LOGOUT_URL = 'user/logout',
-  RESET_PASSWORD_URL = 'auth/reset-password',
-  REFRESH_TOKEN_URL = 'auth/refresh-token',
+  LOGIN_URL = '/user/login',         //fake
+  SEND_CODE_URL = '/auth/send-code',
+  REGISTER_URL = '/auth/register',
+  LOGIN_CODE_URL = '/auth/login-code',
+  LOGIN_PASSWORD_URL = '/auth/login-password',
+  LOGOUT_URL = '/user/logout',
+  RESET_PASSWORD_URL = '/auth/reset-password',
+  REFRESH_TOKEN_URL = '/auth/refresh-token',
 }
 
 //假接口登录

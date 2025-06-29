@@ -12,12 +12,6 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const useMock = env.VITE_USE_MOCK === 'true'
 
-  // 调试信息
-  console.log('环境变量:', {
-    API_URL: env.VITE_APP_API_URL,
-    USE_MOCK: env.VITE_USE_MOCK,
-    TARGET: env.VITE_SERVE
-  });
 
   return {
     plugins: [

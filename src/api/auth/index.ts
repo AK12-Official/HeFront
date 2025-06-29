@@ -21,7 +21,7 @@ export const reqLogin = (data: any) => request.post<any, any>(API.LOGIN_URL, dat
 
 // 发送验证码
 export const sendVerificationCode = (params: SendCodeParams) => {
-  return request.get<any, any>(API.SEND_CODE_URL, { params });
+  return request.post<any, any>(API.SEND_CODE_URL, { params });
 };
 
 // 注册

@@ -113,9 +113,9 @@ export default [
   // 发送验证码接口
   {
     url: '/api/auth/send-code',
-    method: 'get',
+    method: 'post',
     response: ({ query }) => {
-      const { phone, codeType } = query;
+      const { phone, codeType, ipAddress } = query;
 
       // 检查手机号是否存在（仅REGISTER不检查）
       if (codeType !== 'REGISTER') {
@@ -136,6 +136,7 @@ export default [
       verificationCodes.set(phone, verificationCode);
 
       console.log(`手机号 ${phone} 的验证码是: ${verificationCode}`);
+      console.log(`IP地址: ${ipAddress}`);
 
       return {
         code: 10000,

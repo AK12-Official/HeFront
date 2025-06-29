@@ -21,22 +21,22 @@ export const reqLogin = (data: any) => request.post<any, any>(API.LOGIN_URL, dat
 
 // 发送验证码
 export const sendVerificationCode = (params: SendCodeParams) => {
-  return request.post<any, any>(API.SEND_CODE_URL, { params });
+  return request.post<any, any>(API.SEND_CODE_URL, null, { params });
 };
 
 // 注册
 export const register = (params: RegisterParams) => {
-  return request.post<any, any>(API.REGISTER_URL, params);
+  return request.post<any, any>(API.REGISTER_URL, null, { params });
 };
 
 // 验证码登录
 export const loginWithCode = (params: LoginCodeParams) => {
-  return request.post<any, any>(API.LOGIN_CODE_URL, params);
+  return request.post<any, any>(API.LOGIN_CODE_URL, null, { params });
 };
 
 // 密码登录
 export const loginWithPassword = (params: LoginPasswordParams) => {
-  return request.post<any, any>(API.LOGIN_PASSWORD_URL, params);
+  return request.post<any, any>(API.LOGIN_PASSWORD_URL, null, { params });
 };
 
 // 登出
@@ -46,7 +46,7 @@ export const logout = () => {
 
 // 重置密码
 export const resetPassword = (params: ResetPasswordParams) => {
-  return request.post<any, any>(API.RESET_PASSWORD_URL, params);
+  return request.post<any, any>(API.RESET_PASSWORD_URL, null, { params });
 };
 
 // 刷新令牌

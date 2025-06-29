@@ -88,6 +88,17 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const userStore = useUserStore();
+const ip = ref('127.0.0.1');
+
+fetch('https://api.ipify.org?format=json')
+  .then(res => res.json())
+  .then(data => {
+    ip.value = data.ip;
+  })
+  .catch(() => {
+    ip.value = '127.0.0.1';
+  });
+
 
 const currentMode = ref<'login' | 'register'>('login');
 const loginType = ref<'password' | 'code'>('password');
@@ -238,7 +249,7 @@ const sendCode = async () => {
     return;
   }
   try {
-    await sendVerificationCode({ phone: registerForm.phone, codeType: 'REGISTER' });
+    await sendVerificationCode({ phone: registerForm.phone, codeType: 'REGISTER', ipAddress: ip.value });
     ElMessage.success('验证码已发送');
     countdown.value = 60;
     timer = window.setInterval(() => {

@@ -2,7 +2,7 @@
 export interface SendCodeParams {
   phone: string;
   codeType: 'LOGIN' | 'REGISTER' | 'RESET_PASSWORD';
-  ipAddress?: string;
+  ipAddress: string;
 }
 
 // 注册参数

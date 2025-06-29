@@ -9,6 +9,7 @@ import { viteMockServe } from 'vite-plugin-mock'
 export default defineConfig(({ mode }) => {
 
   const env = loadEnv(mode, process.cwd(), '')
+  const useMock = env.VITE_USE_MOCK === 'true'
 
   return {
     plugins: [
@@ -23,11 +24,10 @@ export default defineConfig(({ mode }) => {
         }
       }),
       viteMockServe({
-        // mock 文件夹地址，默认为根目录下的 mock 文件夹
         mockPath: 'mock',
-        enable: mode === 'development', // 开发环境启用
-        watchFiles: true, // 监视 mock 文件夹内文件变化
-        logger: true, // 是否在控制台显示请求日志
+        enable: mode === 'development' && useMock, // 只有在开发环境且开启 MOCK 时启用
+        watchFiles: true,
+        logger: true,
       })
     ],
     resolve: {
@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => {
         '@': fileURLToPath(new URL('./src', import.meta.url))
       },
     },
-    server: {     //代理跨域
+    server: {
       proxy: {
         [env.VITE_APP_API_URL]: {
           target: env.VITE_SERVE, // 使用环境变量-暂时未配置，开发期间会先用mock代替
@@ -45,7 +45,8 @@ export default defineConfig(({ mode }) => {
       }
     },
     define: {
-      __APP_TITLE__: JSON.stringify(env.VITE_APP_TITLE), // 注入全局变量
+      __APP_TITLE__: JSON.stringify(env.VITE_APP_TITLE),
+      __USE_MOCK__: JSON.stringify(useMock), // 将 Mock 状态注入全局变量
     }
   }
 

@@ -39,7 +39,8 @@
         <div v-for="product in featuredProducts" :key="product.id" class="product-card"
           @click="showProductDetail(product.id)">
           <div class="product-image">
-            <img :src="product.imageUrl" :alt="product.name">
+            <!-- 使用懒加载指令 -->
+            <img v-lazy="product.imageUrl" :alt="product.name">
             <div class="product-tag" v-if="product.tag">{{ product.tag }}</div>
           </div>
           <div class="product-info">
@@ -50,7 +51,7 @@
             </div>
             <div class="product-desc">{{ product.description }}</div>
             <div class="product-actions">
-              <el-button type="primary" size="small" @click.stop="addToCart(product as Product)">加入购物车</el-button>
+              <el-button type="primary" size="small" @click.stop="addToCart(product)">加入购物车</el-button>
               <el-button size="small" @click.stop="showProductDetail(product.id)">查看详情</el-button>
             </div>
           </div>
@@ -72,32 +73,45 @@
         </div>
       </div>
 
-      <div class="products-grid">
-        <div v-for="product in filteredProducts" :key="product.id" class="product-card"
-          @click="showProductDetail(product.id)">
-          <div class="product-image">
-            <img :src="product.imageUrl" :alt="product.name">
-            <div class="product-tag" v-if="product.tag">{{ product.tag }}</div>
-          </div>
-          <div class="product-info">
-            <h3 class="product-name">{{ product.name }}</h3>
-            <div class="product-price">
-              <span class="current-price">¥{{ product.price.toFixed(2) }}</span>
-              <span class="original-price" v-if="product.originalPrice">¥{{ product.originalPrice.toFixed(2) }}</span>
+      <!-- 使用无限滚动加载 -->
+      <div class="products-container" v-loading="productsLoading && displayedProducts.length === 0">
+        <div class="products-grid">
+          <div v-for="product in displayedProducts" :key="product.id" class="product-card"
+            @click="showProductDetail(product.id)">
+            <div class="product-image">
+              <!-- 使用懒加载指令 -->
+              <img v-lazy="product.imageUrl" :alt="product.name">
+              <div class="product-tag" v-if="product.tag">{{ product.tag }}</div>
             </div>
-            <div class="product-desc">{{ product.description }}</div>
-            <div class="product-actions">
-              <el-button type="primary" size="small" @click.stop="addToCart(product as Product)">加入购物车</el-button>
-              <el-button size="small" @click.stop="showProductDetail(product.id)">查看详情</el-button>
+            <div class="product-info">
+              <h3 class="product-name">{{ product.name }}</h3>
+              <div class="product-price">
+                <span class="current-price">¥{{ product.price.toFixed(2) }}</span>
+                <span class="original-price" v-if="product.originalPrice">¥{{ product.originalPrice.toFixed(2) }}</span>
+              </div>
+              <div class="product-desc">{{ product.description }}</div>
+              <div class="product-actions">
+                <el-button type="primary" size="small" @click.stop="addToCart(product)">加入购物车</el-button>
+                <el-button size="small" @click.stop="showProductDetail(product.id)">查看详情</el-button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 分页 -->
-      <div class="pagination-container">
-        <el-pagination background layout="prev, pager, next" :total="totalProducts" :page-size="pageSize"
-          :current-page="currentPage" @current-change="handlePageChange" />
+        <!-- 加载更多区域 -->
+        <div v-if="!productsLoading && hasMoreProducts" class="load-more-container" v-intersection="onLoadMoreVisible">
+          <el-button plain @click="loadMoreProducts">加载更多商品</el-button>
+        </div>
+
+        <!-- 加载中状态 -->
+        <div v-if="productsLoading && displayedProducts.length > 0" class="loading-container">
+          <el-skeleton :rows="1" animated />
+        </div>
+
+        <!-- 无更多商品提示 -->
+        <div v-if="!productsLoading && !hasMoreProducts && displayedProducts.length > 0" class="no-more-container">
+          <span class="no-more-text">没有更多商品了</span>
+        </div>
       </div>
     </div>
 
@@ -109,7 +123,7 @@
           <el-carousel height="350px" indicator-position="outside">
             <el-carousel-item v-for="(image, index) in selectedProduct.gallery || [selectedProduct.imageUrl]"
               :key="index">
-              <img :src="image" :alt="`${selectedProduct.name} - 图片 ${index + 1}`" class="detail-image">
+              <img v-lazy="image" :alt="`${selectedProduct.name} - 图片 ${index + 1}`" class="detail-image">
             </el-carousel-item>
           </el-carousel>
         </div>
@@ -149,9 +163,7 @@
       </div>
     </el-dialog>
 
-    <!-- 原有内容保持不变 -->
-
-    <!-- 添加浮动购物车按钮 -->
+    <!-- 浮动购物车按钮 -->
     <div class="floating-cart" @click="toggleCart">
       <el-badge :value="cartItems.length" :hidden="cartItems.length === 0" class="cart-badge">
         <el-icon :size="24">
@@ -210,7 +222,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import type { DirectiveBinding } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import {
@@ -224,7 +237,103 @@ import {
   Delete
 } from '@element-plus/icons-vue';
 
+// 类型定义
+interface Banner {
+  imageUrl: string;
+  title: string;
+  description: string;
+  link: string;
+}
+
+interface ProductSpecifications {
+  [key: string]: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  fullDescription?: string;
+  price: number;
+  originalPrice?: number;
+  imageUrl: string;
+  category: string;
+  tag?: string;
+  gallery?: string[];
+  specifications?: ProductSpecifications;
+  featured: boolean;
+}
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  imageUrl: string;
+  quantity: number;
+}
+
 const router = useRouter();
+
+// 图片懒加载指令
+const vLazy = {
+  mounted: (el: HTMLImageElement, binding: DirectiveBinding) => {
+    const imageUrl = binding.value;
+    // 占位图
+    const placeholderSrc = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZWVlZSIvPjwvc3ZnPg==';
+
+    // 设置占位图
+    el.setAttribute('data-src', imageUrl);
+    el.setAttribute('src', placeholderSrc);
+
+    const loadImage = () => {
+      const src = el.getAttribute('data-src');
+      if (!src) return;
+
+      const img = new Image();
+      img.src = src;
+      img.onload = () => {
+        el.src = src;
+        el.classList.add('loaded');
+      };
+    };
+
+    // 创建 IntersectionObserver 实例
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          loadImage();
+          observer.unobserve(el);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    observer.observe(el);
+  }
+};
+
+// 交叉观察指令，用于检测元素是否在视口中
+const vIntersection = {
+  mounted: (el: HTMLElement, binding: DirectiveBinding) => {
+    const callback = binding.value;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        if (typeof callback === 'function') callback();
+      }
+    }, { threshold: 0.1 });
+
+    observer.observe(el);
+    // 存储observer以便清理
+    (el as HTMLElement & { _observer?: IntersectionObserver })._observer = observer;
+  },
+  unmounted: (el: HTMLElement) => {
+    const _el = el as HTMLElement & { _observer?: IntersectionObserver };
+    if (_el._observer) {
+      _el._observer.disconnect();
+      delete _el._observer;
+    }
+  }
+};
 
 // 创建图标映射对象
 type CategoryId = 'all' | 'clothes' | 'food' | 'electronics' | 'accessories' | 'charity' | 'discount';
@@ -240,7 +349,7 @@ const categoryIcons: Record<CategoryId, unknown> = {
 };
 
 // 轮播广告数据
-const banners = ref([
+const banners = ref<Banner[]>([
   {
     imageUrl: 'https://img1.baidu.com/it/u=3009731526,373851691&fm=253&fmt=auto&app=138&f=JPEG?w=800&h=500',
     title: '爱心助力，健康人生',
@@ -260,6 +369,7 @@ const banners = ref([
     link: '/shop/campaign/quality'
   }
 ]);
+
 const categories = ref<{ id: CategoryId; name: string }[]>([
   { id: 'all', name: '全部' },
   { id: 'clothes', name: '服装' },
@@ -271,7 +381,8 @@ const categories = ref<{ id: CategoryId; name: string }[]>([
 ]);
 
 // 商品数据
-const allProducts = ref([
+// 这里只是示例，实际应用中应该从API获取
+const allProducts = ref<Product[]>([
   {
     id: 1,
     name: '爱心助力纯棉T恤',
@@ -346,7 +457,8 @@ const allProducts = ref([
     price: 68.00,
     imageUrl: 'https://img0.baidu.com/it/u=3109782237,2260639396&fm=253&fmt=auto&app=138&f=JPEG?w=400&h=400',
     category: 'accessories',
-    featured: false
+    featured: false,
+    specifications: {} // 添加空对象，确保符合类型
   },
   {
     id: 5,
@@ -357,7 +469,8 @@ const allProducts = ref([
     imageUrl: 'https://img0.baidu.com/it/u=1043334023,3334448310&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
     category: 'clothes',
     tag: '公益款',
-    featured: false
+    featured: false,
+    specifications: {} // 添加空对象，确保符合类型
   },
   {
     id: 6,
@@ -366,7 +479,8 @@ const allProducts = ref([
     price: 168.00,
     imageUrl: 'https://img2.baidu.com/it/u=4077758591,1057206082&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
     category: 'food',
-    featured: false
+    featured: false,
+    specifications: {} // 添加空对象，确保符合类型
   },
   {
     id: 7,
@@ -377,7 +491,8 @@ const allProducts = ref([
     imageUrl: 'https://img2.baidu.com/it/u=2194721213,261408866&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
     category: 'electronics',
     tag: '新品',
-    featured: false
+    featured: false,
+    specifications: {} // 添加空对象，确保符合类型
   },
   {
     id: 8,
@@ -386,41 +501,32 @@ const allProducts = ref([
     price: 89.00,
     imageUrl: 'https://img2.baidu.com/it/u=3727375769,2994875730&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
     category: 'accessories',
-    featured: true
+    featured: true,
+    specifications: {} // 添加空对象，确保符合类型
   },
 ]);
 
 // 状态变量
-const currentCategory = ref('all');
-const sortOption = ref('default');
-const currentPage = ref(1);
-const pageSize = ref(8);
-const productDetailVisible = ref(false);
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  fullDescription?: string;
-  price: number;
-  originalPrice?: number;
-  imageUrl: string;
-  category: string;
-  tag?: string;
-  gallery?: string[];
-  specifications?: Record<string, string>;
-  featured: boolean;
-}
-
+const currentCategory = ref<string>('all');
+const sortOption = ref<string>('default');
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(4); // 减少每页商品数，以便更好地测试懒加载
+const productDetailVisible = ref<boolean>(false);
 const selectedProduct = ref<Product | null>(null);
-const purchaseQuantity = ref(1);
+const purchaseQuantity = ref<number>(1);
+
+// 商品懒加载相关状态
+const productsLoading = ref<boolean>(false);
+const hasMoreProducts = ref<boolean>(true);
+const displayedProducts = ref<Product[]>([]);
 
 // 计算属性：精选商品
-const featuredProducts = computed(() => {
+const featuredProducts = computed<Product[]>(() => {
   return allProducts.value.filter(product => product.featured).slice(0, 4);
 });
 
-// 计算属性：筛选后的商品
-const filteredProducts = computed(() => {
+// 计算属性：筛选和排序后的所有商品
+const sortedAndFilteredProducts = computed<Product[]>(() => {
   let result = [...allProducts.value];
 
   // 分类筛选
@@ -445,62 +551,108 @@ const filteredProducts = computed(() => {
       break;
   }
 
-  // 分页
-  const startIndex = (currentPage.value - 1) * pageSize.value;
-  return result.slice(startIndex, startIndex + pageSize.value);
+  return result;
 });
 
 // 计算属性：总商品数
-const totalProducts = computed(() => {
-  if (currentCategory.value === 'all') {
-    return allProducts.value.length;
-  }
-  return allProducts.value.filter(product => product.category === currentCategory.value).length;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const totalProducts = computed<number>(() => {
+  return sortedAndFilteredProducts.value.length;
 });
 
-// 方法：选择分类
-const selectCategory = (categoryId: string) => {
-  currentCategory.value = categoryId;
-  currentPage.value = 1;
+// 方法：模拟API请求获取商品
+const fetchProducts = async (page: number, pageSize: number): Promise<{ data: Product[], hasMore: boolean }> => {
+  // 模拟网络延迟
+  await new Promise(resolve => setTimeout(resolve, 800));
+
+  const filteredProducts = sortedAndFilteredProducts.value;
+  const start = (page - 1) * pageSize;
+  const end = start + pageSize;
+  const data = filteredProducts.slice(start, end);
+  const hasMore = end < filteredProducts.length;
+
+  return { data, hasMore };
 };
 
-// 方法：页码变化
-const handlePageChange = (page: number) => {
-  currentPage.value = page;
+// 方法：初始加载商品
+const loadInitialProducts = async (): Promise<void> => {
+  productsLoading.value = true;
+  currentPage.value = 1;
+  displayedProducts.value = [];
+
+  try {
+    const { data, hasMore } = await fetchProducts(1, pageSize.value);
+    displayedProducts.value = data;
+    hasMoreProducts.value = hasMore;
+  } catch (error) {
+    console.error('加载商品失败:', error);
+    ElMessage.error('加载商品失败，请稍后重试');
+  } finally {
+    productsLoading.value = false;
+  }
+};
+
+// 方法：加载更多商品
+const loadMoreProducts = async (): Promise<void> => {
+  if (productsLoading.value || !hasMoreProducts.value) return;
+
+  productsLoading.value = true;
+  const nextPage = currentPage.value + 1;
+
+  try {
+    const { data, hasMore } = await fetchProducts(nextPage, pageSize.value);
+    // 追加新商品
+    displayedProducts.value = [...displayedProducts.value, ...data];
+    currentPage.value = nextPage;
+    hasMoreProducts.value = hasMore;
+  } catch (error) {
+    console.error('加载更多商品失败:', error);
+    ElMessage.error('加载更多商品失败，请稍后重试');
+  } finally {
+    productsLoading.value = false;
+  }
+};
+
+// 方法：监听加载更多容器可见性
+const onLoadMoreVisible = (): void => {
+  if (!productsLoading.value && hasMoreProducts.value) {
+    loadMoreProducts();
+  }
+};
+
+// 方法：选择分类
+const selectCategory = (categoryId: string): void => {
+  if (currentCategory.value === categoryId) return;
+  currentCategory.value = categoryId;
+  loadInitialProducts();
 };
 
 // 方法：显示商品详情
-const showProductDetail = (productId: number) => {
+const showProductDetail = (productId: number): void => {
   const product = allProducts.value.find(item => item.id === productId);
   if (product) {
-    selectedProduct.value = product as Product;
+    selectedProduct.value = product;
     productDetailVisible.value = true;
     purchaseQuantity.value = 1;
   }
 };
 
 // 购物车相关状态
-const cartVisible = ref(false);
-const cartItems = ref<Array<{
-  id: number;
-  name: string;
-  price: number;
-  imageUrl: string;
-  quantity: number;
-}>>([]);
+const cartVisible = ref<boolean>(false);
+const cartItems = ref<CartItem[]>([]);
 
 // 购物车总价计算
-const cartTotal = computed(() => {
+const cartTotal = computed<number>(() => {
   return cartItems.value.reduce((total, item) => total + (item.price * item.quantity), 0);
 });
 
 // 切换购物车显示状态
-const toggleCart = () => {
+const toggleCart = (): void => {
   cartVisible.value = !cartVisible.value;
 };
 
 // 从商品中创建购物车项目
-const createCartItem = (product: Product, quantity: number) => {
+const createCartItem = (product: Product, quantity: number): CartItem => {
   return {
     id: product.id,
     name: product.name,
@@ -510,8 +662,8 @@ const createCartItem = (product: Product, quantity: number) => {
   };
 };
 
-// 修改原有的添加购物车方法
-const addToCart = (product: Product, quantity = 1) => {
+// 添加到购物车方法
+const addToCart = (product: Product, quantity = 1): void => {
   // 检查商品是否已在购物车中
   const existingItem = cartItems.value.find(item => item.id === product.id);
 
@@ -531,21 +683,17 @@ const addToCart = (product: Product, quantity = 1) => {
     });
   }
 
-  // 自动打开购物车
-  //cartVisible.value = true;
-
   // 存储到本地存储以便页面刷新后保留
-  // 回头可能会往pinia那里放
   localStorage.setItem('cartItems', JSON.stringify(cartItems.value));
 };
 
 // 更新购物车项目
-const updateCartItem = () => {
+const updateCartItem = (): void => {
   localStorage.setItem('cartItems', JSON.stringify(cartItems.value));
 };
 
 // 从购物车中移除商品
-const removeFromCart = (item: { id: number }) => {
+const removeFromCart = (item: CartItem): void => {
   const index = cartItems.value.findIndex(cartItem => cartItem.id === item.id);
   if (index !== -1) {
     cartItems.value.splice(index, 1);
@@ -558,7 +706,7 @@ const removeFromCart = (item: { id: number }) => {
 };
 
 // 清空购物车
-const clearCart = () => {
+const clearCart = (): void => {
   cartItems.value = [];
   localStorage.setItem('cartItems', JSON.stringify(cartItems.value));
   ElMessage({
@@ -568,7 +716,7 @@ const clearCart = () => {
 };
 
 // 结算功能
-const checkout = () => {
+const checkout = (): void => {
   if (cartItems.value.length === 0) {
     ElMessage({
       message: '购物车为空，无法结算',
@@ -587,7 +735,7 @@ const checkout = () => {
 };
 
 // 立即购买功能
-const buyNow = (product: Product, quantity = 1) => {
+const buyNow = (product: Product, quantity = 1): void => {
   // 可以根据实际业务跳转到结算页并带上当前商品和数量
   ElMessage({
     message: `立即购买 ${quantity} 件 ${product.name}`,
@@ -598,28 +746,44 @@ const buyNow = (product: Product, quantity = 1) => {
   checkout();
 };
 
-// 页面挂载时从本地存储加载购物车
-onMounted(() => {
-  const savedCart = localStorage.getItem('cartItems');
-  if (savedCart) {
-    try {
-      cartItems.value = JSON.parse(savedCart);
-    } catch (e) {
-      console.error('Failed to parse cart data from localStorage', e);
-    }
-  }
-
-  console.log('商城页面已加载');
+// 监听排序方式变化
+watch(sortOption, () => {
+  loadInitialProducts();
 });
 
 // 跳转到指定链接
-const navigateTo = (link: string) => {
+const navigateTo = (link: string): void => {
   if (link.startsWith('http')) {
     window.open(link, '_blank');
   } else {
     router.push(link);
   }
 };
+
+// 注册自定义指令
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const app = {
+  directives: {
+    lazy: vLazy,
+    intersection: vIntersection
+  }
+};
+
+// 生命周期钩子
+onMounted(() => {
+  // 从本地存储加载购物车
+  const savedCart = localStorage.getItem('cartItems');
+  if (savedCart) {
+    try {
+      cartItems.value = JSON.parse(savedCart);
+    } catch (e) {
+      console.error('解析购物车数据失败:', e);
+    }
+  }
+
+  // 初始加载商品
+  loadInitialProducts();
+});
 </script>
 
 <style scoped>
@@ -739,6 +903,10 @@ const navigateTo = (link: string) => {
   margin-bottom: 20px;
 }
 
+.products-container {
+  min-height: 400px;
+}
+
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -770,10 +938,15 @@ const navigateTo = (link: string) => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s;
+  transition: opacity 0.3s ease, transform 0.5s;
+  opacity: 0;
 }
 
-.product-card:hover .product-image img {
+.product-image img.loaded {
+  opacity: 1;
+}
+
+.product-card:hover .product-image img.loaded {
   transform: scale(1.05);
 }
 
@@ -839,11 +1012,26 @@ const navigateTo = (link: string) => {
   gap: 10px;
 }
 
-/* 分页器样式 */
-.pagination-container {
+/* 加载更多区域样式 */
+.load-more-container {
   display: flex;
   justify-content: center;
-  margin-top: 30px;
+  margin: 20px 0;
+}
+
+.loading-container {
+  padding: 20px;
+  text-align: center;
+}
+
+.no-more-container {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.no-more-text {
+  color: #999;
+  font-size: 14px;
 }
 
 /* 商品详情样式 */

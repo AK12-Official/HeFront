@@ -28,7 +28,7 @@ enum API {
  * @param params 发送验证码所需参数
  * @param params.phone 手机号码
  * @param params.codeType 验证码类型（LOGIN/REGISTER/RESET_PASSWORD）
- * @param params.ipAddress IP地址（可选）
+ * @param params.ipAddress IP地址
  * @returns 验证码发送结果
  */
 export const sendVerificationCode = (params: SendCodeParams) => {

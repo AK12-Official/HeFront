@@ -38,10 +38,16 @@ const navs = [
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 70px;
+  height: 80px;
   background: #fff;
   border-bottom: 1px solid #eaeaea;
   padding: 0 20px;
+  border-radius: 0 0 20px 20px;
+  /* 左下角和右下角圆角 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  /* 添加阴影 */
+  position: relative;
+  z-index: 100;
 }
 
 .logo-area {
@@ -50,7 +56,7 @@ const navs = [
   font-size: 32px;
   color: #42a5f5;
   font-weight: 500;
-  padding-top: 10px;
+  /* padding-top: 10px; */
 }
 
 .project-name {

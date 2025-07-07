@@ -13,6 +13,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import VideoCard from '@/components/VideoCard.vue';
+import Sidebar from '@/components/Sidebar.vue';
 
 const currentCategory = ref('推荐');
 

@@ -76,7 +76,7 @@ const logout = () => {
 .home-container {
   display: flex;
   height: 100vh;
-  background: url('../../assets/pictures/BG1.jpg') no-repeat center/cover;
+  background: url('@/assets/pictures/BG1.jpg') no-repeat center/cover;
   position: relative;
 }
 

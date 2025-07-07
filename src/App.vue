@@ -38,5 +38,8 @@ const route = useRoute();
   flex: 1;
   display: flex;
   flex-direction: column;
+  border-radius: 20px 20px 0 0;
+  background: #fff;
+  overflow: hidden;
 }
 </style>

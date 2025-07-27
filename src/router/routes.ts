@@ -26,13 +26,19 @@ export const Routes = [
   },
   { //视频
     path: '/video',
-    component: () => import('@/views/video/index.vue'),
-    name: 'video',
-  },
-  {
-    path: '/video/:id',
-    component: () => import('@/views/video/detail.vue'),
-    name: 'video-detail',
+    component: () => import('@/views/video/layout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/video/index.vue'),
+        name: 'video',
+      },
+      {
+        path: ':id',
+        component: () => import('@/views/video/detail.vue'),
+        name: 'video-detail',
+      }
+    ]
   },
   { //我的
     path: '/me',

@@ -12,9 +12,7 @@
         </div>
         <!-- 评论区 -->
         <div class="comments-section">
-          <h2>评论 {{ formatNumber(videoData.comments) }}</h2>
           <div class="comment-input">
-            <el-avatar :size="36" :src="currentUser.avatar" />
             <el-input v-model="commentText" placeholder="发一条友善的评论" :rows="2" type="textarea" />
             <el-button type="primary" :disabled="!commentText.trim()">发布</el-button>
           </div>
@@ -448,6 +446,58 @@ onMounted(() => {
             border-color: $quaternary-color;
           }
         }
+      }
+    }
+  }
+}
+
+// 评论区样式
+.comments-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  .comment-input {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    
+    .el-textarea {
+      border-radius: 8px;
+      
+      :deep(.el-textarea__inner) {
+        min-height: 80px;
+        padding: 12px;
+        font-size: 14px;
+        border-radius: 8px;
+        resize: none;
+        transition: all 0.3s;
+        
+        &:focus {
+          box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
+        }
+      }
+    }
+    
+    .el-button {
+      align-self: flex-end;
+      padding: 10px 24px;
+      font-size: 14px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, $primary-color, $tertiary-color);
+      border: none;
+      transition: all 0.3s;
+      
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba($primary-color, 0.2);
+      }
+      
+      &:disabled {
+        background: #f0f0f0;
+        color: #aaa;
       }
     }
   }

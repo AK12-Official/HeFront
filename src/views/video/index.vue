@@ -177,6 +177,22 @@
 				display: flex;
 				align-items: center;
 				gap: 5px;
+				background-color: rgba($primary-color, 0.7); /* 添加70%不透明度 */
+				border-color: rgba($primary-color, 0.7); /* 添加70%不透明度 */
+				border-radius: 20px;
+				padding: 10px 20px;
+				transition: all 0.3s ease;
+				
+				&:hover {
+					background-color: rgba(lighten($primary-color, 5%), 0.8); /* 悬停时略微提高不透明度 */
+					border-color: rgba(lighten($primary-color, 5%), 0.8);
+					transform: translateY(-2px);
+					box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+				}
+				
+				.el-icon {
+					font-size: 16px;
+				}
 			}
 		}
 

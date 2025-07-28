@@ -37,13 +37,13 @@ export const Routes = [
         path: ':id',
         component: () => import('@/views/video/detail.vue'),
         name: 'video-detail',
-      },
-      {
-        path: 'upload',
-        component: () => import('@/views/video/upload.vue'),
-        name: 'video-upload',
       }
     ]
+  },
+  { //视频上传（独立路由，不使用layout）
+    path: '/video/upload',
+    component: () => import('@/views/video/upload.vue'),
+    name: 'video-upload',
   },
   { //我的
     path: '/me',

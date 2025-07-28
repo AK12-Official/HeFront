@@ -1,5 +1,10 @@
 <template>
-  <div class="video-upload-container">
+  <div class="upload-page">
+    <Background />
+    <div class="back-button">
+      <el-button @click="goBack" icon="ArrowLeft" round>返回视频列表</el-button>
+    </div>
+    <div class="video-upload-container">
     <div class="upload-card">
       <h2 class="upload-title">视频上传</h2>
       
@@ -41,6 +46,7 @@
         <el-button type="primary" @click="uploadVideo" :disabled="!canUpload" :loading="isUploading">上传</el-button>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
@@ -48,9 +54,10 @@
 import { ref, computed, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { Upload, VideoCamera, Delete } from '@element-plus/icons-vue';
+import { Upload, VideoCamera, Delete, ArrowLeft } from '@element-plus/icons-vue';
 import { checkDuplicate, uploadPersonVideo } from '@/api/Video';
 import type { getUploadProgress } from '@/api/Video';
+import Background from '@/components/Background.vue';
 
 const router = useRouter();
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -229,33 +236,62 @@ const uploadVideo = async () => {
   }
 };
 
-// 返回上一页
+// 返回视频列表页面
 const goBack = () => {
   if (isUploading.value) {
     ElMessage.warning('上传过程中无法取消，请等待上传完成');
     return;
   }
-  router.back();
+  router.push('/video');
 };
 </script>
 
 <style scoped lang="scss">
+.upload-page {
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - 180px); /* 减去header和footer的高度，增加更多空间 */
+  overflow: visible; /* 修改为visible，确保footer可见 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 70px; /* 为footer留出更多空间 */
+  z-index: 1; /* 确保内容在背景之上，但低于footer */
+  padding-top: 60px; /* 为返回按钮留出空间 */
+}
+
 .video-upload-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 30px 20px;
-  min-height: calc(100vh - 180px);
+  justify-content: center;
+  padding: 0;
   width: 100%;
   max-width: 100%;
+  position: relative;
+  z-index: 1; /* 确保内容在背景之上，但低于footer */
+  /* min-height property removed to prevent pushing FooterInfo out of view */
+}
+
+/* 确保Background组件的样式不被scoped影响 */
+:deep(.background-wrapper) {
+  z-index: 0;
+}
+
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 40px;
+  z-index: 10;
 }
 
 .upload-card {
   width: 800px;
+  max-width: 90%;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   padding: 30px;
+  margin: 0 auto 20px;
 }
 
 .upload-title {

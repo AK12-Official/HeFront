@@ -44,6 +44,8 @@
   padding: 40px 0 20px 0;
   font-size: 14px;
   line-height: 1.6;
+  position: relative;
+  z-index: 10; /* 确保footer显示在内容之上 */
 }
 
 .footer-container {

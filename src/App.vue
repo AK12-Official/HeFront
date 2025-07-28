@@ -5,9 +5,9 @@ import HeaderNav from './components/HeaderNav.vue';
 
 const route = useRoute();
 
-// 判断是否是视频页面
+// 判断是否是视频页面（排除上传页面）
 const isVideoPage = () => {
-  return route.path.startsWith('/video');
+  return route.path.startsWith('/video') && route.path !== '/video/upload';
 };
 </script>
 
@@ -35,6 +35,8 @@ const isVideoPage = () => {
 
 .footer-info {
   flex-shrink: 0;
+  position: relative;
+  z-index: 10; /* 确保footer显示在内容之上 */
 }
 
 .main-content {

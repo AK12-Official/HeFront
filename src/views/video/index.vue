@@ -1,5 +1,12 @@
 <template>
 	<div class="home">
+		<div class="page-header">
+			<h2 class="page-title">视频广场</h2>
+			<el-button type="primary" @click="goToUpload" class="upload-btn">
+				<el-icon><Upload /></el-icon>
+				上传视频
+			</el-button>
+		</div>
 		<div class="waterfall">
 			<div
 				v-for="item in videoList"
@@ -71,6 +78,7 @@
 		ChatDotRound,
 		Picture,
 		VideoPlay,
+		Upload,
 	} from '@element-plus/icons-vue'
 
 	interface Author {
@@ -136,6 +144,11 @@
 			router.push(`/video/${video.id}`)
 		}, 600) // 动画持续时间为 0.6s
 	}
+
+	// 跳转到上传页面
+	const goToUpload = () => {
+		router.push('/video/upload')
+	}
 </script>
 
 <style scoped lang="scss">
@@ -145,6 +158,27 @@
 		padding: 20px 0;
 		height: calc(100vh - 180px);
 		overflow-y: auto;
+
+		.page-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 20px;
+			padding: 0 20px;
+
+			.page-title {
+				margin: 0;
+				font-size: 24px;
+				font-weight: 600;
+				color: #333;
+			}
+
+			.upload-btn {
+				display: flex;
+				align-items: center;
+				gap: 5px;
+			}
+		}
 
 		.waterfall {
 			display: flex;

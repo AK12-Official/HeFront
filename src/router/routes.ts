@@ -37,6 +37,11 @@ export const Routes = [
         path: ':id',
         component: () => import('@/views/video/detail.vue'),
         name: 'video-detail',
+      },
+      {
+        path: 'upload',
+        component: () => import('@/views/video/upload.vue'),
+        name: 'video-upload',
       }
     ]
   },

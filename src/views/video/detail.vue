@@ -541,6 +541,13 @@ onUnmounted(() => {
 .recommended-videos {
   padding-top: 12px;
   padding-bottom: 12px;
+
+  h3 {
+    margin-bottom: 20px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #303133;
+  }
 }
 
 .video-list {

@@ -7,12 +7,12 @@
 				上传视频
 			</el-button>
 		</div>
-		<div class="waterfall">
+		<div v-loading="loading" class="waterfall">
 			<div
 				v-for="item in videoList"
-				:key="item.id"
+				:key="item.videoId"
 				class="video-card"
-				:data-video-id="item.id">
+				:data-video-id="item.videoId">
 				<el-card
 					:body-style="{ padding: '0px' }"
 					shadow="hover"
@@ -20,7 +20,7 @@
 					<!-- 正面 -->
 					<div class="flip-card front">
 						<div class="video-cover" @click="playVideo(item)">
-							<el-image :src="item.cover" fit="cover">
+						<el-image :src="item.cover || item.coverUrl" fit="cover">
 								<template #placeholder>
 									<div class="image-placeholder">
 										<el-icon><Picture /></el-icon>
@@ -40,19 +40,19 @@
 								<span class="name">{{ item.author.name }}</span>
 							</div>
 							<div class="stats">
-								<span class="stat-item">
-									<el-icon><View /></el-icon>
-									{{ formatNumber(item.views) }}
-								</span>
-								<span class="stat-item">
-									<el-icon><Star /></el-icon>
-									{{ formatNumber(item.likes) }}
-								</span>
-								<span class="stat-item">
-									<el-icon><ChatDotRound /></el-icon>
-									{{ formatNumber(item.comments) }}
-								</span>
-							</div>
+							<span class="stat-item">
+								<el-icon><View /></el-icon>
+								{{ formatNumber(item.views || item.viewCount || 0) }}
+							</span>
+							<span class="stat-item">
+								<el-icon><Star /></el-icon>
+								{{ formatNumber(item.likes || item.likeCount || 0) }}
+							</span>
+							<span class="stat-item">
+								<el-icon><ChatDotRound /></el-icon>
+								{{ formatNumber(item.comments || item.commentCount || 0) }}
+							</span>
+						</div>
 						</div>
 					</div>
 
@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref } from 'vue'
+	import { ref, onMounted } from 'vue'
 	import { useRouter } from 'vue-router'
 	// import { ElCard, ElImage, ElAvatar } from 'element-plus'
 	import {
@@ -80,6 +80,7 @@
 		VideoPlay,
 		Upload,
 	} from '@element-plus/icons-vue'
+	import { getVideoList } from '@/api/Video'
 
 	interface Author {
 		id: number
@@ -88,7 +89,7 @@
 	}
 
 	interface Video {
-		id: number
+		videoId: string
 		title: string
 		cover: string
 		duration: string
@@ -96,27 +97,67 @@
 		likes: number
 		comments: number
 		author: Author
+		description?: string
+		uploadTime?: string
+		status?: string
+		userPhone?: string
+		// API返回的原始字段
+		coverUrl?: string
+		viewCount?: number
+		likeCount?: number
+		commentCount?: number
 	}
 
 	const router = useRouter()
 
-	// 模拟视频数据
-	const videoList = ref<Video[]>(
-		Array.from({ length: 20 }, (_, i) => ({
-			id: i + 1,
-			title: `这是一个非常有趣的短视频标题 ${i + 1}`,
-			cover: `https://picsum.photos/300/400?random=${i}`,
-			duration: '3:15',
-			views: Math.floor(Math.random() * 1000000),
-			likes: Math.floor(Math.random() * 50000),
-			comments: Math.floor(Math.random() * 10000),
-			author: {
-				id: i + 1,
-				name: `用户${i + 1}`,
-				avatar: `https://picsum.photos/40/40?random=${i}`,
-			},
-		}))
-	)
+	// 视频数据
+	const videoList = ref<Video[]>([])
+	const loading = ref(false)
+
+	// 获取视频列表
+	const fetchVideoList = async () => {
+		try {
+			loading.value = true
+			const response = await getVideoList({
+				pageIndex: 1,
+				pageSize: 20
+			})
+			if (response.code === 10000) {
+				// 将VideoInfoDTO转换为Video类型
+				videoList.value = response.data.list.map((item: any) => ({
+					videoId: item.videoId,
+					title: item.title,
+					cover: item.coverUrl || item.cover || '',
+					duration: item.duration || '0:00',
+					views: item.viewCount || item.views || 0,
+					likes: item.likeCount || item.likes || 0,
+					comments: item.commentCount || item.comments || 0,
+					author: item.author || {
+						id: 1,
+						name: '用户' + item.videoId.slice(-4),
+						avatar: `https://picsum.photos/40/40?random=${item.videoId}`
+					},
+					description: item.description,
+					uploadTime: item.uploadTime,
+					status: item.status,
+					userPhone: item.userPhone,
+					coverUrl: item.coverUrl,
+					viewCount: item.viewCount,
+					likeCount: item.likeCount,
+					commentCount: item.commentCount
+				}))
+			}
+		} catch (error) {
+			console.error('获取视频列表失败:', error)
+		} finally {
+			loading.value = false
+		}
+	}
+
+	// 组件挂载时获取数据
+	onMounted(() => {
+		fetchVideoList()
+	})
 
 	const formatNumber = (num: number): string => {
 		if (num >= 10000) {
@@ -127,11 +168,11 @@
 
 	const playVideo = (video: Video) => {
 		const card = document.querySelector(
-			`[data-video-id="${video.id}"]`
+			`[data-video-id="${video.videoId}"]`
 		) as HTMLElement
 
 		if (!card) {
-			console.error(`未找到视频卡片，ID: ${video.id}`)
+			console.error(`未找到视频卡片，ID: ${video.videoId}`)
 			return
 		}
 
@@ -141,7 +182,7 @@
 		setTimeout(() => {
 			// 移除动画类名
 			card.classList.remove('card-clicked')
-			router.push(`/video/${video.id}`)
+			router.push(`/video/${video.videoId}`)
 		}, 600) // 动画持续时间为 0.6s
 	}
 

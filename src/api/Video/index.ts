@@ -27,22 +27,22 @@ import type {
 
 
 enum API {
-  CHECK_DUPLICATE_URL = '/api/videos/check-duplicate',          // 秒传检测请求
-  UPLOAD_PERSON_VIDEO_URL = '/api/videos/upload-person-video',  // 小文件上传请求
-  INIT_CHUNK_UPLOAD_URL = '/api/videos/init-chunk-upload',      // 初始化分块上传请求
-  UPLOAD_CHUNK_URL = '/api/videos/upload-chunk',                // 分块上传请求
-  MERGE_CHUNKS_URL = '/api/videos/merge-chunks',                // 合并分块请求
-  GET_VIDEO_INFO_URL = '/api/videos/get-video-info',            // 获取视频详情请求
-  GET_VIDEO_LIST_URL = '/api/videos/get-video-list',            // 获取视频列表请求
-  UPDATE_VIDEO_INFO_URL = '/api/videos/update-video-info',      // 更新视频信息请求
-  DELETE_VIDEO_URL = '/api/videos/delete-video',                // 删除视频请求
-  GET_PLAY_INFO_URL = '/api/videos/get-play-info',              // 获取播放信息请求
-  GET_RECOMMEND_LIST_URL = '/api/videos/get-recommend-list',    // 获取推荐列表请求
-  RECORD_PLAY_URL = '/api/videos/record-play',                  // 记录播放请求
-  GET_STATS_URL = '/api/videos/get-stats',                      // 获取统计信息请求
-  UPDATE_STATS_URL = '/api/videos/update-stats',                // 更新统计数据请求
-  GET_UPLOAD_PROGRESS_URL = '/api/videos/get-upload-progress',  // 查询上传进度请求
-  CANCEL_UPLOAD_URL = '/api/videos/cancel-upload',              // 取消上传请求
+  CHECK_DUPLICATE_URL = '/videos/check-duplicate',          // 秒传检测请求
+  UPLOAD_PERSON_VIDEO_URL = '/videos/upload-person-video',  // 小文件上传请求
+  INIT_CHUNK_UPLOAD_URL = '/videos/init-chunk-upload',      // 初始化分块上传请求
+  UPLOAD_CHUNK_URL = '/videos/upload-chunk',                // 分块上传请求
+  MERGE_CHUNKS_URL = '/videos/merge-chunks',                // 合并分块请求
+  GET_VIDEO_INFO_URL = '/videos/get-video-info',            // 获取视频详情请求
+  GET_VIDEO_LIST_URL = '/videos/get-video-list',            // 获取视频列表请求
+  UPDATE_VIDEO_INFO_URL = '/videos/update-video-info',      // 更新视频信息请求
+  DELETE_VIDEO_URL = '/videos/delete-video',                // 删除视频请求
+  GET_PLAY_INFO_URL = '/videos/get-play-info',              // 获取播放信息请求
+  GET_RECOMMEND_LIST_URL = '/videos/get-recommend-list',    // 获取推荐列表请求
+  RECORD_PLAY_URL = '/videos/record-play',                  // 记录播放请求
+  GET_STATS_URL = '/videos/get-stats',                      // 获取统计信息请求
+  UPDATE_STATS_URL = '/videos/update-stats',                // 更新统计数据请求
+  GET_UPLOAD_PROGRESS_URL = '/videos/get-upload-progress',  // 查询上传进度请求
+  CANCEL_UPLOAD_URL = '/videos/cancel-upload',              // 取消上传请求
 }
 
 /**

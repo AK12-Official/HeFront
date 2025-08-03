@@ -7,7 +7,7 @@ function createVideoList(count: number = 20) {
     title: `这是一个非常有趣的短视频标题 ${i + 1}`,
     description: `这是视频${i + 1}的详细描述，包含了丰富的内容和有趣的故事情节。`,
     coverUrl: `https://picsum.photos/300/400?random=${i}`,
-    playUrl: `https://sample-videos.com/zip/10/mp4/SampleVideo_${i + 1}.mp4`,
+    playUrl: '/src/assets/videos/demo.mp4',
     duration: Math.floor(Math.random() * 300) + 60, // 60-360秒
     uploadTime: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(), // 最近30天内
     status: 'published',
@@ -167,6 +167,245 @@ export default [
           videoId: videoId,
           title: videoDatabase[videoIndex].title,
           description: videoDatabase[videoIndex].description
+        }
+      };
+    }
+  },
+
+  // 获取播放信息
+  {
+    url: '/api/videos/get-play-info',
+    method: 'get',
+    response: (req) => {
+      const { videoId } = req.query || {};
+      
+      if (!videoId) {
+        return {
+          code: 40001,
+          message: '视频ID不能为空',
+          data: null
+        };
+      }
+      
+      const video = videoDatabase.find(v => v.videoId === videoId);
+      
+      if (!video) {
+        return {
+          code: 40404,
+          message: '视频不存在',
+          data: null
+        };
+      }
+      
+      return {
+        code: 10000,
+        message: '获取播放信息成功',
+        data: {
+          videoId: video.videoId,
+          playUrl: video.playUrl,
+          duration: video.duration,
+          resolution: '1080p',
+          subtitleUrl: `https://example.com/subtitles/${videoId}.vtt`,
+          qualities: [
+            { quality: '480p', url: '/src/assets/videos/demo.mp4' },
+            { quality: '720p', url: '/src/assets/videos/demo.mp4' },
+            { quality: '1080p', url: '/src/assets/videos/demo.mp4' }
+          ]
+        }
+      };
+    }
+  },
+
+  // 获取推荐列表
+  {
+    url: '/api/videos/get-recommend-list',
+    method: 'get',
+    response: (req) => {
+      const { currentVideoId, recommendCount = 10, excludeVideoIds } = req.query || {};
+      
+      if (!currentVideoId) {
+        return {
+          code: 40001,
+          message: '当前视频ID不能为空',
+          data: null
+        };
+      }
+      
+      let recommendVideos = [...videoDatabase];
+      
+      // 排除当前视频
+      recommendVideos = recommendVideos.filter(v => v.videoId !== currentVideoId);
+      
+      // 排除指定的视频ID
+      if (excludeVideoIds) {
+        const excludeIds = Array.isArray(excludeVideoIds) ? excludeVideoIds : [excludeVideoIds];
+        recommendVideos = recommendVideos.filter(v => !excludeIds.includes(v.videoId));
+      }
+      
+      // 随机排序并取指定数量
+      recommendVideos = recommendVideos
+        .sort(() => Math.random() - 0.5)
+        .slice(0, parseInt(recommendCount));
+      
+      // 格式化返回数据
+      const formattedVideos = recommendVideos.map(video => ({
+        ...video,
+        duration: formatDuration(video.duration),
+        views: video.viewCount,
+        likes: video.likeCount,
+        comments: video.commentCount,
+        cover: video.coverUrl
+      }));
+      
+      return {
+        code: 10000,
+        message: '获取推荐列表成功',
+        data: formattedVideos
+      };
+    }
+  },
+
+  // 记录播放
+  {
+    url: '/api/videos/record-play',
+    method: 'post',
+    response: (req) => {
+      const { videoId, playDuration, playProgress } = req.query || {};
+      
+      if (!videoId) {
+        return {
+          code: 40001,
+          message: '视频ID不能为空',
+          data: null
+        };
+      }
+      
+      const videoIndex = videoDatabase.findIndex(v => v.videoId === videoId);
+      
+      if (videoIndex === -1) {
+        return {
+          code: 40404,
+          message: '视频不存在',
+          data: null
+        };
+      }
+      
+      // 更新播放次数
+      videoDatabase[videoIndex].viewCount += 1;
+      
+      return {
+        code: 10000,
+        message: '播放记录成功',
+        data: {
+          videoId: videoId,
+          playDuration: playDuration || 0,
+          playProgress: playProgress || 0,
+          totalViews: videoDatabase[videoIndex].viewCount
+        }
+      };
+    }
+  },
+
+  // 获取统计信息
+  {
+    url: '/api/videos/get-stats',
+    method: 'get',
+    response: (req) => {
+      const { videoId } = req.query || {};
+      
+      if (!videoId) {
+        return {
+          code: 40001,
+          message: '视频ID不能为空',
+          data: null
+        };
+      }
+      
+      const video = videoDatabase.find(v => v.videoId === videoId);
+      
+      if (!video) {
+        return {
+          code: 40404,
+          message: '视频不存在',
+          data: null
+        };
+      }
+      
+      return {
+        code: 10000,
+        message: '获取统计信息成功',
+        data: {
+          videoId: video.videoId,
+          viewCount: video.viewCount,
+          likeCount: video.likeCount,
+          commentCount: video.commentCount,
+          shareCount: video.shareCount,
+          avgWatchTime: Math.floor(Math.random() * 180) + 30, // 30-210秒
+          completionRate: (Math.random() * 0.4 + 0.6).toFixed(2), // 60%-100%
+          dailyViews: Math.floor(Math.random() * 1000) + 100,
+          weeklyViews: Math.floor(Math.random() * 5000) + 500
+        }
+      };
+    }
+  },
+
+  // 更新统计数据
+  {
+    url: '/api/videos/update-stats',
+    method: 'post',
+    response: (req) => {
+      const { videoId, actionType, actionValue = 1 } = req.query || {};
+      
+      if (!videoId || !actionType) {
+        return {
+          code: 40001,
+          message: '视频ID和操作类型不能为空',
+          data: null
+        };
+      }
+      
+      const videoIndex = videoDatabase.findIndex(v => v.videoId === videoId);
+      
+      if (videoIndex === -1) {
+        return {
+          code: 40404,
+          message: '视频不存在',
+          data: null
+        };
+      }
+      
+      // 根据操作类型更新统计数据
+      switch (actionType) {
+        case 'like':
+          videoDatabase[videoIndex].likeCount += parseInt(actionValue);
+          break;
+        case 'comment':
+          videoDatabase[videoIndex].commentCount += parseInt(actionValue);
+          break;
+        case 'share':
+          videoDatabase[videoIndex].shareCount += parseInt(actionValue);
+          break;
+        case 'view':
+          videoDatabase[videoIndex].viewCount += parseInt(actionValue);
+          break;
+        default:
+          return {
+            code: 40002,
+            message: '不支持的操作类型',
+            data: null
+          };
+      }
+      
+      return {
+        code: 10000,
+        message: '更新统计数据成功',
+        data: {
+          videoId: videoId,
+          actionType: actionType,
+          actionValue: parseInt(actionValue),
+          newCount: videoDatabase[videoIndex][actionType === 'like' ? 'likeCount' : 
+                                            actionType === 'comment' ? 'commentCount' : 
+                                            actionType === 'share' ? 'shareCount' : 'viewCount']
         }
       };
     }

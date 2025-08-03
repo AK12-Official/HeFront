@@ -167,23 +167,17 @@
 	}
 
 	const playVideo = (video: Video) => {
-		const card = document.querySelector(
-			`[data-video-id="${video.videoId}"]`
-		) as HTMLElement
-
-		if (!card) {
-			console.error(`未找到视频卡片，ID: ${video.videoId}`)
-			return
+		// 添加点击动画效果
+		const videoCard = document.querySelector(`[data-video-id="${video.videoId}"]`)
+		if (videoCard) {
+			videoCard.classList.add('clicked')
+			setTimeout(() => {
+				videoCard.classList.remove('clicked')
+			}, 200)
 		}
-
-		// 添加点击动画类名
-		card.classList.add('card-clicked')
-
-		setTimeout(() => {
-			// 移除动画类名
-			card.classList.remove('card-clicked')
-			router.push(`/video/${video.videoId}`)
-		}, 600) // 动画持续时间为 0.6s
+		
+		// 跳转到视频播放页面
+		router.push(`/video/${video.videoId}`)
 	}
 
 	// 跳转到上传页面
@@ -218,6 +212,25 @@
 				display: flex;
 				align-items: center;
 				gap: 5px;
+				background: linear-gradient(135deg, #ffb366, #ff9933);
+				border: none;
+				color: white;
+				border-radius: 8px;
+				padding: 10px 20px;
+				font-weight: 500;
+				transition: all 0.3s ease;
+				box-shadow: 0 2px 8px rgba(255, 153, 51, 0.3);
+				
+				&:hover {
+					background: linear-gradient(135deg, #ff9933, #ff8000);
+					transform: translateY(-2px);
+					box-shadow: 0 4px 12px rgba(255, 153, 51, 0.4);
+				}
+				
+				&:active {
+					transform: translateY(0);
+					box-shadow: 0 2px 6px rgba(255, 153, 51, 0.3);
+				}
 			}
 		}
 

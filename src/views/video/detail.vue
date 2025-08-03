@@ -7,7 +7,7 @@
         <div class="video-player">
           <div class="player-wrapper">
             <video ref="videoRef" class="video-element" controls preload="auto" autoplay :src="videoData.videoUrl"
-              @ended="handleVideoEnd"></video>
+              @ended="handleVideoEnd" @contextmenu="showContextMenu"></video>
           </div>
         </div>
         <!-- 评论区 -->
@@ -63,7 +63,7 @@
 
           <div class="action-bar">
             <div class="action-group">
-              <el-button class="action-btn like" :icon="Star">
+              <el-button class="action-btn like" :icon="Star" @click="handleLike">
                 {{ formatNumber(videoData.likes) }}
               </el-button>
               <el-button class="action-btn dislike" :icon="StarFilled">
@@ -72,7 +72,7 @@
             </div>
             <div class="action-group">
               <el-button class="action-btn" :icon="Share">分享</el-button>
-              <el-button class="action-btn" :icon="Collection">收藏</el-button>
+              <el-button class="action-btn" :icon="Collection" @click="handleCollect">收藏</el-button>
             </div>
           </div>
         </div>
@@ -97,12 +97,82 @@
         </div>
       </div>
     </div>
+
+    <!-- 右键菜单 -->
+    <div v-if="contextMenuVisible" class="context-menu" :style="{ left: contextMenuPosition.x + 'px', top: contextMenuPosition.y + 'px' }">
+      <div class="menu-item" @click="copyVideoUrl">
+        <el-icon><DocumentCopy /></el-icon>
+        复制视频地址
+      </div>
+      <div class="menu-item" @click="showDetailDialog">
+        <el-icon><InfoFilled /></el-icon>
+        查看详情
+      </div>
+    </div>
+
+    <!-- 详情弹窗 -->
+    <el-dialog v-model="detailDialogVisible" title="视频详情" width="600px">
+      <div class="detail-content">
+        <div class="detail-section">
+          <h4>基本信息</h4>
+          <div class="detail-item">
+            <span class="label">视频ID:</span>
+            <span class="value">{{ videoData.id }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">标题:</span>
+            <span class="value">{{ videoData.title }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">创建时间:</span>
+            <span class="value">{{ new Date(videoData.createTime).toLocaleString() }}</span>
+          </div>
+        </div>
+        
+        <div v-if="playInfo" class="detail-section">
+          <h4>播放信息</h4>
+          <div class="detail-item">
+            <span class="label">播放质量:</span>
+            <span class="value">{{ playInfo.quality || 'HD' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">播放时长:</span>
+            <span class="value">{{ playInfo.duration || '未知' }}</span>
+          </div>
+          <div class="detail-item" v-if="playInfo.playUrl">
+            <span class="label">播放地址:</span>
+            <span class="value url">{{ playInfo.playUrl }}</span>
+          </div>
+        </div>
+        
+        <div v-if="statsInfo" class="detail-section">
+          <h4>统计信息</h4>
+          <div class="detail-item">
+            <span class="label">播放次数:</span>
+            <span class="value">{{ formatNumber(statsInfo.playCount || 0) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">点赞数:</span>
+            <span class="value">{{ formatNumber(statsInfo.likeCount || 0) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">评论数:</span>
+            <span class="value">{{ formatNumber(statsInfo.commentCount || 0) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">平均播放时长:</span>
+            <span class="value">{{ statsInfo.avgPlayDuration || '0s' }}</span>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import {
   View,
   Star,
@@ -111,7 +181,10 @@ import {
   Share,
   Collection,
   Plus,
+  DocumentCopy,
+  InfoFilled,
 } from '@element-plus/icons-vue'
+import { getPlayInfo, getRecommendList, recordPlay, getStats, updateStats } from '@/api/Video'
 
 const route = useRoute()
 const router = useRouter()
@@ -124,11 +197,11 @@ const currentUser = {
   avatar: 'https://picsum.photos/36/36',
 }
 
-// 模拟视频数据
-const videoData = {
+// 视频数据
+const videoData = ref({
   id: route.params.id,
   title: '这是一个精彩的短视频',
-  videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4', // 示例视频URL
+  videoUrl: '/src/assets/videos/demo.mp4', // 使用本地demo视频
   views: 1234567,
   likes: 45678,
   dislikes: 123,
@@ -140,7 +213,27 @@ const videoData = {
     avatar: 'https://picsum.photos/48/48',
     followers: 12345,
   },
-}
+})
+
+// 播放信息
+const playInfo = ref<any>(null)
+// 统计信息
+const statsInfo = ref<any>(null)
+// 右键菜单
+const contextMenuVisible = ref(false)
+const contextMenuPosition = ref({ x: 0, y: 0 })
+// 详情弹窗
+const detailDialogVisible = ref(false)
+
+// 视频质量相关
+const currentQuality = ref('1080p')
+const availableQualities = ref([
+  { label: '1080P', value: '1080p' },
+  { label: '720P', value: '720p' },
+  { label: '480P', value: '480p' },
+  { label: '360P', value: '360p' },
+  { label: '自动', value: 'auto' }
+])
 
 // 添加推荐视频数据
 const recommendedVideos = ref(
@@ -182,15 +275,221 @@ const handleVideoEnd = () => {
   }
 }
 
-const playVideo = (video: any) => {
+const playVideo = async (video: any) => {
+  try {
+    // 记录播放
+    await recordPlay({
+      videoId: video.id,
+      playDuration: 0,
+      playProgress: 0
+    })
+  } catch (error) {
+    console.error('播放记录失败:', error)
+  }
   router.push(`/video/${video.id}`)
 }
 
-onMounted(() => {
+// 获取播放信息
+const fetchPlayInfo = async () => {
+  try {
+    const response = await getPlayInfo({ videoId: route.params.id as string })
+    if (response.code === 10000) {
+      playInfo.value = response.data
+      // 更新视频URL
+      if (response.data.playUrl) {
+        videoData.value.videoUrl = response.data.playUrl
+      }
+    }
+  } catch (error) {
+    console.error('获取播放信息失败:', error)
+  }
+}
+
+// 获取统计信息
+const fetchStats = async () => {
+  try {
+    const response = await getStats({ videoId: route.params.id as string })
+    if (response.code === 10000) {
+      statsInfo.value = response.data
+      // 更新统计数据
+      videoData.value.views = response.data.viewCount
+      videoData.value.likes = response.data.likeCount
+      videoData.value.comments = response.data.commentCount
+    }
+  } catch (error) {
+    console.error('获取统计信息失败:', error)
+  }
+}
+
+// 获取推荐列表
+const fetchRecommendList = async () => {
+  try {
+    const response = await getRecommendList({
+      currentVideoId: route.params.id as string,
+      recommendCount: 10
+    })
+    if (response.code === 10000) {
+      recommendedVideos.value = response.data.map((item: any) => ({
+        id: item.videoId,
+        title: item.title,
+        cover: item.coverUrl || item.cover || `https://picsum.photos/320/180?random=${item.videoId}`,
+        duration: item.duration || '3:15',
+        views: item.viewCount || item.views || 0,
+        author: {
+          name: item.author?.name || `创作者${item.videoId.slice(-2)}`
+        }
+      }))
+    }
+  } catch (error) {
+    console.error('获取推荐列表失败:', error)
+  }
+}
+
+// 处理点赞
+const handleLike = async () => {
+  try {
+    const response = await updateStats({
+      videoId: route.params.id as string,
+      actionType: 'like',
+      actionValue: 1
+    })
+    if (response.code === 10000) {
+      videoData.value.likes += 1
+      ElMessage.success('点赞成功！')
+    }
+  } catch (error) {
+    console.error('点赞失败:', error)
+    ElMessage.error('点赞失败，请重试')
+  }
+}
+
+// 处理收藏
+const handleCollect = async () => {
+  try {
+    const response = await updateStats({
+      videoId: route.params.id as string,
+      actionType: 'favorite',
+      actionValue: 1
+    })
+    if (response.code === 10000) {
+      ElMessage.success('收藏成功！')
+    }
+  } catch (error) {
+    console.error('收藏失败:', error)
+    ElMessage.error('收藏失败，请重试')
+  }
+}
+
+// 记录播放行为
+const recordVideoPlay = async () => {
+  try {
+    await recordPlay({
+      videoId: route.params.id as string,
+      playDuration: 0,
+      playProgress: 0
+    })
+  } catch (error) {
+    console.error('播放记录失败:', error)
+  }
+}
+
+// 显示右键菜单
+const showContextMenu = (event: MouseEvent) => {
+  event.preventDefault()
+  event.stopPropagation()
+  
+  contextMenuPosition.value = {
+    x: event.clientX,
+    y: event.clientY
+  }
+  contextMenuVisible.value = true
+}
+
+// 隐藏右键菜单
+const hideContextMenu = () => {
+  contextMenuVisible.value = false
+}
+
+// 全局点击事件监听
+const handleGlobalClick = (event: MouseEvent) => {
+  if (contextMenuVisible.value) {
+    const target = event.target as HTMLElement
+    const contextMenu = document.querySelector('.context-menu')
+    if (contextMenu && !contextMenu.contains(target)) {
+      hideContextMenu()
+    }
+  }
+}
+
+// 复制视频地址
+const copyVideoUrl = async () => {
+  try {
+    const videoUrl = playInfo.value?.playUrl || videoData.value.videoUrl
+    await navigator.clipboard.writeText(videoUrl)
+    ElMessage.success('视频地址已复制到剪贴板')
+  } catch (error) {
+    console.error('复制失败:', error)
+    ElMessage.error('复制失败，请重试')
+  }
+  contextMenuVisible.value = false
+}
+
+// 显示详情内容
+const showDetailDialog = () => {
+  detailDialogVisible.value = true
+  contextMenuVisible.value = false
+}
+
+// 切换视频质量
+const changeVideoQuality = async (quality: string) => {
+  if (!playInfo.value || !playInfo.value.qualities) {
+    ElMessage.warning('暂无其他画质选项')
+    return
+  }
+  
+  const qualityOption = playInfo.value.qualities.find((q: any) => q.quality === quality)
+  if (qualityOption) {
+    const currentTime = videoRef.value?.currentTime || 0
+    const wasPlaying = !videoRef.value?.paused
+    
+    videoData.value.videoUrl = qualityOption.url
+    
+    // 等待视频加载后恢复播放位置
+    await nextTick()
+    if (videoRef.value) {
+      videoRef.value.currentTime = currentTime
+      if (wasPlaying) {
+        videoRef.value.play()
+      }
+    }
+    
+    ElMessage.success(`已切换到${quality}画质`)
+  } else {
+    ElMessage.error('切换画质失败')
+  }
+}
+
+onMounted(async () => {
   // 先设置为true,然后在下一帧设置为false以触发动画
   nextTick(() => {
     isEntering.value = true
   })
+  
+  // 添加全局点击事件监听
+  document.addEventListener('click', handleGlobalClick)
+  
+  // 获取视频相关数据
+  await Promise.all([
+    fetchPlayInfo(),
+    fetchStats(),
+    fetchRecommendList(),
+    recordVideoPlay()
+  ])
+})
+
+onUnmounted(() => {
+  // 移除全局事件监听器
+  document.removeEventListener('click', handleGlobalClick)
 })
 </script>
 
@@ -319,6 +618,8 @@ onMounted(() => {
       height: 100%;
       object-fit: cover;
     }
+    
+
   }
 }
 
@@ -512,5 +813,182 @@ onMounted(() => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clickable:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+/* 播放信息样式 */
+.play-info-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #409eff;
+}
+
+.play-info-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.play-info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.info-item .label {
+  color: #606266;
+  font-weight: 500;
+}
+
+.info-item .value {
+  color: #303133;
+  font-weight: 600;
+}
+
+.info-item .value.url {
+  font-family: monospace;
+  font-size: 10px;
+  color: #409eff;
+}
+
+/* 统计信息样式 */
+.stats-info-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f0f9ff;
+  border-radius: 8px;
+  border-left: 4px solid #67c23a;
+}
+
+.stats-info-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 8px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #409eff;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #909399;
+  font-weight: 500;
+}
+
+/* 右键菜单样式 */
+.context-menu {
+  position: fixed;
+  background: white;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  min-width: 150px;
+  padding: 4px 0;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #303133;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.menu-item:hover {
+  background-color: #f5f7fa;
+}
+
+.menu-item .el-icon {
+  font-size: 16px;
+  color: #606266;
+}
+
+/* 详情弹窗样式 */
+.detail-content {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.detail-section {
+  margin-bottom: 20px;
+}
+
+.detail-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  border-bottom: 1px solid #e4e7ed;
+  padding-bottom: 8px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.detail-item .label {
+  color: #606266;
+  font-weight: 500;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.detail-item .value {
+  color: #303133;
+  text-align: right;
+  word-break: break-all;
+}
+
+.detail-item .value.url {
+  font-family: monospace;
+  font-size: 12px;
+  color: #409eff;
+  max-width: 300px;
 }
 </style>

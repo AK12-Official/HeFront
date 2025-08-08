@@ -22,7 +22,7 @@ import meIcon from '@/assets/icons/我的.svg'
 const navs = [
   { name: '首页', path: '/', active: true, icon: homeIcon },
   { name: '视频', path: '/video', active: false, icon: videoIcon },
-  { name: '商城', path: '/shop', active: false, icon: shopIcon },
+  { name: '商城', path: '/mall', active: false, icon: shopIcon },
   { name: '广场', path: '/square', active: false, icon: squareIcon },
   { name: '我的', path: '/me', active: false, icon: meIcon }
 ]

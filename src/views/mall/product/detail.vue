@@ -69,7 +69,8 @@
             <label class="quantity-label">数量：</label>
             <div class="quantity-control">
               <el-button size="small" @click="decreaseQuantity" :disabled="quantity <= 1">-</el-button>
-              <el-input v-model.number="quantity" size="small" class="quantity-input" @change="handleQuantityChange" />
+              <el-input v-model.number="quantity" size="small" class="quantity-input" @change="handleQuantityChange"
+                title="商品数量" />
               <el-button size="small" @click="increaseQuantity" :disabled="quantity >= product.stock">+</el-button>
             </div>
             <span class="stock-info">库存{{ product.stock }}件</span>
@@ -91,7 +92,12 @@
       <div class="product-detail">
         <el-tabs v-model="activeTab">
           <el-tab-pane label="商品详情" name="detail">
-            <div class="detail-content" v-html="product.detailHtml"></div>
+            <div class="detail-content">
+              <div v-if="product.detailHtml" v-html="product.detailHtml"></div>
+              <div v-else class="no-detail">
+                <p>暂无商品详情</p>
+              </div>
+            </div>
           </el-tab-pane>
           <el-tab-pane label="规格参数" name="params"
             v-if="product.productAttributeValueList && product.productAttributeValueList.length > 0">
@@ -119,26 +125,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { productDetail, cartAdd } from '@/api/mall'
+import { productDetail, cartAdd, cartList } from '@/api/mall'
+import type { CommonResult, Product, ProductAttributeValue } from '@/api/mall/types'
 
-interface Product {
-  id: number
-  name: string
-  subTitle?: string
-  price: number
-  originalPrice?: number
-  stock: number
-  pic?: string
-  albumPics?: string[]
-  detailHtml?: string
-  productAttributeValueList?: ProductAttribute[]
-}
-
-interface ProductAttribute {
-  id: number
-  productAttributeId: number
-  productAttributeName: string
-  value: string
+// 扩展的商品信息（用于详情页显示）
+interface ProductDetailInfo extends Product {
+  productAttributeValueList?: ProductAttributeValue[]
 }
 
 interface AttributeGroup {
@@ -151,11 +143,12 @@ const route = useRoute()
 const router = useRouter()
 
 // 数据
-const product = ref<Product>({
+const product = ref<ProductDetailInfo>({
   id: 0,
   name: '加载中...',
   price: 0,
-  stock: 0
+  stock: 0,
+  pic: ''
 })
 const quantity = ref(1)
 const selectedSpecs = ref<Record<number, string>>({})
@@ -204,7 +197,14 @@ const loadProductDetail = async () => {
     }
 
     const response = await productDetail(Number(productId))
-    product.value = response.data || {}
+    // Mock数据直接返回扩展的Product对象
+    product.value = response.data as unknown as ProductDetailInfo || {
+      id: 0,
+      name: '商品不存在',
+      price: 0,
+      stock: 0,
+      pic: ''
+    }
 
     // 设置默认图片
     if (product.value.albumPics && product.value.albumPics.length > 0) {
@@ -294,15 +294,58 @@ const buyNow = async () => {
       }
     }
 
-    // 跳转到订单确认页面
-    router.push({
-      path: '/mall/order/confirm',
-      query: {
-        productId: product.value.id,
-        quantity: quantity.value,
-        specs: JSON.stringify(selectedSpecs.value)
+    // 先添加到购物车
+    const cartData = {
+      productId: product.value.id,
+      quantity: quantity.value,
+      productSkuId: product.value.id, // 如果没有SKU，使用产品ID
+      memberId: 1, // 这里应该从用户状态获取
+      memberUsername: 'user', // 这里应该从用户状态获取
+      price: product.value.price,
+      productPic: product.value.pic || '',
+      productName: product.value.name,
+      productSubTitle: product.value.subTitle || '',
+      productSkuCode: '',
+      memberNickname: 'user',
+      createDate: new Date().toISOString(),
+      modifyDate: new Date().toISOString(),
+      deleteStatus: 0,
+      productCategoryId: 1,
+      productBrand: '',
+      productSn: '',
+      productAttr: Object.values(selectedSpecs.value).join(' ')
+    }
+
+    // 调用添加购物车API
+    const cartResponse = await cartAdd(cartData) as unknown as CommonResult<number>
+
+    console.log('添加购物车响应:', cartResponse)
+
+    if (cartResponse.code === 200) {
+      // 如果添加成功，获取购物车列表来找到刚添加的商品
+      const cartListResponse = await cartList() as unknown as CommonResult<{ id: number, productId: number }[]>
+
+      if (cartListResponse.code === 200 && cartListResponse.data) {
+        // 找到当前商品的购物车项
+        const currentCartItem = cartListResponse.data.find(item => item.productId === product.value.id)
+
+        if (currentCartItem) {
+          // 跳转到订单确认页面，传递购物车ID
+          router.push({
+            path: '/mall/order/create',
+            query: {
+              cartIds: currentCartItem.id.toString()
+            }
+          })
+        } else {
+          ElMessage.error('无法找到购物车商品')
+        }
+      } else {
+        ElMessage.error('获取购物车信息失败')
       }
-    })
+    } else {
+      ElMessage.error(cartResponse.message || '添加购物车失败')
+    }
   } catch (error) {
     console.error('立即购买失败:', error)
     ElMessage.error('立即购买失败')
@@ -525,6 +568,14 @@ onMounted(() => {
     :deep(img) {
       max-width: 100%;
       height: auto;
+    }
+
+    .no-detail {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+      background: #f9f9f9;
+      border-radius: 4px;
     }
   }
 

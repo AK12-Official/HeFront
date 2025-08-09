@@ -161,6 +161,8 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { orderDetail as getOrderDetail } from '@/api/mall'
+import type { CommonResult } from '@/api/mall/types'
 
 interface OrderItem {
     id: number
@@ -252,54 +254,32 @@ const loadOrderDetail = async () => {
             return
         }
 
-        // 模拟订单详情数据
-        orderDetail.value = {
-            id: Number(orderId),
-            orderSn: 'ORD202401010001',
-            status: 2,
-            createTime: '2024-01-01 10:00:00',
-            payTime: '2024-01-01 10:05:00',
-            deliveryTime: '2024-01-01 15:00:00',
-            note: '请尽快发货',
-            receiverName: '张三',
-            receiverPhone: '13800138000',
-            receiverProvince: '湖南省',
-            receiverCity: '长沙市',
-            receiverRegion: '岳麓区',
-            receiverDetailAddress: '中南大学新校区',
-            deliveryCompany: '顺丰快递',
-            deliverySn: 'SF1234567890',
-            productAmount: 9999,
-            freightAmount: 0,
-            couponAmount: 50,
-            integrationAmount: 0,
-            payAmount: 9949,
-            orderItemList: [
-                {
-                    id: 1,
-                    productId: 1,
-                    productName: 'iPhone 15 Pro Max',
-                    productPic: '/static/products/iphone15.jpg',
-                    productPrice: 9999,
-                    productQuantity: 1,
-                    productAttr: '颜色：钛金色；容量：256GB'
-                }
-            ]
-        }
+        // 调用真实的订单详情API
+        console.log('请求订单详情，订单ID:', orderId)
+        const response = await getOrderDetail(Number(orderId)) as unknown as CommonResult<OrderDetail>
 
-        // 模拟物流轨迹
-        if (orderDetail.value.status >= 2) {
-            logisticsTrack.value = [
-                { time: '2024-01-02 14:30:00', status: '快递已送达，签收人：本人' },
-                { time: '2024-01-02 09:15:00', status: '快递正在派送中，预计当日送达' },
-                { time: '2024-01-01 20:00:00', status: '快递已到达长沙转运中心' },
-                { time: '2024-01-01 15:00:00', status: '商品已发出，承运商：顺丰快递' }
-            ]
-        }
+        console.log('订单详情API响应:', response)
 
+        if (response.code === 200 && response.data) {
+            orderDetail.value = response.data
+
+            // 如果订单已发货，加载物流轨迹
+            if (orderDetail.value.status >= 2) {
+                logisticsTrack.value = [
+                    { time: '2024-01-02 14:30:00', status: '快递已送达，签收人：本人' },
+                    { time: '2024-01-02 09:15:00', status: '快递正在派送中，预计当日送达' },
+                    { time: '2024-01-01 20:00:00', status: '快递已到达长沙转运中心' },
+                    { time: '2024-01-01 15:00:00', status: '商品已发出，承运商：顺丰快递' }
+                ]
+            }
+        } else {
+            ElMessage.error(response.message || '加载订单详情失败')
+            router.back()
+        }
     } catch (error) {
         console.error('加载订单详情失败:', error)
         ElMessage.error('加载订单详情失败')
+        router.back()
     }
 }
 

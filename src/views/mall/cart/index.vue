@@ -20,7 +20,8 @@
     <div v-else class="cart-content">
       <div class="cart-list">
         <div v-for="(item, index) in cartItems" :key="index" class="cart-item">
-          <el-checkbox :model-value="getItemChecked(item)" @change="updateItemCheck(item, $event)" />
+          <el-checkbox :model-value="getItemChecked(item)" @change="updateItemCheck(item, $event)"
+            :title="`选择商品：${getItemProp(item, 'productName')}`" />
 
           <div class="product-image">
             <img :src="getItemProp(item, 'productPic')" :alt="getItemProp(item, 'productName')" />
@@ -49,7 +50,7 @@
       <!-- 底部操作栏 -->
       <div class="cart-footer">
         <div class="footer-left">
-          <el-checkbox :model-value="allChecked" @change="toggleAllCheck">
+          <el-checkbox :model-value="allChecked" @change="toggleAllCheck" title="全选所有商品">
             全选
           </el-checkbox>
           <span class="total-info">

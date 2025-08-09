@@ -54,36 +54,39 @@
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑地址' : '添加地址'" width="500px">
       <el-form :model="addressForm" :rules="addressRules" ref="addressFormRef" label-width="100px">
         <el-form-item label="收货人" prop="name">
-          <el-input v-model="addressForm.name" placeholder="请输入收货人姓名" />
+          <el-input v-model="addressForm.name" placeholder="请输入收货人姓名" title="收货人姓名" />
         </el-form-item>
 
         <el-form-item label="手机号码" prop="phoneNumber">
-          <el-input v-model="addressForm.phoneNumber" placeholder="请输入手机号码" />
+          <el-input v-model="addressForm.phoneNumber" placeholder="请输入手机号码" title="收货人手机号码" />
         </el-form-item>
 
         <el-form-item label="所在地区" prop="region">
           <div class="region-selector">
-            <el-select v-model="addressForm.province" placeholder="省份" @change="onProvinceChange">
+            <el-select v-model="addressForm.province" placeholder="省份" @change="onProvinceChange" title="选择省份">
               <el-option v-for="province in provinceList" :key="province.value" :label="province.label"
                 :value="province.value" />
             </el-select>
 
-            <el-select v-model="addressForm.city" placeholder="城市" @change="onCityChange">
+            <el-select v-model="addressForm.city" placeholder="城市" @change="onCityChange" title="选择城市">
               <el-option v-for="city in cityList" :key="city.value" :label="city.label" :value="city.value" />
             </el-select>
 
-            <el-select v-model="addressForm.region" placeholder="区县">
+            <el-select v-model="addressForm.region" placeholder="区县" title="选择区县">
               <el-option v-for="region in regionList" :key="region.value" :label="region.label" :value="region.value" />
             </el-select>
           </div>
         </el-form-item>
 
         <el-form-item label="详细地址" prop="detailAddress">
-          <el-input v-model="addressForm.detailAddress" type="textarea" :rows="3" placeholder="请输入详细地址" />
+          <el-input v-model="addressForm.detailAddress" type="textarea" :rows="3" placeholder="请输入详细地址"
+            title="详细收货地址" />
         </el-form-item>
 
         <el-form-item>
-          <el-checkbox v-model="addressForm.defaultStatus">设为默认地址</el-checkbox>
+          <el-checkbox v-model="addressForm.defaultStatus" title="设置此地址为默认收货地址">
+            设为默认地址
+          </el-checkbox>
         </el-form-item>
       </el-form>
 

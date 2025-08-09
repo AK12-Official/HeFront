@@ -1,3 +1,4 @@
+<!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <template>
   <div class="user-center-container">
     <div class="user-header">
@@ -66,20 +67,20 @@
     <el-dialog v-model="editProfileVisible" title="编辑个人资料" width="400px">
       <el-form :model="profileForm" label-width="80px">
         <el-form-item label="昵称">
-          <el-input v-model="profileForm.nickname" placeholder="请输入昵称" />
+          <el-input v-model="profileForm.nickname" placeholder="请输入昵称" title="用户昵称" />
         </el-form-item>
         <el-form-item label="性别">
-          <el-select v-model="profileForm.gender" placeholder="请选择性别">
+          <el-select v-model="profileForm.gender" placeholder="请选择性别" title="选择性别">
             <el-option label="男" :value="1" />
             <el-option label="女" :value="0" />
           </el-select>
         </el-form-item>
         <el-form-item label="生日">
           <el-date-picker v-model="profileForm.birthday" type="date" placeholder="请选择生日" format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD" />
+            value-format="YYYY-MM-DD" title="选择出生日期" />
         </el-form-item>
         <el-form-item label="个人简介">
-          <el-input v-model="profileForm.note" type="textarea" :rows="3" placeholder="请输入个人简介" />
+          <el-input v-model="profileForm.note" type="textarea" :rows="3" placeholder="请输入个人简介" title="个人简介" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -92,13 +93,15 @@
     <el-dialog v-model="changePasswordVisible" title="修改密码" width="400px">
       <el-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef" label-width="100px">
         <el-form-item label="原密码" prop="oldPassword">
-          <el-input v-model="passwordForm.oldPassword" type="password" placeholder="请输入原密码" show-password />
+          <el-input v-model="passwordForm.oldPassword" type="password" placeholder="请输入原密码" show-password
+            title="当前密码" />
         </el-form-item>
         <el-form-item label="新密码" prop="newPassword">
-          <el-input v-model="passwordForm.newPassword" type="password" placeholder="请输入新密码" show-password />
+          <el-input v-model="passwordForm.newPassword" type="password" placeholder="请输入新密码" show-password title="新密码" />
         </el-form-item>
         <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input v-model="passwordForm.confirmPassword" type="password" placeholder="请再次输入新密码" show-password />
+          <el-input v-model="passwordForm.confirmPassword" type="password" placeholder="请再次输入新密码" show-password
+            title="确认新密码" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -169,7 +172,7 @@ const passwordRules = {
   confirmPassword: [
     { required: true, message: '请再次输入新密码', trigger: 'blur' },
     {
-      validator: (rule: any, value: string, callback: Function) => {
+      validator: (rule: unknown, value: string, callback: (error?: Error) => void) => {
         if (value !== passwordForm.value.newPassword) {
           callback(new Error('两次输入的密码不一致'))
         } else {
@@ -186,8 +189,6 @@ const menuItems = [
   { title: '我的订单', path: '/mall/order', icon: 'el-icon-s-order' },
   { title: '收货地址', path: '/mall/address', icon: 'el-icon-location' },
   { title: '我的优惠券', path: '/mall/coupon', icon: 'el-icon-ticket' },
-  { title: '我的收藏', path: '/mall/favorite', icon: 'el-icon-star-on' },
-  { title: '积分商城', path: '/mall/points', icon: 'el-icon-coin' },
   { title: '联系客服', path: '/mall/service', icon: 'el-icon-service' }
 ]
 

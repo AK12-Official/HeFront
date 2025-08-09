@@ -15,10 +15,11 @@
       <div class="filter-bar">
         <div class="filter-item">
           <span class="filter-label">分类：</span>
-          <el-select v-model="selectedCategory" placeholder="全部分类" @change="handleCategoryChange">
-            <el-option label="全部分类" value=""></el-option>
+          <el-select v-model="selectedCategory" :key="`category-${categoryList.length}`" placeholder="全部分类"
+            @change="handleCategoryChange">
+            <el-option label="全部分类" value="0"></el-option>
             <el-option v-for="category in categoryList" :key="category.id" :label="category.name"
-              :value="category.id"></el-option>
+              :value="String(category.id)"></el-option>
           </el-select>
         </div>
 
@@ -56,7 +57,7 @@
         <div v-for="product in productList" :key="product.id" class="product-item"
           @click="goToProductDetail(product.id)">
           <div class="product-image">
-            <img :src="product.pic" :alt="product.name" />
+            <img :src="product.pic" :alt="product.name" @error="handleImageError" />
             <div class="product-badge" v-if="product.promotionType">
               {{ getPromotionText(product.promotionType) }}
             </div>
@@ -92,10 +93,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { productSearch, productCategoryTreeList } from '@/api/mall'
+import type { ProductCategoryTree } from '@/api/mall/types'
 
 interface Product {
   id: number
@@ -112,6 +114,9 @@ interface Product {
 interface Category {
   id: number
   name: string
+  level?: number
+  parentId?: number
+  fullPath?: string // 完整路径，用于显示
 }
 
 interface PriceRange {
@@ -126,8 +131,9 @@ const router = useRouter()
 const loading = ref(false)
 const productList = ref<Product[]>([])
 const categoryList = ref<Category[]>([])
+const categoryTreeData = ref<ProductCategoryTree[]>([]) // 原始分类树数据
 const searchKeyword = ref('')
-const selectedCategory = ref('')
+const selectedCategory = ref('0')
 const sortType = ref('')
 const priceRange = ref<PriceRange>({ min: '', max: '' })
 const currentPage = ref(1)
@@ -158,16 +164,56 @@ const loadCategoryList = async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data = (response as any).data
         if (data && Array.isArray(data)) {
-          categoryList.value = data.map((item: any) => ({
-            id: item.id,
-            name: item.name
-          }))
+          // 保存原始分类树数据
+          categoryTreeData.value = data
+
+          // 处理树形结构的分类数据，展平为一级列表
+          const flatCategories: Category[] = []
+
+          // 递归处理分类树，生成带层级的分类选项
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const flattenCategories = (categories: any[], level = 0, parentPath = '') => {
+            categories.forEach((category) => {
+              if (category.showStatus === 1) { // 只显示启用的分类
+                const prefix = '　'.repeat(level) // 使用全角空格表示层级
+                const displayName = level > 0 ? `${prefix}${category.name}` : category.name
+                const fullPath = parentPath ? `${parentPath} > ${category.name}` : category.name
+
+                flatCategories.push({
+                  id: category.id,
+                  name: displayName,
+                  level: category.level || level,
+                  parentId: category.parentId,
+                  fullPath: fullPath
+                })
+
+                // 递归处理子分类
+                if (category.children && Array.isArray(category.children) && category.children.length > 0) {
+                  flattenCategories(category.children, level + 1, fullPath)
+                }
+              }
+            })
+          }
+
+          flattenCategories(data)
+          categoryList.value = flatCategories
           console.log('成功加载分类列表:', categoryList.value.length, '个分类')
+
+          // 调试：检查当前选中的分类是否在列表中
+          if (selectedCategory.value && selectedCategory.value !== '0') {
+            const foundCategory = categoryList.value.find(cat => String(cat.id) === selectedCategory.value)
+            if (foundCategory) {
+              console.log('找到选中的分类:', foundCategory.name)
+            } else {
+              console.warn('未找到选中的分类ID:', selectedCategory.value)
+            }
+          }
         } else {
           console.warn('API返回分类数据格式异常，使用默认分类数据')
           loadDefaultCategories()
         }
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         console.error('API返回错误:', (response as any).message)
         loadDefaultCategories()
       }
@@ -185,12 +231,34 @@ const loadCategoryList = async () => {
 const loadDefaultCategories = () => {
   console.log('使用默认分类数据')
   categoryList.value = [
-    { id: 1, name: '手机数码' },
-    { id: 2, name: '电脑办公' },
-    { id: 3, name: '家用电器' },
-    { id: 4, name: '服装鞋帽' },
-    { id: 5, name: '家居生活' },
-    { id: 6, name: '图书音像' }
+    // 一级分类
+    { id: 1, name: '服装鞋包', level: 0, parentId: 0, fullPath: '服装鞋包' },
+    { id: 7, name: '　外套', level: 1, parentId: 1, fullPath: '服装鞋包 > 外套' },
+    { id: 43, name: '　　羽绒服', level: 2, parentId: 7, fullPath: '服装鞋包 > 外套 > 羽绒服' },
+    { id: 44, name: '　　风衣', level: 2, parentId: 7, fullPath: '服装鞋包 > 外套 > 风衣' },
+    { id: 8, name: '　鞋靴', level: 1, parentId: 1, fullPath: '服装鞋包 > 鞋靴' },
+    { id: 45, name: '　　运动鞋', level: 2, parentId: 8, fullPath: '服装鞋包 > 鞋靴 > 运动鞋' },
+
+    { id: 2, name: '手机数码', level: 0, parentId: 0, fullPath: '手机数码' },
+    { id: 9, name: '　手机通讯', level: 1, parentId: 2, fullPath: '手机数码 > 手机通讯' },
+    { id: 10, name: '　数码配件', level: 1, parentId: 2, fullPath: '手机数码 > 数码配件' },
+
+    { id: 3, name: '电脑办公', level: 0, parentId: 0, fullPath: '电脑办公' },
+    { id: 11, name: '　笔记本电脑', level: 1, parentId: 3, fullPath: '电脑办公 > 笔记本电脑' },
+    { id: 12, name: '　台式机', level: 1, parentId: 3, fullPath: '电脑办公 > 台式机' },
+    { id: 13, name: '　办公设备', level: 1, parentId: 3, fullPath: '电脑办公 > 办公设备' },
+
+    { id: 4, name: '家用电器', level: 0, parentId: 0, fullPath: '家用电器' },
+    { id: 14, name: '　大家电', level: 1, parentId: 4, fullPath: '家用电器 > 大家电' },
+    { id: 15, name: '　小家电', level: 1, parentId: 4, fullPath: '家用电器 > 小家电' },
+
+    { id: 5, name: '家居生活', level: 0, parentId: 0, fullPath: '家居生活' },
+    { id: 16, name: '　家具', level: 1, parentId: 5, fullPath: '家居生活 > 家具' },
+    { id: 17, name: '　家纺', level: 1, parentId: 5, fullPath: '家居生活 > 家纺' },
+
+    { id: 6, name: '图书音像', level: 0, parentId: 0, fullPath: '图书音像' },
+    { id: 18, name: '　图书', level: 1, parentId: 6, fullPath: '图书音像 > 图书' },
+    { id: 19, name: '　音像制品', level: 1, parentId: 6, fullPath: '图书音像 > 音像制品' }
   ]
 }
 
@@ -199,14 +267,22 @@ const loadProductList = async () => {
   try {
     loading.value = true
 
-    // 构建搜索参数
+    // 构建搜索参数，确保符合API接口要求
     const searchParams = {
       keyword: searchKeyword.value || undefined,
-      productCategoryId: selectedCategory.value ? Number(selectedCategory.value) : undefined,
+      productCategoryId: (selectedCategory.value && selectedCategory.value !== '0') ? Number(selectedCategory.value) : undefined,
+      brandId: undefined, // 暂时不支持品牌筛选
       sort: getSortValue(),
       pageNum: currentPage.value,
       pageSize: pageSize.value
     }
+
+    // 清理undefined值
+    Object.keys(searchParams).forEach(key => {
+      if (searchParams[key as keyof typeof searchParams] === undefined) {
+        delete searchParams[key as keyof typeof searchParams]
+      }
+    })
 
     console.log('商品搜索参数:', searchParams)
 
@@ -219,22 +295,44 @@ const loadProductList = async () => {
       if ('code' in response && (response as any).code === 200) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data = (response as any).data
-        if (data && Array.isArray(data.list)) {
-          productList.value = data.list.map((item: any) => ({
+
+        // 处理两种可能的响应格式：直接数组或分页对象
+        if (data) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          let productData: any[] = []
+          let totalCount = 0
+
+          if (Array.isArray(data)) {
+            // 直接返回数组
+            productData = data
+            totalCount = data.length
+          } else if (data.list && Array.isArray(data.list)) {
+            // 分页对象格式
+            productData = data.list
+            totalCount = data.total || data.totalElements || productData.length
+          } else if (data.content && Array.isArray(data.content)) {
+            // Spring Data分页格式
+            productData = data.content
+            totalCount = data.totalElements || productData.length
+          }
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          productList.value = productData.map((item: any) => ({
             id: item.id,
-            name: item.name,
-            subTitle: item.subTitle || item.subtitle,
-            price: item.price,
-            originalPrice: item.originalPrice,
-            pic: item.pic,
-            sale: item.sale,
-            stock: item.stock,
+            name: item.name || item.productName,
+            subTitle: item.subTitle || item.subtitle || item.description,
+            price: Number(item.price || 0),
+            originalPrice: item.originalPrice ? Number(item.originalPrice) : undefined,
+            pic: item.pic || item.image || item.pictureUrl || '/img/products/default.jpg',
+            sale: Number(item.sale || item.saleCount || 0),
+            stock: Number(item.stock || 0),
             promotionType: item.promotionType
           }))
-          total.value = data.total || 0
-          console.log('成功加载商品列表:', productList.value.length, '个商品')
+
+          total.value = totalCount
+          console.log('成功加载商品列表:', productList.value.length, '个商品，总计:', totalCount)
         } else {
-          console.warn('API返回数据格式异常，使用默认商品数据')
+          console.warn('API返回数据为空，使用默认商品数据')
           loadDefaultProducts()
         }
       } else {
@@ -273,24 +371,25 @@ const getSortValue = (): number => {
 const loadDefaultProducts = () => {
   console.log('使用默认商品数据')
   const mockProducts: Product[] = [
+    // 手机数码类
     {
       id: 1,
       name: 'iPhone 15 Pro Max',
-      subTitle: '钛金属材质，A17 Pro芯片',
+      subTitle: '钛金属材质，A17 Pro芯片，专业级摄影系统',
       price: 9999,
       originalPrice: 10999,
-      pic: '/static/products/iphone15.jpg',
+      pic: '/img/products/iphone15.jpg',
       sale: 1200,
       stock: 50,
       promotionType: 1
     },
     {
       id: 2,
-      name: 'MacBook Pro 14英寸',
-      subTitle: 'M3芯片，性能强劲',
-      price: 14999,
-      originalPrice: 16999,
-      pic: '/static/products/macbook.jpg',
+      name: '华为Mate 60 Pro',
+      subTitle: '卫星通话，鸿蒙4.0系统',
+      price: 6999,
+      originalPrice: 7999,
+      pic: '/img/products/huawei-mate60.jpg',
       sale: 800,
       stock: 30,
       promotionType: 2
@@ -298,46 +397,198 @@ const loadDefaultProducts = () => {
     {
       id: 3,
       name: 'AirPods Pro 2',
-      subTitle: '主动降噪，空间音频',
+      subTitle: '主动降噪，空间音频，无线充电盒',
       price: 1899,
-      pic: '/static/products/airpods.jpg',
+      pic: '/img/products/airpods.jpg',
       sale: 2500,
       stock: 100,
       promotionType: 3
     },
+    // 电脑办公类
     {
       id: 4,
-      name: 'iPad Air 5',
-      subTitle: 'M1芯片，10.9英寸',
-      price: 4399,
-      originalPrice: 4799,
-      pic: '/static/products/ipad.jpg',
-      sale: 600,
-      stock: 80,
-      promotionType: 4
+      name: 'MacBook Pro 14英寸',
+      subTitle: 'M3芯片，性能强劲，专业创作首选',
+      price: 14999,
+      originalPrice: 16999,
+      pic: '/img/products/macbook.jpg',
+      sale: 400,
+      stock: 20,
+      promotionType: 2
     },
     {
       id: 5,
-      name: 'Apple Watch Series 9',
-      subTitle: '健康监测，运动追踪',
-      price: 2999,
-      pic: '/static/products/watch.jpg',
-      sale: 900,
-      stock: 60
+      name: 'ThinkPad X1 Carbon',
+      subTitle: '商务轻薄本，Intel第13代处理器',
+      price: 12999,
+      originalPrice: 14999,
+      pic: '/img/products/thinkpad.jpg',
+      sale: 300,
+      stock: 25,
     },
     {
       id: 6,
       name: 'Magic Keyboard',
-      subTitle: '无线键盘，背光设计',
+      subTitle: '无线键盘，背光设计，支持多设备',
       price: 799,
-      pic: '/static/products/keyboard.jpg',
-      sale: 400,
+      pic: '/img/products/keyboard.jpg',
+      sale: 600,
       stock: 120
+    },
+    // 家用电器类
+    {
+      id: 7,
+      name: '海尔冰箱 BCD-452',
+      subTitle: '452升大容量，变频节能，干湿分储',
+      price: 3999,
+      originalPrice: 4999,
+      pic: '/img/products/refrigerator.jpg',
+      sale: 150,
+      stock: 15,
+      promotionType: 1
+    },
+    {
+      id: 8,
+      name: '美的空调 KFR-35GW',
+      subTitle: '1.5匹变频空调，静音节能，智能控制',
+      price: 2699,
+      originalPrice: 3199,
+      pic: '/img/products/air-conditioner.jpg',
+      sale: 200,
+      stock: 30,
+    },
+    {
+      id: 9,
+      name: '戴森吸尘器 V15',
+      subTitle: '激光显尘技术，强力除螨，无绳便携',
+      price: 4199,
+      pic: '/img/products/dyson-v15.jpg',
+      sale: 80,
+      stock: 40,
+      promotionType: 4
+    },
+    // 服装鞋帽类
+    {
+      id: 10,
+      name: 'Nike Air Jordan 1',
+      subTitle: '经典篮球鞋，复古设计，舒适透气',
+      price: 1299,
+      originalPrice: 1599,
+      pic: '/img/products/jordan1.jpg',
+      sale: 500,
+      stock: 60,
+      promotionType: 3
+    },
+    {
+      id: 11,
+      name: 'Uniqlo羽绒服',
+      subTitle: '轻薄保暖，防风防水，多色可选',
+      price: 399,
+      originalPrice: 599,
+      pic: '/img/products/uniqlo-down.jpg',
+      sale: 800,
+      stock: 100,
+    },
+    {
+      id: 12,
+      name: 'Levi\'s 501牛仔裤',
+      subTitle: '经典直筒版型，优质棉质面料',
+      price: 599,
+      pic: '/img/products/levis-501.jpg',
+      sale: 300,
+      stock: 80,
+    },
+    // 家居生活类
+    {
+      id: 13,
+      name: 'IKEA书桌 BEKANT',
+      subTitle: '简约现代设计，环保材质，易于组装',
+      price: 799,
+      originalPrice: 999,
+      pic: '/img/products/ikea-desk.jpg',
+      sale: 200,
+      stock: 50,
+    },
+    {
+      id: 14,
+      name: '小米扫地机器人',
+      subTitle: '激光导航，智能规划，自动回充',
+      price: 1699,
+      pic: '/img/products/mi-robot.jpg',
+      sale: 400,
+      stock: 35,
+      promotionType: 2
+    },
+    // 图书音像类
+    {
+      id: 15,
+      name: '《三体》全集',
+      subTitle: '刘慈欣科幻巨作，雨果奖获奖作品',
+      price: 89,
+      originalPrice: 120,
+      pic: '/img/products/three-body.jpg',
+      sale: 1000,
+      stock: 200,
+    },
+    {
+      id: 16,
+      name: 'Sony WH-1000XM5',
+      subTitle: '无线降噪耳机，30小时续航，高音质',
+      price: 2399,
+      pic: '/img/products/sony-headphones.jpg',
+      sale: 300,
+      stock: 45,
+      promotionType: 4
     }
   ]
 
-  // 应用价格筛选到默认数据
+  // 应用筛选条件到默认数据
   let filteredProducts = [...mockProducts]
+
+  // 分类筛选
+  if (selectedCategory.value && selectedCategory.value !== '0') {
+    const categoryId = Number(selectedCategory.value)
+    // 根据新的分类ID进行筛选逻辑
+
+    // 使用分类结构进行筛选，支持父子分类
+    const findAllCategoryIds = (targetId: number): number[] => {
+      const result = [targetId]
+      const findChildren = (parentId: number) => {
+        categoryList.value.forEach(cat => {
+          if (cat.parentId === parentId) {
+            result.push(cat.id)
+            findChildren(cat.id) // 递归查找子分类
+          }
+        })
+      }
+      findChildren(targetId)
+      return result
+    }
+
+    const validCategoryIds = findAllCategoryIds(categoryId)
+
+    // 根据分类进行商品筛选（这里使用简化的映射关系）
+    if (validCategoryIds.includes(1) || validCategoryIds.includes(7) || validCategoryIds.includes(8) ||
+      validCategoryIds.includes(43) || validCategoryIds.includes(44) || validCategoryIds.includes(45)) {
+      // 服装鞋包类
+      filteredProducts = filteredProducts.filter(p => p.id >= 10 && p.id <= 12)
+    } else if (validCategoryIds.includes(2) || validCategoryIds.includes(9) || validCategoryIds.includes(10)) {
+      // 手机数码类
+      filteredProducts = filteredProducts.filter(p => p.id <= 3)
+    } else if (validCategoryIds.includes(3) || validCategoryIds.includes(11) || validCategoryIds.includes(12) || validCategoryIds.includes(13)) {
+      // 电脑办公类
+      filteredProducts = filteredProducts.filter(p => p.id >= 4 && p.id <= 6)
+    } else if (validCategoryIds.includes(4) || validCategoryIds.includes(14) || validCategoryIds.includes(15)) {
+      // 家用电器类
+      filteredProducts = filteredProducts.filter(p => p.id >= 7 && p.id <= 9)
+    } else if (validCategoryIds.includes(5) || validCategoryIds.includes(16) || validCategoryIds.includes(17)) {
+      // 家居生活类
+      filteredProducts = filteredProducts.filter(p => p.id >= 13 && p.id <= 14)
+    } else if (validCategoryIds.includes(6) || validCategoryIds.includes(18) || validCategoryIds.includes(19)) {
+      // 图书音像类
+      filteredProducts = filteredProducts.filter(p => p.id >= 15 && p.id <= 16)
+    }
+  }
 
   // 关键词搜索
   if (searchKeyword.value) {
@@ -374,8 +625,15 @@ const loadDefaultProducts = () => {
     }
   }
 
-  productList.value = filteredProducts
+  // 分页处理
+  const startIndex = (currentPage.value - 1) * pageSize.value
+  const endIndex = startIndex + pageSize.value
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex)
+
+  productList.value = paginatedProducts
   total.value = filteredProducts.length
+
+  console.log(`筛选后商品数量: ${filteredProducts.length}, 当前页显示: ${paginatedProducts.length}`)
 }
 
 // 搜索处理
@@ -387,7 +645,20 @@ const handleSearch = () => {
 // 分类变化
 const handleCategoryChange = () => {
   currentPage.value = 1
-  loadProductList()
+
+  // 更新URL参数，保持其他查询参数
+  const query = { ...route.query }
+  if (selectedCategory.value && selectedCategory.value !== '0') {
+    query.categoryId = selectedCategory.value
+  } else {
+    delete query.categoryId
+  }
+
+  // 导航到新的URL（不会触发页面刷新，只更新URL）
+  router.replace({
+    path: route.path,
+    query
+  })
 }
 
 // 排序变化
@@ -420,23 +691,75 @@ const goToProductDetail = (productId: number) => {
   router.push(`/mall/product/detail/${productId}`)
 }
 
+// 图片加载错误处理
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.src = '/img/products/default.jpg' // 使用默认图片
+}
+
 // 监听路由参数变化
 watch(
   () => route.query,
   (newQuery) => {
+    // 重置页码
+    currentPage.value = 1
+
     if (newQuery.categoryId) {
-      selectedCategory.value = newQuery.categoryId as string
+      selectedCategory.value = String(newQuery.categoryId)
+    } else {
+      selectedCategory.value = '0'
     }
+
     if (newQuery.keyword) {
       searchKeyword.value = newQuery.keyword as string
+    } else {
+      searchKeyword.value = ''
     }
+
     loadProductList()
-  },
-  { immediate: true }
+  }
+  // 移除 immediate: true，因为我们在 onMounted 中手动处理初始状态
 )
 
-onMounted(() => {
-  loadCategoryList()
+onMounted(async () => {
+  console.log('onMounted: 开始加载')
+
+  // 先加载分类列表，再处理路由参数
+  await loadCategoryList()
+  console.log('onMounted: 分类列表加载完成')
+
+  // 等待下一个 tick 确保 DOM 已更新
+  await nextTick()
+
+  // 重新同步路由参数到组件状态
+  if (route.query.categoryId) {
+    selectedCategory.value = String(route.query.categoryId)
+    console.log('onMounted: 设置分类ID为', selectedCategory.value)
+  } else {
+    selectedCategory.value = '0'
+    console.log('onMounted: 设置默认分类')
+  }
+
+  if (route.query.keyword) {
+    searchKeyword.value = route.query.keyword as string
+  } else {
+    searchKeyword.value = ''
+  }
+
+  // 再次等待 DOM 更新
+  await nextTick()
+
+  // 检查选中的分类是否在列表中
+  if (selectedCategory.value !== '0') {
+    const foundCategory = categoryList.value.find(cat => String(cat.id) === selectedCategory.value)
+    console.log('onMounted: 选中分类验证', {
+      selectedCategory: selectedCategory.value,
+      found: !!foundCategory,
+      categoryName: foundCategory?.name,
+      totalCategories: categoryList.value.length
+    })
+  }
+
   loadProductList()
 })
 </script>
@@ -484,6 +807,26 @@ onMounted(() => {
       .price-separator {
         color: #666;
         margin: 0 4px;
+      }
+
+      // 分类选择器样式优化
+      .el-select {
+        min-width: 200px;
+
+        .el-select-dropdown__item {
+
+          // 层级分类的字体大小调整
+          &.level-1 {
+            padding-left: 20px;
+            font-size: 13px;
+          }
+
+          &.level-2 {
+            padding-left: 40px;
+            font-size: 12px;
+            color: #666;
+          }
+        }
       }
     }
   }

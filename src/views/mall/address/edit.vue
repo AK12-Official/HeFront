@@ -8,28 +8,28 @@
             <el-form :model="addressForm" :rules="addressRules" ref="addressFormRef" label-width="100px"
                 class="address-form">
                 <el-form-item label="收货人" prop="name">
-                    <el-input v-model="addressForm.name" placeholder="请输入收货人姓名" maxlength="20" />
+                    <el-input v-model="addressForm.name" placeholder="请输入收货人姓名" maxlength="20" title="收货人姓名" />
                 </el-form-item>
 
                 <el-form-item label="手机号码" prop="phoneNumber">
-                    <el-input v-model="addressForm.phoneNumber" placeholder="请输入手机号码" maxlength="11" />
+                    <el-input v-model="addressForm.phoneNumber" placeholder="请输入手机号码" maxlength="11" title="收货人手机号码" />
                 </el-form-item>
 
                 <el-form-item label="所在地区" prop="region">
                     <div class="region-selector">
                         <el-select v-model="addressForm.province" placeholder="省份" @change="onProvinceChange"
-                            class="region-select">
+                            class="region-select" title="选择省份">
                             <el-option v-for="province in provinceList" :key="province.value" :label="province.label"
                                 :value="province.value" />
                         </el-select>
 
                         <el-select v-model="addressForm.city" placeholder="城市" @change="onCityChange"
-                            class="region-select">
+                            class="region-select" title="选择城市">
                             <el-option v-for="city in cityList" :key="city.value" :label="city.label"
                                 :value="city.value" />
                         </el-select>
 
-                        <el-select v-model="addressForm.region" placeholder="区县" class="region-select">
+                        <el-select v-model="addressForm.region" placeholder="区县" class="region-select" title="选择区县">
                             <el-option v-for="region in regionList" :key="region.value" :label="region.label"
                                 :value="region.value" />
                         </el-select>
@@ -38,7 +38,7 @@
 
                 <el-form-item label="详细地址" prop="detailAddress">
                     <el-input v-model="addressForm.detailAddress" type="textarea" :rows="3"
-                        placeholder="请输入详细地址，如道路、门牌号、小区、楼栋号、单元等信息" maxlength="200" show-word-limit />
+                        placeholder="请输入详细地址，如道路、门牌号、小区、楼栋号、单元等信息" maxlength="200" show-word-limit title="详细收货地址" />
                 </el-form-item>
 
                 <el-form-item label="地址标签" prop="tag">
@@ -51,7 +51,9 @@
                 </el-form-item>
 
                 <el-form-item>
-                    <el-checkbox v-model="addressForm.defaultStatus">设为默认地址</el-checkbox>
+                    <el-checkbox v-model="addressForm.defaultStatus" title="设置此地址为默认收货地址">
+                        设为默认地址
+                    </el-checkbox>
                 </el-form-item>
             </el-form>
         </div>

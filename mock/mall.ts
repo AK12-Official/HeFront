@@ -1842,6 +1842,530 @@ const mockProducts = [
         ])
       }
     ]
+  },
+
+  // ==================== 更多家用电器 ====================
+  {
+    id: 51,
+    name: '戴森吸尘器V15',
+    subTitle: '激光探测，科学清洁',
+    price: 4199,
+    originalPrice: 4699,
+    pic: generateImageUrl(51),
+    albumPics: [generateImageUrl(51), generateImageUrl(151), generateImageUrl(251)],
+    detailTitle: '戴森吸尘器V15详细介绍',
+    detailDesc: '激光探测微尘，150AW强劲吸力',
+    detailHtml: `
+      <div class="product-detail">
+        <h3>产品特点</h3>
+        <ul>
+          <li>激光灰尘探测技术 - 让微尘无所遁形</li>
+          <li>150AW强劲吸力 - 深度清洁地毯和硬质地板</li>
+          <li>5层整机HEPA过滤 - 过滤99.99%小至0.3微米的颗粒</li>
+          <li>防缠绕螺旋形刷条 - 有效清除毛发</li>
+          <li>智能LCD屏幕 - 实时显示清洁信息</li>
+        </ul>
+        <h3>技术规格</h3>
+        <table>
+          <tr><td>吸力</td><td>150AW</td></tr>
+          <tr><td>电池续航</td><td>最长60分钟</td></tr>
+          <tr><td>充电时间</td><td>4.5小时</td></tr>
+          <tr><td>集尘桶容量</td><td>0.76L</td></tr>
+        </table>
+      </div>
+    `,
+    productCategoryId: 4,
+    productCategoryName: '家用电器',
+    brandId: 20,
+    brandName: '戴森',
+    stock: 25,
+    sale: 345,
+    publishStatus: 1,
+    newStatus: 1,
+    recommandStatus: 1,
+    sort: 88,
+    productAttributeValueList: [
+      { id: 94, value: '黑色', productAttributeId: 2, productAttributeName: '颜色' }
+    ],
+    skuStockList: [
+      {
+        id: 51,
+        productId: 51,
+        skuCode: 'SKU051',
+        price: 4199,
+        stock: 12,
+        lowStock: 2,
+        spData: JSON.stringify([
+          { key: '颜色', value: '黑色' }
+        ])
+      }
+    ]
+  },
+  {
+    id: 52,
+    name: '美的空调1.5匹',
+    subTitle: '变频节能，静音舒适',
+    price: 3299,
+    originalPrice: 3999,
+    pic: generateImageUrl(52),
+    albumPics: [generateImageUrl(52), generateImageUrl(152), generateImageUrl(252)],
+    detailTitle: '美的空调1.5匹详细介绍',
+    detailDesc: '全直流变频技术，节能静音',
+    productCategoryId: 4,
+    productCategoryName: '家用电器',
+    brandId: 22,
+    brandName: '美的',
+    stock: 60,
+    sale: 1230,
+    publishStatus: 1,
+    newStatus: 0,
+    recommandStatus: 1,
+    sort: 82,
+    productAttributeValueList: [
+      { id: 95, value: '1.5匹', productAttributeId: 12, productAttributeName: '匹数' },
+      { id: 96, value: '白色', productAttributeId: 2, productAttributeName: '颜色' }
+    ],
+    skuStockList: [
+      {
+        id: 52,
+        productId: 52,
+        skuCode: 'SKU052',
+        price: 3299,
+        stock: 30,
+        lowStock: 6,
+        spData: JSON.stringify([
+          { key: '匹数', value: '1.5匹' },
+          { key: '颜色', value: '白色' }
+        ])
+      }
+    ]
+  },
+
+  // ==================== 服饰鞋帽 ====================
+  {
+    id: 53,
+    name: '优衣库纯棉T恤',
+    subTitle: '舒适透气，经典百搭',
+    price: 79,
+    originalPrice: 99,
+    pic: generateImageUrl(53),
+    albumPics: [generateImageUrl(53), generateImageUrl(153), generateImageUrl(253)],
+    detailTitle: '优衣库纯棉T恤详细介绍',
+    detailDesc: '100%纯棉材质，舒适透气',
+    detailHtml: `
+      <div class="product-detail">
+        <h3>产品特点</h3>
+        <ul>
+          <li>100%纯棉材质 - 天然舒适透气</li>
+          <li>经典圆领设计 - 简约百搭</li>
+          <li>精细做工 - 走线平整</li>
+          <li>多色可选 - 满足不同需求</li>
+        </ul>
+        <h3>尺码建议</h3>
+        <table>
+          <tr><td>S</td><td>胸围88-92cm</td></tr>
+          <tr><td>M</td><td>胸围92-96cm</td></tr>
+          <tr><td>L</td><td>胸围96-100cm</td></tr>
+          <tr><td>XL</td><td>胸围100-104cm</td></tr>
+        </table>
+      </div>
+    `,
+    productCategoryId: 5,
+    productCategoryName: '服饰鞋帽',
+    brandId: 23,
+    brandName: '优衣库',
+    stock: 500,
+    sale: 2800,
+    publishStatus: 1,
+    newStatus: 0,
+    recommandStatus: 1,
+    sort: 90,
+    productAttributeValueList: [
+      { id: 97, value: 'M', productAttributeId: 5, productAttributeName: '尺码' },
+      { id: 98, value: '白色', productAttributeId: 2, productAttributeName: '颜色' }
+    ],
+    skuStockList: [
+      {
+        id: 53,
+        productId: 53,
+        skuCode: 'SKU053',
+        price: 79,
+        stock: 100,
+        lowStock: 20,
+        spData: JSON.stringify([
+          { key: '尺码', value: 'M' },
+          { key: '颜色', value: '白色' }
+        ])
+      }
+    ]
+  },
+  {
+    id: 54,
+    name: 'Nike Air Force 1',
+    subTitle: '经典百搭，街头潮流',
+    price: 899,
+    originalPrice: 999,
+    pic: generateImageUrl(54),
+    albumPics: [generateImageUrl(54), generateImageUrl(154), generateImageUrl(254)],
+    detailTitle: 'Nike Air Force 1详细介绍',
+    detailDesc: '经典篮球鞋款，百搭时尚',
+    productCategoryId: 5,
+    productCategoryName: '服饰鞋帽',
+    brandId: 9,
+    brandName: 'Nike',
+    stock: 120,
+    sale: 1890,
+    publishStatus: 1,
+    newStatus: 0,
+    recommandStatus: 1,
+    sort: 92,
+    productAttributeValueList: [
+      { id: 99, value: '42', productAttributeId: 6, productAttributeName: '鞋码' },
+      { id: 100, value: '白色', productAttributeId: 2, productAttributeName: '颜色' }
+    ],
+    skuStockList: [
+      {
+        id: 54,
+        productId: 54,
+        skuCode: 'SKU054',
+        price: 899,
+        stock: 60,
+        lowStock: 12,
+        spData: JSON.stringify([
+          { key: '鞋码', value: '42' },
+          { key: '颜色', value: '白色' }
+        ])
+      }
+    ]
+  },
+
+  // ==================== 美妆护肤 ====================
+  {
+    id: 55,
+    name: '兰蔻小黑瓶精华',
+    subTitle: '肌底修护，焕活新生',
+    price: 1080,
+    originalPrice: 1280,
+    pic: generateImageUrl(55),
+    albumPics: [generateImageUrl(55), generateImageUrl(155), generateImageUrl(255)],
+    detailTitle: '兰蔻小黑瓶精华详细介绍',
+    detailDesc: '二代小黑瓶，7天肌肤焕新',
+    detailHtml: `
+      <div class="product-detail">
+        <h3>核心成分</h3>
+        <ul>
+          <li>二裂酵母发酵产物溶胞物 - 强化肌肤屏障</li>
+          <li>透明质酸 - 深层补水保湿</li>
+          <li>维生素E - 抗氧化护肤</li>
+          <li>甘油 - 锁水保湿</li>
+        </ul>
+        <h3>使用方法</h3>
+        <p>洁面后，取适量轻拍于面部和颈部，早晚使用效果更佳</p>
+      </div>
+    `,
+    productCategoryId: 6,
+    productCategoryName: '美妆护肤',
+    brandId: 11,
+    brandName: '兰蔻',
+    stock: 200,
+    sale: 3456,
+    publishStatus: 1,
+    newStatus: 1,
+    recommandStatus: 1,
+    sort: 95,
+    productAttributeValueList: [
+      { id: 101, value: '50ml', productAttributeId: 7, productAttributeName: '规格' }
+    ],
+    skuStockList: [
+      {
+        id: 55,
+        productId: 55,
+        skuCode: 'SKU055',
+        price: 1080,
+        stock: 100,
+        lowStock: 20,
+        spData: JSON.stringify([
+          { key: '规格', value: '50ml' }
+        ])
+      }
+    ]
+  },
+  {
+    id: 56,
+    name: 'SK-II神仙水',
+    subTitle: 'PITERA™精华，肌肤新生',
+    price: 1699,
+    originalPrice: 1890,
+    pic: generateImageUrl(56),
+    albumPics: [generateImageUrl(56), generateImageUrl(156), generateImageUrl(256)],
+    detailTitle: 'SK-II神仙水详细介绍',
+    detailDesc: '90%PITERA™精华，改善肌肤质感',
+    productCategoryId: 6,
+    productCategoryName: '美妆护肤',
+    brandId: 25,
+    brandName: 'SK-II',
+    stock: 150,
+    sale: 2340,
+    publishStatus: 1,
+    newStatus: 0,
+    recommandStatus: 1,
+    sort: 93,
+    productAttributeValueList: [
+      { id: 102, value: '230ml', productAttributeId: 7, productAttributeName: '规格' }
+    ],
+    skuStockList: [
+      {
+        id: 56,
+        productId: 56,
+        skuCode: 'SKU056',
+        price: 1699,
+        stock: 75,
+        lowStock: 15,
+        spData: JSON.stringify([
+          { key: '规格', value: '230ml' }
+        ])
+      }
+    ]
+  },
+
+  // ==================== 食品饮料 ====================
+  {
+    id: 57,
+    name: '茅台酒53度',
+    subTitle: '国酒茅台，传承经典',
+    price: 2899,
+    originalPrice: 3199,
+    pic: generateImageUrl(57),
+    albumPics: [generateImageUrl(57), generateImageUrl(157), generateImageUrl(257)],
+    detailTitle: '茅台酒详细介绍',
+    detailDesc: '茅台镇核心产区，古法酿造',
+    productCategoryId: 7,
+    productCategoryName: '食品饮料',
+    brandId: 31,
+    brandName: '茅台',
+    stock: 100,
+    sale: 1260,
+    publishStatus: 1,
+    newStatus: 0,
+    recommandStatus: 1,
+    sort: 90,
+    productAttributeValueList: [
+      { id: 103, value: '500ml', productAttributeId: 7, productAttributeName: '规格' },
+      { id: 104, value: '53度', productAttributeId: 8, productAttributeName: '度数' }
+    ],
+    skuStockList: [
+      {
+        id: 57,
+        productId: 57,
+        skuCode: 'SKU057',
+        price: 2899,
+        stock: 50,
+        lowStock: 10,
+        spData: JSON.stringify([
+          { key: '规格', value: '500ml' },
+          { key: '度数', value: '53度' }
+        ])
+      }
+    ]
+  },
+  {
+    id: 58,
+    name: '五常大米',
+    subTitle: '东北特产，粒粒香甜',
+    price: 128,
+    originalPrice: 168,
+    pic: generateImageUrl(58),
+    albumPics: [generateImageUrl(58), generateImageUrl(158), generateImageUrl(258)],
+    detailTitle: '五常大米详细介绍',
+    detailDesc: '黑龙江五常产区，优质稻花香',
+    productCategoryId: 7,
+    productCategoryName: '食品饮料',
+    brandId: 32,
+    brandName: '五常',
+    stock: 500,
+    sale: 3890,
+    publishStatus: 1,
+    newStatus: 1,
+    recommandStatus: 0,
+    sort: 85,
+    productAttributeValueList: [
+      { id: 105, value: '10kg', productAttributeId: 9, productAttributeName: '重量' }
+    ],
+    skuStockList: [
+      {
+        id: 58,
+        productId: 58,
+        skuCode: 'SKU058',
+        price: 128,
+        stock: 250,
+        lowStock: 50,
+        spData: JSON.stringify([
+          { key: '重量', value: '10kg' }
+        ])
+      }
+    ]
+  },
+
+  // ==================== 母婴用品 ====================
+  {
+    id: 59,
+    name: '好奇纸尿裤',
+    subTitle: '超薄透气，12小时干爽',
+    price: 199,
+    originalPrice: 239,
+    pic: generateImageUrl(59),
+    albumPics: [generateImageUrl(59), generateImageUrl(159), generateImageUrl(259)],
+    detailTitle: '好奇纸尿裤详细介绍',
+    detailDesc: '3D环抱腰围，柔软贴合',
+    productCategoryId: 8,
+    productCategoryName: '母婴用品',
+    brandId: 33,
+    brandName: '好奇',
+    stock: 300,
+    sale: 5670,
+    publishStatus: 1,
+    newStatus: 0,
+    recommandStatus: 1,
+    sort: 88,
+    productAttributeValueList: [
+      { id: 106, value: 'L码', productAttributeId: 5, productAttributeName: '尺码' },
+      { id: 107, value: '84片', productAttributeId: 10, productAttributeName: '数量' }
+    ],
+    skuStockList: [
+      {
+        id: 59,
+        productId: 59,
+        skuCode: 'SKU059',
+        price: 199,
+        stock: 150,
+        lowStock: 30,
+        spData: JSON.stringify([
+          { key: '尺码', value: 'L码' },
+          { key: '数量', value: '84片' }
+        ])
+      }
+    ]
+  },
+  {
+    id: 60,
+    name: '飞鹤奶粉',
+    subTitle: '更适合中国宝宝体质',
+    price: 368,
+    originalPrice: 428,
+    pic: generateImageUrl(60),
+    albumPics: [generateImageUrl(60), generateImageUrl(160), generateImageUrl(260)],
+    detailTitle: '飞鹤奶粉详细介绍',
+    detailDesc: '专为中国宝宝研制，营养全面',
+    productCategoryId: 8,
+    productCategoryName: '母婴用品',
+    brandId: 34,
+    brandName: '飞鹤',
+    stock: 200,
+    sale: 2340,
+    publishStatus: 1,
+    newStatus: 1,
+    recommandStatus: 1,
+    sort: 92,
+    productAttributeValueList: [
+      { id: 108, value: '900g', productAttributeId: 9, productAttributeName: '重量' },
+      { id: 109, value: '3段', productAttributeId: 11, productAttributeName: '阶段' }
+    ],
+    skuStockList: [
+      {
+        id: 60,
+        productId: 60,
+        skuCode: 'SKU060',
+        price: 368,
+        stock: 100,
+        lowStock: 20,
+        spData: JSON.stringify([
+          { key: '重量', value: '900g' },
+          { key: '阶段', value: '3段' }
+        ])
+      }
+    ]
+  },
+
+  // ==================== 运动户外 ====================
+  {
+    id: 61,
+    name: 'Adidas Ultra Boost',
+    subTitle: '回弹科技，舒适跑步',
+    price: 1399,
+    originalPrice: 1599,
+    pic: generateImageUrl(61),
+    albumPics: [generateImageUrl(61), generateImageUrl(161), generateImageUrl(261)],
+    detailTitle: 'Adidas Ultra Boost详细介绍',
+    detailDesc: 'Boost中底科技，能量回弹',
+    productCategoryId: 9,
+    productCategoryName: '运动户外',
+    brandId: 10,
+    brandName: 'Adidas',
+    stock: 80,
+    sale: 890,
+    publishStatus: 1,
+    newStatus: 1,
+    recommandStatus: 1,
+    sort: 90,
+    productAttributeValueList: [
+      { id: 110, value: '42', productAttributeId: 6, productAttributeName: '鞋码' },
+      { id: 111, value: '黑白配色', productAttributeId: 2, productAttributeName: '颜色' }
+    ],
+    skuStockList: [
+      {
+        id: 61,
+        productId: 61,
+        skuCode: 'SKU061',
+        price: 1399,
+        stock: 40,
+        lowStock: 8,
+        spData: JSON.stringify([
+          { key: '鞋码', value: '42' },
+          { key: '颜色', value: '黑白配色' }
+        ])
+      }
+    ]
+  },
+
+  // ==================== 汽车用品 ====================
+  {
+    id: 62,
+    name: '特斯拉车载充电器',
+    subTitle: '原厂品质，快速充电',
+    price: 1299,
+    originalPrice: 1499,
+    pic: generateImageUrl(62),
+    albumPics: [generateImageUrl(62), generateImageUrl(162), generateImageUrl(262)],
+    detailTitle: '特斯拉车载充电器详细介绍',
+    detailDesc: '原厂认证，安全可靠的充电解决方案',
+    productCategoryId: 10,
+    productCategoryName: '汽车用品',
+    brandId: 30,
+    brandName: 'Tesla',
+    stock: 40,
+    sale: 156,
+    publishStatus: 1,
+    newStatus: 1,
+    recommandStatus: 0,
+    sort: 85,
+    productAttributeValueList: [
+      { id: 112, value: '黑色', productAttributeId: 2, productAttributeName: '颜色' },
+      { id: 113, value: '120W', productAttributeId: 13, productAttributeName: '功率' }
+    ],
+    skuStockList: [
+      {
+        id: 62,
+        productId: 62,
+        skuCode: 'SKU062',
+        price: 1299,
+        stock: 20,
+        lowStock: 4,
+        spData: JSON.stringify([
+          { key: '颜色', value: '黑色' },
+          { key: '功率', value: '120W' }
+        ])
+      }
+    ]
   }
 ]
 
@@ -1871,7 +2395,37 @@ const mockCategories = [
   { id: 301, name: '耳机音箱', parentId: 3, level: 1, showStatus: 1, sort: 100 },
   { id: 302, name: '数据线', parentId: 3, level: 1, showStatus: 1, sort: 95 },
   { id: 303, name: '充电器', parentId: 3, level: 1, showStatus: 1, sort: 90 },
-  { id: 304, name: '移动电源', parentId: 3, level: 1, showStatus: 1, sort: 85 }
+  { id: 304, name: '移动电源', parentId: 3, level: 1, showStatus: 1, sort: 85 },
+
+  { id: 401, name: '大家电', parentId: 4, level: 1, showStatus: 1, sort: 100 },
+  { id: 402, name: '小家电', parentId: 4, level: 1, showStatus: 1, sort: 95 },
+  { id: 403, name: '厨房电器', parentId: 4, level: 1, showStatus: 1, sort: 90 },
+
+  { id: 501, name: '男装', parentId: 5, level: 1, showStatus: 1, sort: 100 },
+  { id: 502, name: '女装', parentId: 5, level: 1, showStatus: 1, sort: 95 },
+  { id: 503, name: '鞋靴', parentId: 5, level: 1, showStatus: 1, sort: 90 },
+  { id: 504, name: '箱包', parentId: 5, level: 1, showStatus: 1, sort: 85 },
+
+  { id: 601, name: '面部护肤', parentId: 6, level: 1, showStatus: 1, sort: 100 },
+  { id: 602, name: '彩妆', parentId: 6, level: 1, showStatus: 1, sort: 95 },
+  { id: 603, name: '香水', parentId: 6, level: 1, showStatus: 1, sort: 90 },
+
+  { id: 701, name: '酒类', parentId: 7, level: 1, showStatus: 1, sort: 100 },
+  { id: 702, name: '茶叶', parentId: 7, level: 1, showStatus: 1, sort: 95 },
+  { id: 703, name: '粮油米面', parentId: 7, level: 1, showStatus: 1, sort: 90 },
+  { id: 704, name: '零食', parentId: 7, level: 1, showStatus: 1, sort: 85 },
+
+  { id: 801, name: '奶粉', parentId: 8, level: 1, showStatus: 1, sort: 100 },
+  { id: 802, name: '纸尿裤', parentId: 8, level: 1, showStatus: 1, sort: 95 },
+  { id: 803, name: '玩具', parentId: 8, level: 1, showStatus: 1, sort: 90 },
+
+  { id: 901, name: '运动鞋服', parentId: 9, level: 1, showStatus: 1, sort: 100 },
+  { id: 902, name: '健身器材', parentId: 9, level: 1, showStatus: 1, sort: 95 },
+  { id: 903, name: '户外装备', parentId: 9, level: 1, showStatus: 1, sort: 90 },
+
+  { id: 1001, name: '汽车配件', parentId: 10, level: 1, showStatus: 1, sort: 100 },
+  { id: 1002, name: '车载电器', parentId: 10, level: 1, showStatus: 1, sort: 95 },
+  { id: 1003, name: '汽车美容', parentId: 10, level: 1, showStatus: 1, sort: 90 }
 ]
 
 // 模拟品牌数据
@@ -1905,7 +2459,17 @@ const mockBrands = [
   { id: 27, name: 'Amazon', firstLetter: 'A', logo: generateImageUrl(427), showStatus: 1, productCount: 1, brandStory: '全球最大的电子商务公司' },
   { id: 28, name: 'GoPro', firstLetter: 'G', logo: generateImageUrl(428), showStatus: 1, productCount: 1, brandStory: '运动相机领导品牌' },
   { id: 29, name: '任天堂', firstLetter: 'R', logo: generateImageUrl(429), showStatus: 1, productCount: 1, brandStory: '日本著名游戏公司' },
-  { id: 30, name: 'Tesla', firstLetter: 'T', logo: generateImageUrl(430), showStatus: 1, productCount: 1, brandStory: '电动汽车和清洁能源公司' }
+  { id: 30, name: 'Tesla', firstLetter: 'T', logo: generateImageUrl(430), showStatus: 1, productCount: 2, brandStory: '电动汽车和清洁能源公司' },
+  { id: 31, name: '茅台', firstLetter: 'M', logo: generateImageUrl(431), showStatus: 1, productCount: 1, brandStory: '中国国酒，享誉世界' },
+  { id: 32, name: '五常', firstLetter: 'W', logo: generateImageUrl(432), showStatus: 1, productCount: 1, brandStory: '东北优质大米产区' },
+  { id: 33, name: '好奇', firstLetter: 'H', logo: generateImageUrl(433), showStatus: 1, productCount: 1, brandStory: '专业婴幼儿护理品牌' },
+  { id: 34, name: '飞鹤', firstLetter: 'F', logo: generateImageUrl(434), showStatus: 1, productCount: 1, brandStory: '中国婴幼儿奶粉知名品牌' },
+  { id: 35, name: 'Burberry', firstLetter: 'B', logo: generateImageUrl(435), showStatus: 1, productCount: 1, brandStory: '英国奢侈时装品牌' },
+  { id: 36, name: 'Coach', firstLetter: 'C', logo: generateImageUrl(436), showStatus: 1, productCount: 1, brandStory: '美国奢华手袋品牌' },
+  { id: 37, name: 'Hermès', firstLetter: 'H', logo: generateImageUrl(437), showStatus: 1, productCount: 1, brandStory: '法国奢侈品品牌' },
+  { id: 38, name: 'LV', firstLetter: 'L', logo: generateImageUrl(438), showStatus: 1, productCount: 1, brandStory: '法国奢侈品牌路易威登' },
+  { id: 39, name: 'Gucci', firstLetter: 'G', logo: generateImageUrl(439), showStatus: 1, productCount: 1, brandStory: '意大利奢侈时装品牌' },
+  { id: 40, name: 'Prada', firstLetter: 'P', logo: generateImageUrl(440), showStatus: 1, productCount: 1, brandStory: '意大利奢侈品牌' }
 ]
 
 // 模拟购物车数据
@@ -2005,6 +2569,7 @@ interface Address {
   city: string
   region: string
   detailAddress: string
+  postCode?: string
   defaultStatus: number
 }
 
@@ -2488,6 +3053,7 @@ const mockOrders: Order[] = [
 ]
 
 // 模拟地址数据
+// 模拟地址数据
 const mockAddresses: Address[] = [
   {
     id: 1,
@@ -2498,6 +3064,7 @@ const mockAddresses: Address[] = [
     city: '北京市',
     region: '朝阳区',
     detailAddress: '三里屯街道1号院2栋3单元401室',
+    postCode: '100020',
     defaultStatus: 1
   },
   {
@@ -2509,6 +3076,7 @@ const mockAddresses: Address[] = [
     city: '上海市',
     region: '浦东新区',
     detailAddress: '陆家嘴金融贸易区世纪大道100号',
+    postCode: '200120',
     defaultStatus: 0
   },
   {
@@ -2520,6 +3088,7 @@ const mockAddresses: Address[] = [
     city: '深圳市',
     region: '南山区',
     detailAddress: '科技园南区深南大道9988号',
+    postCode: '518052',
     defaultStatus: 0
   },
   {
@@ -2531,6 +3100,7 @@ const mockAddresses: Address[] = [
     city: '杭州市',
     region: '西湖区',
     detailAddress: '文三路477号华星科技大厦15楼',
+    postCode: '310013',
     defaultStatus: 0
   },
   {
@@ -2733,6 +3303,125 @@ const mockCoupons = [
     receiveCount: 1500,
     enableTime: '2024-01-01 00:00:00',
     code: 'EXPIRED15',
+    memberLevel: 0
+  },
+  {
+    id: 12,
+    name: '春节大礼包',
+    type: 1,
+    amount: 188,
+    minPoint: 1000,
+    startTime: '2024-01-01',
+    endTime: '2024-12-31',
+    useStatus: 0,
+    note: '春节特惠，满1000减188',
+    publishCount: 5000,
+    useCount: 200,
+    receiveCount: 3000,
+    enableTime: '2024-01-01 00:00:00',
+    code: 'SPRING188',
+    memberLevel: 0
+  },
+  {
+    id: 13,
+    name: '电子产品专享',
+    type: 2,
+    amount: 300,
+    minPoint: 2000,
+    startTime: '2024-01-01',
+    endTime: '2024-12-31',
+    useStatus: 0,
+    note: '电子产品类专享优惠券',
+    publishCount: 2000,
+    useCount: 50,
+    receiveCount: 800,
+    enableTime: '2024-01-01 00:00:00',
+    code: 'ELECTRONIC300',
+    memberLevel: 1
+  },
+  {
+    id: 14,
+    name: '服装类折扣券',
+    type: 3,
+    amount: 9, // 折扣，表示9折
+    minPoint: 300,
+    startTime: '2024-01-01',
+    endTime: '2024-12-31',
+    useStatus: 0,
+    note: '服装类商品9折优惠',
+    publishCount: 3000,
+    useCount: 150,
+    receiveCount: 2000,
+    enableTime: '2024-01-01 00:00:00',
+    code: 'FASHION90',
+    memberLevel: 0
+  },
+  {
+    id: 15,
+    name: '美妆护肤券',
+    type: 1,
+    amount: 60,
+    minPoint: 400,
+    startTime: '2024-01-01',
+    endTime: '2024-12-31',
+    useStatus: 0,
+    note: '美妆护肤专用优惠券',
+    publishCount: 1500,
+    useCount: 80,
+    receiveCount: 1000,
+    enableTime: '2024-01-01 00:00:00',
+    code: 'BEAUTY60',
+    memberLevel: 0
+  },
+  {
+    id: 16,
+    name: '母婴用品券',
+    type: 1,
+    amount: 50,
+    minPoint: 300,
+    startTime: '2024-01-01',
+    endTime: '2024-12-31',
+    useStatus: 0,
+    note: '母婴用品专享优惠',
+    publishCount: 2000,
+    useCount: 100,
+    receiveCount: 1200,
+    enableTime: '2024-01-01 00:00:00',
+    code: 'BABY50',
+    memberLevel: 0
+  },
+  {
+    id: 17,
+    name: 'VIP专享券',
+    type: 1,
+    amount: 500,
+    minPoint: 3000,
+    startTime: '2024-01-01',
+    endTime: '2024-12-31',
+    useStatus: 0,
+    note: 'VIP会员专享，满3000减500',
+    publishCount: 500,
+    useCount: 20,
+    receiveCount: 200,
+    enableTime: '2024-01-01 00:00:00',
+    code: 'VIP500',
+    memberLevel: 2
+  },
+  {
+    id: 18,
+    name: '双11狂欢券',
+    type: 1,
+    amount: 200,
+    minPoint: 1500,
+    startTime: '2024-11-01',
+    endTime: '2024-11-15',
+    useStatus: 0,
+    note: '双11购物节专享',
+    publishCount: 10000,
+    useCount: 500,
+    receiveCount: 8000,
+    enableTime: '2024-11-01 00:00:00',
+    code: 'DOUBLE11_200',
     memberLevel: 0
   }
 ]
@@ -3857,28 +4546,6 @@ export const mallMockApi = {
     }
   },
 
-  '/sso/updatePassword': (data: {
-    telephone: string;
-    password: string;
-    authCode: string;
-  }) => {
-    console.log('修改密码:', data)
-    return {
-      code: 200,
-      message: '修改密码成功',
-      data: null
-    }
-  },
-
-  '/sso/refreshToken': () => ({
-    code: 200,
-    message: '操作成功',
-    data: {
-      token: 'eyJhbGciOiJIUzUxMiJ9.refreshed_token_data.refreshed_signature',
-      tokenHead: 'Bearer '
-    }
-  }),
-
   // ==================== 专题列表接口 ====================
   '/home/subjectList': ({ cateId, pageNum = 1, pageSize = 4 }: {
     cateId?: number;
@@ -3968,7 +4635,306 @@ export const mallMockApi = {
       total_amount: '100.00',
       out_trade_no: outTradeNo
     }
-  })
+  }),
+
+  // ==================== ElasticSearch商品搜索接口 ====================
+  '/esProduct/search/simple': ({ keyword = '', pageNum = 0, pageSize = 5 }: {
+    keyword?: string;
+    pageNum?: number;
+    pageSize?: number;
+  }) => {
+    let filteredProducts = [...mockProducts];
+
+    if (keyword) {
+      filteredProducts = filteredProducts.filter(p =>
+        p.name.includes(keyword) ||
+        p.subTitle.includes(keyword) ||
+        p.brandName.includes(keyword)
+      );
+    }
+
+    const startIndex = pageNum * pageSize;
+    const endIndex = startIndex + pageSize;
+    const pageData = filteredProducts.slice(startIndex, endIndex);
+
+    return {
+      code: 200,
+      message: '操作成功',
+      data: {
+        pageNum,
+        pageSize,
+        totalPage: Math.ceil(filteredProducts.length / pageSize),
+        total: filteredProducts.length,
+        list: pageData
+      }
+    };
+  },
+
+  '/esProduct/search': ({ keyword = '', brandId, productCategoryId, sort = 0, pageNum = 0, pageSize = 5 }: {
+    keyword?: string;
+    brandId?: number;
+    productCategoryId?: number;
+    sort?: number;
+    pageNum?: number;
+    pageSize?: number;
+  }) => {
+    let filteredProducts = [...mockProducts];
+
+    // 关键词过滤
+    if (keyword) {
+      filteredProducts = filteredProducts.filter(p =>
+        p.name.includes(keyword) ||
+        p.subTitle.includes(keyword) ||
+        p.brandName.includes(keyword)
+      );
+    }
+
+    // 品牌过滤
+    if (brandId) {
+      filteredProducts = filteredProducts.filter(p => p.brandId === brandId);
+    }
+
+    // 分类过滤
+    if (productCategoryId) {
+      filteredProducts = filteredProducts.filter(p => p.productCategoryId === productCategoryId);
+    }
+
+    // 排序
+    switch (sort) {
+      case 1: // 按新品
+        filteredProducts = filteredProducts.sort((a, b) => b.newStatus - a.newStatus);
+        break;
+      case 2: // 按销量
+        filteredProducts = filteredProducts.sort((a, b) => b.sale - a.sale);
+        break;
+      case 3: // 价格从低到高
+        filteredProducts = filteredProducts.sort((a, b) => a.price - b.price);
+        break;
+      case 4: // 价格从高到低
+        filteredProducts = filteredProducts.sort((a, b) => b.price - a.price);
+        break;
+      default: // 按相关度（默认）
+        break;
+    }
+
+    const startIndex = pageNum * pageSize;
+    const endIndex = startIndex + pageSize;
+    const pageData = filteredProducts.slice(startIndex, endIndex);
+
+    return {
+      code: 200,
+      message: '操作成功',
+      data: {
+        pageNum,
+        pageSize,
+        totalPage: Math.ceil(filteredProducts.length / pageSize),
+        total: filteredProducts.length,
+        list: pageData
+      }
+    };
+  },
+
+  '/esProduct/recommend/:id': ({ id, pageNum = 0, pageSize = 5 }: {
+    id: number;
+    pageNum?: number;
+    pageSize?: number;
+  }) => {
+    const currentProduct = mockProducts.find(p => p.id === Number(id));
+    let recommendedProducts: typeof mockProducts = [];
+
+    if (currentProduct) {
+      // 推荐同品牌或同分类的商品
+      recommendedProducts = mockProducts.filter(p =>
+        p.id !== currentProduct.id &&
+        (p.brandId === currentProduct.brandId || p.productCategoryId === currentProduct.productCategoryId)
+      );
+    } else {
+      // 如果找不到商品，推荐热门商品
+      recommendedProducts = mockProducts.filter(p => p.recommandStatus === 1);
+    }
+
+    const startIndex = pageNum * pageSize;
+    const endIndex = startIndex + pageSize;
+    const pageData = recommendedProducts.slice(startIndex, endIndex);
+
+    return {
+      code: 200,
+      message: '操作成功',
+      data: {
+        pageNum,
+        pageSize,
+        totalPage: Math.ceil(recommendedProducts.length / pageSize),
+        total: recommendedProducts.length,
+        list: pageData
+      }
+    };
+  },
+
+  // ==================== 新增密码修改接口 ====================
+  '/sso/changePassword': (data: {
+    telephone: string;
+    password: string;
+    authCode: string;
+  }) => {
+    console.log('修改密码:', data);
+    // 验证验证码
+    if (data.authCode !== '123456') {
+      return {
+        code: 400,
+        message: '验证码错误',
+        data: null
+      };
+    }
+
+    return {
+      code: 200,
+      message: '密码修改成功',
+      data: null
+    };
+  },
+
+  // ==================== 新增Token刷新接口 ====================
+  '/sso/refreshAccessToken': () => ({
+    code: 200,
+    message: '操作成功',
+    data: {
+      token: 'eyJhbGciOiJIUzUxMiJ9.refreshed_token_data.refreshed_signature',
+      tokenHead: 'Bearer '
+    }
+  }),
+
+  // ==================== 品牌相关接口 ====================
+  '/brand/listAll': () => ({
+    code: 200,
+    message: '操作成功',
+    data: mockBrands.filter(b => b.showStatus === 1)
+  }),
+
+  '/brand/detail/:id': ({ id }: { id: number }) => {
+    const brand = mockBrands.find(b => b.id === Number(id));
+    return {
+      code: 200,
+      message: '操作成功',
+      data: brand || null
+    };
+  },
+
+  // ==================== 促销活动接口 ====================
+  '/promotion/flashPromotion/list': ({ pageNum = 1, pageSize = 5 }: {
+    pageNum?: number;
+    pageSize?: number;
+  }) => {
+    const flashPromotions = [
+      {
+        id: 1,
+        title: '每日秒杀',
+        startDate: '2024-08-09',
+        endDate: '2024-08-09',
+        status: 1,
+        createTime: '2024-08-08 10:00:00',
+        productList: mockProducts.filter(p => p.recommandStatus === 1).slice(0, 10)
+      }
+    ];
+
+    return {
+      code: 200,
+      message: '操作成功',
+      data: {
+        pageNum,
+        pageSize,
+        totalPage: 1,
+        total: flashPromotions.length,
+        list: flashPromotions
+      }
+    };
+  },
+
+  // ==================== 收藏相关接口 ====================
+  '/member/productCollection/add': (data: { productId: number }) => {
+    console.log('添加收藏:', data);
+    return {
+      code: 200,
+      message: '收藏成功',
+      data: null
+    };
+  },
+
+  '/member/productCollection/delete': (data: { productId: number }) => {
+    console.log('取消收藏:', data);
+    return {
+      code: 200,
+      message: '取消收藏成功',
+      data: null
+    };
+  },
+
+  '/member/productCollection/list': ({ pageNum = 1, pageSize = 5 }: {
+    pageNum?: number;
+    pageSize?: number;
+  }) => {
+    const favoriteProducts = mockProducts.slice(0, 8); // 模拟收藏的商品
+
+    const startIndex = (pageNum - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const pageData = favoriteProducts.slice(startIndex, endIndex);
+
+    return {
+      code: 200,
+      message: '操作成功',
+      data: {
+        pageNum,
+        pageSize,
+        totalPage: Math.ceil(favoriteProducts.length / pageSize),
+        total: favoriteProducts.length,
+        list: pageData
+      }
+    };
+  },
+
+  // ==================== 积分相关接口 ====================
+  '/member/integration/list': ({ pageNum = 1, pageSize = 10 }: {
+    pageNum?: number;
+    pageSize?: number;
+  }) => {
+    const integrationHistory = [
+      {
+        id: 1,
+        memberId: 1,
+        createTime: '2024-08-09 10:00:00',
+        changeCount: 100,
+        note: '购买商品获得积分',
+        sourceType: 1
+      },
+      {
+        id: 2,
+        memberId: 1,
+        createTime: '2024-08-08 15:30:00',
+        changeCount: -50,
+        note: '使用积分抵扣',
+        sourceType: 2
+      },
+      {
+        id: 3,
+        memberId: 1,
+        createTime: '2024-08-07 09:15:00',
+        changeCount: 200,
+        note: '签到获得积分',
+        sourceType: 3
+      }
+    ];
+
+    return {
+      code: 200,
+      message: '操作成功',
+      data: {
+        pageNum,
+        pageSize,
+        totalPage: 1,
+        total: integrationHistory.length,
+        list: integrationHistory
+      }
+    };
+  }
 }
 
 // 模拟专题数据
@@ -4006,6 +4972,142 @@ const mockSubjects = [
     showStatus: 1,
     content: '<h1>笔记本电脑专区</h1><p>高性能笔记本，满足您的工作需求</p>',
     forwardCount: 25
+  },
+  {
+    id: 3,
+    categoryId: 3,
+    title: '数码潮品汇',
+    pic: generateImageUrl(603),
+    productCount: 30,
+    recommendStatus: 1,
+    createTime: '2024-01-01',
+    collectCount: 120,
+    readCount: 1200,
+    commentCount: 60,
+    albumPics: generateImageUrl(603),
+    description: '时尚数码配件一站购齐',
+    showStatus: 1,
+    content: '<h1>数码潮品汇</h1><p>精选数码配件，提升您的数字生活品质</p>',
+    forwardCount: 40
+  },
+  {
+    id: 4,
+    categoryId: 4,
+    title: '智能家电节',
+    pic: generateImageUrl(604),
+    productCount: 25,
+    recommendStatus: 1,
+    createTime: '2024-01-01',
+    collectCount: 90,
+    readCount: 900,
+    commentCount: 45,
+    albumPics: generateImageUrl(604),
+    description: '打造智慧家居生活',
+    showStatus: 1,
+    content: '<h1>智能家电节</h1><p>智能家电让生活更便捷</p>',
+    forwardCount: 35
+  },
+  {
+    id: 5,
+    categoryId: 5,
+    title: '时尚穿搭秀',
+    pic: generateImageUrl(605),
+    productCount: 40,
+    recommendStatus: 1,
+    createTime: '2024-01-01',
+    collectCount: 150,
+    readCount: 1500,
+    commentCount: 75,
+    albumPics: generateImageUrl(605),
+    description: '潮流服饰，展现个性风采',
+    showStatus: 1,
+    content: '<h1>时尚穿搭秀</h1><p>最新潮流服饰，让您成为街头焦点</p>',
+    forwardCount: 50
+  },
+  {
+    id: 6,
+    categoryId: 6,
+    title: '美妆护肤馆',
+    pic: generateImageUrl(606),
+    productCount: 35,
+    recommendStatus: 1,
+    createTime: '2024-01-01',
+    collectCount: 200,
+    readCount: 2000,
+    commentCount: 100,
+    albumPics: generateImageUrl(606),
+    description: '美丽从这里开始',
+    showStatus: 1,
+    content: '<h1>美妆护肤馆</h1><p>精选美妆护肤产品，让您焕发自信光彩</p>',
+    forwardCount: 60
+  },
+  {
+    id: 7,
+    categoryId: 7,
+    title: '健康食品专区',
+    pic: generateImageUrl(607),
+    productCount: 50,
+    recommendStatus: 1,
+    createTime: '2024-01-15',
+    collectCount: 80,
+    readCount: 800,
+    commentCount: 40,
+    albumPics: generateImageUrl(607),
+    description: '健康生活，从饮食开始',
+    showStatus: 1,
+    content: '<h1>健康食品专区</h1><p>精选健康食品，守护家人健康</p>',
+    forwardCount: 25
+  },
+  {
+    id: 8,
+    categoryId: 8,
+    title: '母婴用品大全',
+    pic: generateImageUrl(608),
+    productCount: 60,
+    recommendStatus: 1,
+    createTime: '2024-02-01',
+    collectCount: 180,
+    readCount: 1800,
+    commentCount: 90,
+    albumPics: generateImageUrl(608),
+    description: '宝宝成长每一步，我们都在',
+    showStatus: 1,
+    content: '<h1>母婴用品大全</h1><p>为宝宝提供最好的成长陪伴</p>',
+    forwardCount: 45
+  },
+  {
+    id: 9,
+    categoryId: 9,
+    title: '运动健身专场',
+    pic: generateImageUrl(609),
+    productCount: 45,
+    recommendStatus: 1,
+    createTime: '2024-02-15',
+    collectCount: 120,
+    readCount: 1200,
+    commentCount: 65,
+    albumPics: generateImageUrl(609),
+    description: '运动改变生活，健康成就未来',
+    showStatus: 1,
+    content: '<h1>运动健身专场</h1><p>专业运动装备，助您达成健身目标</p>',
+    forwardCount: 35
+  },
+  {
+    id: 10,
+    categoryId: 10,
+    title: '汽车用品精选',
+    pic: generateImageUrl(610),
+    productCount: 30,
+    recommendStatus: 1,
+    createTime: '2024-03-01',
+    collectCount: 60,
+    readCount: 600,
+    commentCount: 30,
+    albumPics: generateImageUrl(610),
+    description: '让爱车更贴心，让出行更安心',
+    showStatus: 1,
+    content: '<h1>汽车用品精选</h1><p>精选汽车用品，提升驾驶体验</p>',
+    forwardCount: 20
   }
 ]
 

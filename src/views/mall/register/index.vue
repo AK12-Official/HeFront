@@ -24,17 +24,18 @@
                     @submit.prevent="handleRegister">
                     <el-form-item prop="username">
                         <el-input v-model="registerForm.username" placeholder="请输入用户名" size="large" :prefix-icon="User"
-                            clearable />
+                            clearable title="用户名" />
                     </el-form-item>
 
                     <el-form-item prop="password">
                         <el-input v-model="registerForm.password" type="password" placeholder="请输入密码" size="large"
-                            :prefix-icon="Lock" show-password clearable />
+                            :prefix-icon="Lock" show-password clearable title="密码" />
                     </el-form-item>
 
                     <el-form-item prop="confirmPassword">
                         <el-input v-model="registerForm.confirmPassword" type="password" placeholder="请确认密码"
-                            size="large" :prefix-icon="Lock" show-password clearable @keyup.enter="handleRegister" />
+                            size="large" :prefix-icon="Lock" show-password clearable @keyup.enter="handleRegister"
+                            title="确认密码" />
                     </el-form-item>
 
                     <el-form-item>

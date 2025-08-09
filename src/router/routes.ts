@@ -36,11 +36,6 @@ export const Routes = [
         name: 'mall-home',
       },
       {
-        path: 'category',
-        component: () => import('@/views/mall/category/index.vue'),
-        name: 'mall-category',
-      },
-      {
         path: 'product/detail/:id',
         component: () => import('@/views/mall/product/detail.vue'),
         name: 'mall-product-detail',
@@ -66,9 +61,34 @@ export const Routes = [
         name: 'mall-order-create',
       },
       {
+        path: 'payment/:orderId',
+        component: () => import('@/views/mall/payment/index.vue'),
+        name: 'mall-payment',
+      },
+      {
+        path: 'payment/result',
+        component: () => import('@/views/mall/payment/result.vue'),
+        name: 'mall-payment-result',
+      },
+      {
         path: 'order/:id',
         component: () => import('@/views/mall/order/detail.vue'),
         name: 'mall-order-detail',
+      },
+      {
+        path: 'order/detail/:id',
+        component: () => import('@/views/mall/order/detail.vue'),
+        name: 'mall-order-detail-alt',
+      },
+      {
+        path: 'order/return-apply/:orderId/:productId',
+        component: () => import('@/views/mall/order/return-apply.vue'),
+        name: 'mall-order-return-apply',
+      },
+      {
+        path: 'order/return-list',
+        component: () => import('@/views/mall/order/return-list.vue'),
+        name: 'mall-order-return-list',
       },
       {
         path: 'address',

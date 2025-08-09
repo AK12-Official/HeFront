@@ -73,6 +73,9 @@
               <el-button v-if="order.status === 2" size="small" @click="confirmReceive(order)">
                 确认收货
               </el-button>
+              <el-button v-if="order.status === 3" size="small" type="warning" @click="applyReturn(order)">
+                申请退货
+              </el-button>
               <el-button v-if="order.status === 4" size="small" @click="deleteOrder(order)">
                 删除订单
               </el-button>
@@ -385,6 +388,26 @@ const cancelOrder = async (order: Order) => {
   } catch (error) {
     console.error('取消订单失败:', error)
     ElMessage.error('取消订单失败')
+  }
+}
+
+// 申请退货
+const applyReturn = (order: Order) => {
+  if (!order.orderItemList || order.orderItemList.length === 0) {
+    ElMessage.error('该订单没有商品可以退货')
+    return
+  }
+
+  // 如果只有一个商品，直接跳转
+  if (order.orderItemList.length === 1) {
+    const product = order.orderItemList[0]
+    router.push(`/mall/order/return-apply/${order.id}/${product.productId}`)
+  } else {
+    // 如果有多个商品，可以让用户选择要退货的商品
+    // 这里简化处理，跳转到第一个商品的退货页面
+    // 实际应用中可以显示商品选择弹窗
+    const product = order.orderItemList[0]
+    router.push(`/mall/order/return-apply/${order.id}/${product.productId}`)
   }
 }
 

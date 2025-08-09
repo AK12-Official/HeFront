@@ -6,7 +6,7 @@
         <h1 class="mall-title">爱心商城</h1>
         <nav class="nav-menu">
           <router-link to="/mall/home" class="nav-item">首页</router-link>
-          <router-link to="/mall/category" class="nav-item">分类</router-link>
+          <router-link to="/mall/product/list" class="nav-item">分类</router-link>
           <router-link to="/mall/cart" class="nav-item">购物车</router-link>
           <router-link to="/mall/order" class="nav-item">订单</router-link>
           <router-link to="/mall/user" class="nav-item">个人中心</router-link>

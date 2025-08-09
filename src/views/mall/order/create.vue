@@ -1,447 +1,460 @@
-<!-- eslint-disable @typescript-eslint/no-explicit-any -->
+<!-- 基于MallLite接口文档的订单确认页面 -->
 <template>
-  <div class="order-create-container">
+  <div class="order-confirm-container">
     <div class="order-header">
       <h2>确认订单</h2>
     </div>
 
-    <div class="order-content">
+    <div v-if="loading" class="loading-section">
+      <el-skeleton :rows="5" animated />
+    </div>
+
+    <div v-else-if="!confirmOrderData" class="error-section">
+      <el-empty description="订单信息加载失败">
+        <el-button type="primary" @click="goBack">返回购物车</el-button>
+      </el-empty>
+    </div>
+
+    <div v-else class="order-content">
       <!-- 收货地址 -->
       <div class="address-section">
         <div class="section-title">
-          <span>收货地址</span>
-          <el-button size="small" type="primary" @click="selectAddress">
-            {{ selectedAddress ? '更换地址' : '选择地址' }}
-          </el-button>
+          <el-icon>
+            <Location />
+          </el-icon>
+          收货地址
         </div>
 
-        <div v-if="selectedAddress" class="address-info">
-          <div class="address-main">
-            <span class="name">{{ selectedAddress.name }}</span>
-            <span class="phone">{{ selectedAddress.phoneNumber }}</span>
-            <span class="default-tag" v-if="selectedAddress.defaultStatus">默认</span>
-          </div>
-          <div class="address-detail">
-            {{ selectedAddress.province }} {{ selectedAddress.city }} {{ selectedAddress.region }} {{
-              selectedAddress.detailAddress }}
-          </div>
+        <div v-if="!selectedAddress" class="no-address">
+          <p>您还没有收货地址，请先添加</p>
+          <el-button type="primary" @click="addAddress">添加收货地址</el-button>
         </div>
 
-        <div v-else class="no-address">
-          <span>请选择收货地址</span>
-        </div>
-      </div>
-
-      <!-- 商品清单 -->
-      <div class="product-section">
-        <div class="section-title">商品清单</div>
-        <div v-if="loading" class="loading-section">
-          <el-text>正在加载商品信息...</el-text>
-        </div>
-        <div v-else-if="orderItems.length === 0" class="empty-section">
-          <el-text>暂无商品</el-text>
-        </div>
-        <div v-else class="product-list">
-          <div v-for="item in orderItems" :key="item.id" class="product-item">
-            <img :src="item.productPic" :alt="item.productName" class="product-image" />
-            <div class="product-info">
-              <h4 class="product-name">{{ item.productName }}</h4>
-              <p class="product-attr" v-if="item.productAttr">{{ item.productAttr }}</p>
-              <div class="product-price-quantity">
-                <span class="price">¥{{ item.productPrice }}</span>
-                <span class="quantity">x{{ item.productQuantity }}</span>
+        <div v-else class="address-content">
+          <div class="selected-address" @click="showAddressDialog = true">
+            <div class="address-info">
+              <div class="contact">
+                <span class="name">{{ selectedAddress.name }}</span>
+                <span class="phone">{{ selectedAddress.phoneNumber }}</span>
+                <span v-if="selectedAddress.defaultStatus" class="default-tag">默认</span>
+              </div>
+              <div class="address">
+                {{ selectedAddress.province }} {{ selectedAddress.city }} {{ selectedAddress.region }} {{
+                  selectedAddress.detailAddress }}
               </div>
             </div>
-            <div class="item-total">
-              ¥{{ (item.productPrice * item.productQuantity).toFixed(2) }}
+            <el-icon class="arrow-icon">
+              <ArrowRight />
+            </el-icon>
+          </div>
+        </div>
+      </div>
+
+      <!-- 商品列表 -->
+      <div class="products-section">
+        <div class="section-title">商品清单</div>
+        <div class="product-list">
+          <div v-for="item in confirmOrderData.cartPromotionItemList" :key="item.id" class="product-item">
+            <img :src="item.productPic" :alt="item.productName" class="product-image" />
+            <div class="product-info">
+              <h3 class="product-name">{{ item.productName }}</h3>
+              <p class="product-attr" v-if="item.productAttr">{{ item.productAttr }}</p>
+              <div class="product-price">
+                <span class="price">¥{{ item.price }}</span>
+                <span class="quantity">x{{ item.quantity }}</span>
+              </div>
+            </div>
+            <div class="product-total">
+              ¥{{ (item.price * item.quantity).toFixed(2) }}
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 优惠券 -->
+      <!-- 优惠券选择 -->
       <div class="coupon-section">
-        <div class="section-title">
-          <span>优惠券</span>
-          <el-button size="small" @click="selectCoupon">
-            {{ selectedCoupon ? '更换优惠券' : '选择优惠券' }}
-          </el-button>
-        </div>
-
-        <div v-if="selectedCoupon" class="coupon-info">
-          <span class="coupon-name">{{ selectedCoupon.name }}</span>
-          <span class="coupon-discount">-¥{{ selectedCoupon.amount }}</span>
-        </div>
-
-        <div v-else class="no-coupon">
-          <span>暂无可用优惠券</span>
+        <div class="section-title">优惠券</div>
+        <div class="coupon-selector" @click="showCouponDialog = true">
+          <div class="coupon-info">
+            <span v-if="selectedCoupon">
+              {{ selectedCoupon.name }} -¥{{ selectedCoupon.amount }}
+            </span>
+            <span v-else class="no-coupon">
+              {{ availableCoupons.length > 0 ? '请选择优惠券' : '暂无可用优惠券' }}
+            </span>
+          </div>
+          <el-icon class="arrow-icon">
+            <ArrowRight />
+          </el-icon>
         </div>
       </div>
 
-      <!-- 配送方式 -->
-      <div class="delivery-section">
-        <div class="section-title">配送方式</div>
-        <div class="delivery-options">
-          <div v-for="option in deliveryOptions" :key="option.id" class="delivery-option"
-            :class="{ active: selectedDelivery === option.id }" @click="selectedDelivery = option.id">
-            <span class="option-name">{{ option.name }}</span>
-            <span class="option-price">{{ option.price > 0 ? `¥${option.price}` : '免费' }}</span>
+      <!-- 积分使用 -->
+      <div class="integration-section" v-if="confirmOrderData.memberIntegration > 0">
+        <div class="section-title">积分抵扣</div>
+        <div class="integration-content">
+          <div class="integration-info">
+            <span>可用积分：{{ confirmOrderData.memberIntegration }}</span>
+            <span class="integration-rule">（{{ integrationRule }}）</span>
+          </div>
+          <div class="integration-control">
+            <el-switch v-model="useIntegration" @change="onIntegrationChange" :disabled="maxIntegrationAmount <= 0" />
+            <el-input-number v-if="useIntegration" v-model="integrationAmount" :min="0" :max="maxIntegrationAmount"
+              :step="10" size="small" @change="onIntegrationAmountChange" />
           </div>
         </div>
       </div>
 
-      <!-- 支付方式 -->
-      <div class="payment-section">
-        <div class="section-title">支付方式</div>
-        <div class="payment-options">
-          <div v-for="option in paymentOptions" :key="option.id" class="payment-option"
-            :class="{ active: selectedPayment === option.id }" @click="selectedPayment = option.id">
-            <div class="option-info">
-              <img :src="option.icon" :alt="option.name" class="payment-icon" />
-              <span class="option-name">{{ option.name }}</span>
-            </div>
-            <div class="option-check">
-              <el-radio :model-value="selectedPayment" :label="option.id" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 备注 -->
+      <!-- 订单备注 -->
       <div class="note-section">
         <div class="section-title">订单备注</div>
         <el-input v-model="orderNote" type="textarea" :rows="3" placeholder="请输入订单备注（选填）" maxlength="200"
           show-word-limit />
       </div>
+
+      <!-- 费用明细 -->
+      <div class="amount-section">
+        <div class="amount-list">
+          <div class="amount-item">
+            <span>商品总额</span>
+            <span>¥{{ totalProductAmount.toFixed(2) }}</span>
+          </div>
+          <div class="amount-item">
+            <span>运费</span>
+            <span>¥{{ freightAmount.toFixed(2) }}</span>
+          </div>
+          <div class="amount-item" v-if="couponAmount > 0">
+            <span>优惠券优惠</span>
+            <span class="discount">-¥{{ couponAmount.toFixed(2) }}</span>
+          </div>
+          <div class="amount-item" v-if="integrationDiscount > 0">
+            <span>积分抵扣</span>
+            <span class="discount">-¥{{ integrationDiscount.toFixed(2) }}</span>
+          </div>
+          <div class="amount-item total">
+            <span>应付金额</span>
+            <span class="total-amount">¥{{ finalAmount.toFixed(2) }}</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- 订单汇总 -->
-    <div class="order-summary">
-      <div class="summary-item">
-        <span>商品金额：</span>
-        <span>¥{{ productTotal.toFixed(2) }}</span>
+    <!-- 底部提交 -->
+    <div class="order-footer" v-if="confirmOrderData">
+      <div class="footer-info">
+        <div class="total-info">
+          <span>实付款：</span>
+          <span class="amount">¥{{ finalAmount.toFixed(2) }}</span>
+        </div>
       </div>
-      <div class="summary-item">
-        <span>运费：</span>
-        <span>¥{{ deliveryFee.toFixed(2) }}</span>
-      </div>
-      <div class="summary-item" v-if="couponDiscount > 0">
-        <span>优惠券：</span>
-        <span class="discount">-¥{{ couponDiscount.toFixed(2) }}</span>
-      </div>
-      <div class="summary-total">
-        <span>应付金额：</span>
-        <span class="total-amount">¥{{ totalAmount.toFixed(2) }}</span>
-      </div>
-    </div>
-
-    <!-- 提交按钮 -->
-    <div class="submit-section">
-      <el-button type="danger" size="large" class="submit-btn" :loading="submitting" @click="submitOrder">
+      <el-button type="danger" size="large" class="submit-btn" :loading="submitting" @click="submitOrder"
+        :disabled="!selectedAddress">
         提交订单
       </el-button>
     </div>
+
+    <!-- 地址选择对话框 -->
+    <AddressSelectDialog v-model="showAddressDialog" :addresses="confirmOrderData?.memberReceiveAddressList || []"
+      :selected-id="selectedAddress?.id" @select="onAddressSelect" @add="addAddress" />
+
+    <!-- 优惠券选择对话框 -->
+    <CouponSelectDialog v-model="showCouponDialog" :coupons="availableCoupons" :selected-id="selectedCoupon?.id"
+      @select="onCouponSelect" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { orderGenerateConfirmOrder, orderGenerateOrder } from '@/api/mall'
-import type { CommonResult } from '@/api/mall/types'
+import { Location, ArrowRight } from '@element-plus/icons-vue'
+import {
+  orderGenerateConfirmOrder,
+  orderGenerateOrder,
+  memberCouponListCart
+} from '@/api/mall'
+import AddressSelectDialog from '@/components/AddressSelectDialog.vue'
+import CouponSelectDialog from '@/components/CouponSelectDialog.vue'
+import type {
+  ConfirmOrderResult,
+  MemberReceiveAddress,
+  MemberCoupon,
+  OrderParam
+} from '@/api/mall/types'
 
-interface Address {
-  id: number
-  name: string
-  phoneNumber: string
-  province: string
-  city: string
-  region: string
-  detailAddress: string
-  defaultStatus: boolean
-}
-
-interface OrderItem {
-  id: number
-  productId: number
-  productName: string
-  productPic: string
-  productPrice: number
-  productQuantity: number
-  productAttr?: string
-}
-
-interface Coupon {
-  id: number
-  name: string
-  amount: number
-  minPoint?: number
-}
-
-interface PaymentOption {
-  id: number
-  name: string
-  icon: string
-}
-
-interface DeliveryOption {
-  id: number
-  name: string
-  price: number
-}
-
-const route = useRoute()
 const router = useRouter()
+const route = useRoute()
 
-// 数据
-const selectedAddress = ref<Address | null>(null)
-const selectedCoupon = ref<Coupon | null>(null)
-const selectedDelivery = ref(1)
-const selectedPayment = ref(1)  // 默认选择支付宝
-const orderNote = ref('')
+// 数据状态
+const loading = ref(true)
 const submitting = ref(false)
+const confirmOrderData = ref<ConfirmOrderResult | null>(null)
+const orderNote = ref('')
 
-const orderItems = ref<OrderItem[]>([])
-const loading = ref(false)
+// 选择状态
+const selectedAddress = ref<MemberReceiveAddress | null>(null)
+const selectedCoupon = ref<MemberCoupon | null>(null)
+const useIntegration = ref(false)
+const integrationAmount = ref(0)
 
-const deliveryOptions = ref<DeliveryOption[]>([
-  { id: 1, name: '标准快递', price: 0 },
-  { id: 2, name: '次日达', price: 15 },
-  { id: 3, name: '当日达', price: 25 }
-])
+// 对话框状态
+const showAddressDialog = ref(false)
+const showCouponDialog = ref(false)
 
-const paymentOptions = ref<PaymentOption[]>([
-  { id: 1, name: '支付宝', icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE2IDJDOC4yNjggMiAyIDguMjY4IDIgMTZTOC4yNjggMzAgMTYgMzAgMzAgMjMuNzMyIDMwIDE2IDIzLjczMiAyIDE2IDJaIiBmaWxsPSIjMDA5NkZGIi8+CjxwYXRoIGQ9Ik0yMC4wNzggMTQuNzVIMTQuNzVWMTMuMjVIMjAuMDc4VjE0Ljc1WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+' },
-  { id: 2, name: '微信支付', icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE2IDJDOC4yNjggMiAyIDguMjY4IDIgMTZTOC4yNjggMzAgMTYgMzAgMzAgMjMuNzMyIDMwIDE2IDIzLjczMiAyIDE2IDJaIiBmaWxsPSIjMDBBRjAwIi8+CjxwYXRoIGQ9Ik0yMC4wNzggMTQuNzVIMTQuNzVWMTMuMjVIMjAuMDc4VjE0Ljc1WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+' }
-])
+// 可用优惠券
+const availableCoupons = ref<MemberCoupon[]>([])
 
 // 计算属性
-const productTotal = computed(() => {
-  return orderItems.value.reduce((total, item) => {
-    return total + (item.productPrice * item.productQuantity)
+const totalProductAmount = computed(() => {
+  if (!confirmOrderData.value) return 0
+  return confirmOrderData.value.cartPromotionItemList.reduce((total, item) => {
+    return total + (item.price * item.quantity)
   }, 0)
 })
 
-const deliveryFee = computed(() => {
-  const option = deliveryOptions.value.find(opt => opt.id === selectedDelivery.value)
-  return option ? option.price : 0
+const freightAmount = computed(() => {
+  return confirmOrderData.value?.calcAmount.freightAmount || 0
 })
 
-const couponDiscount = computed(() => {
-  return selectedCoupon.value ? selectedCoupon.value.amount : 0
+const couponAmount = computed(() => {
+  return selectedCoupon.value?.amount || 0
 })
 
-const totalAmount = computed(() => {
-  return Math.max(0, productTotal.value + deliveryFee.value - couponDiscount.value)
+const integrationDiscount = computed(() => {
+  if (!useIntegration.value || !confirmOrderData.value) return 0
+  const setting = confirmOrderData.value.integrationConsumeSetting
+  return integrationAmount.value / setting.deductionPerAmount
 })
 
-// 选择地址
-const selectAddress = () => {
-  // 这里可以打开地址选择弹窗或跳转到地址管理页面
-  ElMessage.info('地址选择功能开发中')
+const maxIntegrationAmount = computed(() => {
+  if (!confirmOrderData.value) return 0
+  const setting = confirmOrderData.value.integrationConsumeSetting
+  const maxByTotal = Math.floor(totalProductAmount.value * setting.maxPercentPerOrder / 100) * setting.deductionPerAmount
+  const maxByOwned = confirmOrderData.value.memberIntegration
+  return Math.min(maxByTotal, maxByOwned)
+})
 
-  // 模拟选择地址
-  selectedAddress.value = {
-    id: 1,
-    name: '张三',
-    phoneNumber: '13800138000',
-    province: '湖南省',
-    city: '长沙市',
-    region: '岳麓区',
-    detailAddress: '中南大学新校区',
-    defaultStatus: true
+const integrationRule = computed(() => {
+  if (!confirmOrderData.value) return ''
+  const setting = confirmOrderData.value.integrationConsumeSetting
+  return `每${setting.deductionPerAmount}积分抵扣1元`
+})
+
+const finalAmount = computed(() => {
+  return Math.max(0, totalProductAmount.value + freightAmount.value - couponAmount.value - integrationDiscount.value)
+})
+
+// 方法
+const loadConfirmOrder = async () => {
+  try {
+    loading.value = true
+    const cartIds = route.query.cartIds as string
+    if (!cartIds) {
+      ElMessage.error('缺少订单信息')
+      router.back()
+      return
+    }
+
+    const ids = cartIds.split(',').map(id => parseInt(id))
+    const response = await orderGenerateConfirmOrder(ids)
+
+    if (response.code === 200) {
+      confirmOrderData.value = response.data
+
+      // 设置默认地址
+      const defaultAddress = response.data.memberReceiveAddressList.find(addr => addr.defaultStatus === 1)
+      if (defaultAddress) {
+        selectedAddress.value = defaultAddress
+      } else if (response.data.memberReceiveAddressList.length > 0) {
+        selectedAddress.value = response.data.memberReceiveAddressList[0]
+      }
+
+      // 加载可用优惠券
+      loadAvailableCoupons()
+    } else {
+      ElMessage.error(response.message)
+      router.back()
+    }
+  } catch (error) {
+    console.error('加载确认订单失败:', error)
+    ElMessage.error('加载失败，请重试')
+    router.back()
+  } finally {
+    loading.value = false
   }
 }
 
-// 选择优惠券
-const selectCoupon = () => {
-  // 这里可以打开优惠券选择弹窗
-  ElMessage.info('优惠券选择功能开发中')
-
-  // 模拟选择优惠券
-  selectedCoupon.value = {
-    id: 1,
-    name: '满减优惠券',
-    amount: 50,
-    minPoint: 100
+const loadAvailableCoupons = async () => {
+  try {
+    const response = await memberCouponListCart(1) // 1表示可用的优惠券
+    if (response.code === 200) {
+      availableCoupons.value = response.data
+    }
+  } catch (error) {
+    console.error('加载优惠券失败:', error)
   }
 }
 
-// 提交订单
+const onAddressSelect = (address: MemberReceiveAddress) => {
+  selectedAddress.value = address
+  showAddressDialog.value = false
+}
+
+const onCouponSelect = (coupon: MemberCoupon | null) => {
+  selectedCoupon.value = coupon
+  showCouponDialog.value = false
+}
+
+const onIntegrationChange = (value: boolean) => {
+  if (value) {
+    integrationAmount.value = Math.min(100, maxIntegrationAmount.value)
+  } else {
+    integrationAmount.value = 0
+  }
+}
+
+const onIntegrationAmountChange = (value: number | undefined) => {
+  integrationAmount.value = Math.min(value || 0, maxIntegrationAmount.value)
+}
+
+const addAddress = () => {
+  router.push('/mall/address/edit')
+}
+
+const goBack = () => {
+  router.back()
+}
+
 const submitOrder = async () => {
   if (!selectedAddress.value) {
     ElMessage.warning('请选择收货地址')
     return
   }
 
-  if (orderItems.value.length === 0) {
-    ElMessage.warning('购物车为空')
-    return
-  }
-
-  if (!selectedPayment.value) {
-    ElMessage.warning('请选择支付方式')
-    return
-  }
-
   try {
     submitting.value = true
 
-    // 获取选中的购物车项ID
-    const cartIdsParam = route.query.cartIds as string
-    const cartIds = cartIdsParam ? cartIdsParam.split(',').map(id => Number(id)) : []
-
-    const orderData = {
+    const cartIds = route.query.cartIds as string
+    const orderParam: OrderParam = {
       memberReceiveAddressId: selectedAddress.value.id,
-      couponId: selectedCoupon.value?.id,
-      useIntegration: 0, // 暂时不使用积分
-      payType: selectedPayment.value,
-      cartIds: cartIds
+      payType: 1, // 默认支付宝支付
+      cartIds: cartIds.split(',').map(id => parseInt(id))
     }
 
-    console.log('提交订单数据:', orderData)
+    if (selectedCoupon.value) {
+      orderParam.couponId = selectedCoupon.value.id
+    }
 
-    // 调用生成订单API
-    const response = await orderGenerateOrder(orderData) as unknown as CommonResult<{ order: Record<string, unknown> }>
+    if (useIntegration.value && integrationAmount.value > 0) {
+      orderParam.useIntegration = integrationAmount.value
+    }
 
-    console.log('订单API响应:', response)
+    if (orderNote.value.trim()) {
+      orderParam.note = orderNote.value.trim()
+    }
+
+    const response = await orderGenerateOrder(orderParam)
 
     if (response.code === 200) {
       ElMessage.success('订单提交成功')
-
-      // 跳转到订单列表页面
-      router.push('/mall/order')
+      // 跳转到支付页面
+      router.push({
+        path: '/mall/payment',
+        query: {
+          orderId: response.data.id,
+          orderSn: response.data.orderSn,
+          amount: finalAmount.value
+        }
+      })
     } else {
-      ElMessage.error(response.message || '订单提交失败')
+      ElMessage.error(response.message)
     }
   } catch (error) {
     console.error('提交订单失败:', error)
-    ElMessage.error('提交订单失败')
+    ElMessage.error('提交失败，请重试')
   } finally {
     submitting.value = false
   }
 }
 
-// 加载订单确认数据
-const loadOrderData = async () => {
-  const cartIdsParam = route.query.cartIds as string
-
-  if (!cartIdsParam) {
-    ElMessage.error('未找到商品信息')
-    router.push('/mall/cart')
-    return
-  }
-
-  try {
-    loading.value = true
-    const cartIds = cartIdsParam.split(',').map(id => Number(id))
-    const response = await orderGenerateConfirmOrder(cartIds) as unknown as CommonResult<unknown[] | { cartPromotionItemList: unknown[] }>
-
-    // 处理API响应数据
-    if (response.code === 200 && response.data) {
-      if (Array.isArray(response.data)) {
-        // 如果直接返回商品数组
-        orderItems.value = response.data.map((item: unknown) => {
-          const cartItem = item as Record<string, unknown>
-          return {
-            id: cartItem.id as number,
-            productId: cartItem.productId as number,
-            productName: cartItem.productName as string,
-            productPic: cartItem.productPic as string,
-            productPrice: (cartItem.price || cartItem.productPrice) as number,
-            productQuantity: (cartItem.quantity || cartItem.productQuantity) as number,
-            productAttr: cartItem.productAttr as string
-          }
-        })
-      } else if ((response.data as Record<string, unknown>).cartPromotionItemList) {
-        // 如果返回完整的订单确认对象
-        const dataObj = response.data as { cartPromotionItemList: unknown[] }
-        orderItems.value = dataObj.cartPromotionItemList.map((item: unknown) => {
-          const cartItem = item as Record<string, unknown>
-          return {
-            id: cartItem.id as number,
-            productId: cartItem.productId as number,
-            productName: cartItem.productName as string,
-            productPic: cartItem.productPic as string,
-            productPrice: cartItem.price as number,
-            productQuantity: cartItem.quantity as number,
-            productAttr: cartItem.productAttr as string
-          }
-        })
-      }
-    } else {
-      ElMessage.error(response.message || '加载订单数据失败')
-      router.push('/mall/cart')
-    }
-  } catch (error) {
-    console.error('加载订单数据失败:', error)
-    ElMessage.error('加载订单数据失败')
-    router.push('/mall/cart')
-  } finally {
-    loading.value = false
-  }
-}
-
 onMounted(() => {
-  loadOrderData()
+  loadConfirmOrder()
 })
 </script>
 
-<style lang="scss" scoped>
-.order-create-container {
-  background: #f5f5f5;
+<style scoped lang="scss">
+.order-confirm-container {
   min-height: 100vh;
+  background-color: #f5f5f5;
   padding-bottom: 80px;
 }
 
 .order-header {
-  background: #fff;
-  padding: 20px;
+  background: white;
+  padding: 16px;
   border-bottom: 1px solid #eee;
 
   h2 {
     margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
+    font-size: 18px;
+    font-weight: 500;
   }
 }
 
-.order-content {
+.loading-section,
+.error-section {
   padding: 20px;
+}
 
-  .section-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 16px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 16px;
-  }
+.order-content {
+  padding: 0 16px 20px;
+}
 
-  .address-section,
-  .product-section,
-  .coupon-section,
-  .delivery-section,
-  .payment-section,
-  .note-section {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-  }
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.address-section,
+.products-section,
+.coupon-section,
+.integration-section,
+.note-section,
+.amount-section {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.no-address {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+}
+
+.selected-address {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
 
   .address-info {
-    .address-main {
+    flex: 1;
+
+    .contact {
       display: flex;
       align-items: center;
       gap: 12px;
       margin-bottom: 8px;
 
       .name {
-        font-weight: 600;
+        font-weight: 500;
         color: #333;
       }
 
@@ -450,259 +463,222 @@ onMounted(() => {
       }
 
       .default-tag {
-        background: #409eff;
+        background: #f56c6c;
         color: white;
-        font-size: 12px;
         padding: 2px 6px;
         border-radius: 4px;
+        font-size: 12px;
       }
     }
 
-    .address-detail {
+    .address {
       color: #666;
-      font-size: 14px;
+      line-height: 1.5;
     }
   }
 
-  .no-address,
-  .no-coupon {
-    color: #999;
-    font-size: 14px;
+  .arrow-icon {
+    color: #ccc;
   }
+}
 
-  .product-list {
-    .product-item {
-      display: flex;
-      align-items: center;
-      padding: 16px 0;
-      border-bottom: 1px solid #f5f5f5;
-
-      &:last-child {
-        border-bottom: none;
-      }
-
-      .product-image {
-        width: 80px;
-        height: 80px;
-        object-fit: cover;
-        border-radius: 4px;
-        margin-right: 16px;
-      }
-
-      .product-info {
-        flex: 1;
-
-        .product-name {
-          font-size: 16px;
-          color: #333;
-          margin: 0 0 8px 0;
-        }
-
-        .product-attr {
-          font-size: 12px;
-          color: #999;
-          margin: 0 0 8px 0;
-        }
-
-        .product-price-quantity {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-
-          .price {
-            font-size: 16px;
-            color: #e53e3e;
-            font-weight: 600;
-          }
-
-          .quantity {
-            color: #666;
-          }
-        }
-      }
-
-      .item-total {
-        font-size: 18px;
-        font-weight: 600;
-        color: #e53e3e;
-      }
-    }
-  }
-
-  .coupon-info {
+.product-list {
+  .product-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-
-    .coupon-name {
-      color: #333;
-    }
-
-    .coupon-discount {
-      color: #e53e3e;
-      font-weight: 600;
-    }
-  }
-
-  .delivery-options,
-  .payment-options {
-    display: flex;
-    flex-direction: column;
     gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
 
-    .delivery-option,
-    .payment-option {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-
-      &:hover {
-        border-color: #409eff;
-      }
-
-      &.active {
-        border-color: #409eff;
-        background: #f0f9ff;
-      }
-
-      .option-name {
-        color: #333;
-      }
-
-      .option-price {
-        color: #e53e3e;
-        font-weight: 600;
-      }
+    &:last-child {
+      border-bottom: none;
     }
-  }
 
-  .payment-options {
-    .payment-option {
-      .option-info {
+    .product-image {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .product-info {
+      flex: 1;
+
+      .product-name {
+        font-size: 14px;
+        font-weight: 500;
+        margin: 0 0 4px 0;
+        color: #333;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-clamp: 2;
+      }
+
+      .product-attr {
+        font-size: 12px;
+        color: #999;
+        margin: 0 0 8px 0;
+      }
+
+      .product-price {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
 
-        .payment-icon {
-          width: 24px;
-          height: 24px;
+        .price {
+          color: #f56c6c;
+          font-weight: 500;
         }
 
-        .option-name {
-          color: #333;
-          font-size: 16px;
-        }
-      }
-
-      .option-check {
-        .el-radio {
-          margin: 0;
+        .quantity {
+          color: #999;
+          font-size: 14px;
         }
       }
+    }
+
+    .product-total {
+      font-weight: 500;
+      color: #f56c6c;
     }
   }
 }
 
-.order-summary {
-  background: #fff;
-  padding: 20px;
-  margin: 0 20px 20px;
-  border-radius: 8px;
+.coupon-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
 
-  .summary-item {
+  .coupon-info {
+    .no-coupon {
+      color: #999;
+    }
+  }
+
+  .arrow-icon {
+    color: #ccc;
+  }
+}
+
+.integration-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .integration-info {
+    .integration-rule {
+      color: #999;
+      font-size: 12px;
+    }
+  }
+
+  .integration-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+.amount-list {
+  .amount-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 8px 0;
-    font-size: 14px;
-    color: #666;
+
+    &.total {
+      border-top: 1px solid #eee;
+      padding-top: 12px;
+      margin-top: 8px;
+      font-weight: 500;
+
+      .total-amount {
+        color: #f56c6c;
+        font-size: 18px;
+      }
+    }
 
     .discount {
-      color: #e53e3e;
-    }
-  }
-
-  .summary-total {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-top: 1px solid #eee;
-    margin-top: 8px;
-
-    .total-amount {
-      font-size: 20px;
-      font-weight: 600;
-      color: #e53e3e;
+      color: #f56c6c;
     }
   }
 }
 
-.submit-section {
+.order-footer {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: #fff;
-  padding: 16px 20px;
+  background: white;
+  padding: 16px;
   border-top: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   z-index: 100;
 
+  .footer-info {
+    .total-info {
+      font-size: 16px;
+
+      .amount {
+        color: #f56c6c;
+        font-weight: 500;
+        font-size: 18px;
+      }
+    }
+  }
+
   .submit-btn {
-    width: 100%;
-    height: 50px;
-    font-size: 16px;
-    font-weight: 600;
+    min-width: 120px;
   }
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .order-content {
-    padding: 16px;
+    padding: 0 12px 20px;
 
     .address-section,
-    .product-section,
+    .products-section,
     .coupon-section,
-    .delivery-section,
-    .note-section {
-      padding: 16px;
+    .integration-section,
+    .note-section,
+    .amount-section {
+      padding: 12px;
+    }
+  }
+
+  .product-list .product-item {
+    .product-image {
+      width: 60px;
+      height: 60px;
     }
 
-    .product-list .product-item {
-      .product-image {
-        width: 60px;
-        height: 60px;
+    .product-info {
+      .product-name {
+        font-size: 13px;
       }
+    }
+  }
 
-      .product-info {
-        .product-name {
-          font-size: 14px;
-        }
+  .order-footer {
+    padding: 12px;
 
-        .product-price-quantity .price {
-          font-size: 14px;
-        }
-      }
+    .footer-info .total-info {
+      font-size: 14px;
 
-      .item-total {
+      .amount {
         font-size: 16px;
       }
     }
-  }
 
-  .order-summary {
-    margin: 0 16px 20px;
-    padding: 16px;
-  }
-
-  .submit-section {
-    padding: 12px 16px;
+    .submit-btn {
+      min-width: 100px;
+    }
   }
 }
 </style>

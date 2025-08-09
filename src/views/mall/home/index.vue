@@ -231,8 +231,8 @@ const loadRecommendProducts = async (page = 1) => {
   try {
     isLoadingMore.value = true
 
-    // 后端API使用从0开始的页码，前端UI使用从1开始的页码
-    const response = await homeRecommendProductList(page - 1, pageSize)
+    // Mock API使用从1开始的页码，与前端UI保持一致
+    const response = await homeRecommendProductList(page, pageSize)
     const newProducts = (response.data?.list || []) as Product[]
 
     // 替换数据
@@ -275,7 +275,7 @@ const handleBannerClick = (banner: Banner) => {
 
 // 跳转分类
 const goToCategory = (categoryId: number) => {
-  router.push(`/mall/category?id=${categoryId}`)
+  router.push(`/mall/product/list?categoryId=${categoryId}`)
 }
 
 // 跳转商品详情

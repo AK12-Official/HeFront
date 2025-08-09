@@ -124,7 +124,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Loading, Clock, CircleCheck, CircleClose } from '@element-plus/icons-vue'
-import { orderDetail } from '@/api/mall'
+import { orderDetail, orderPaySuccess } from '@/api/mall'
 import type { CommonResult } from '@/api/mall/types'
 import { PaymentUtils } from '@/utils/payment'
 
@@ -153,7 +153,7 @@ const router = useRouter()
 const loading = ref(false)
 const paying = ref(false)
 const orderInfo = ref<OrderInfo | null>(null)
-const selectedPaymentMethod = ref(1) // 默认支付宝
+const selectedPaymentMethod = ref(99) // 默认模拟支付，方便测试
 const paymentDialogVisible = ref(false)
 const paymentStatus = ref<'pending' | 'waiting' | 'success' | 'failed'>('pending')
 const paymentError = ref('')
@@ -175,6 +175,13 @@ const paymentMethods = ref<PaymentMethod[]>([
     description: '使用微信安全快捷支付',
     icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTI0IDQ4QzM3LjI1NDggNDggNDggMzcuMjU0OCA0OCAyNEM0OCAxMC43NDUyIDM3LjI1NDggMCAyNCAwQzEwLjc0NTIgMCAwIDEwLjc0NTIgMCAyNEMwIDM3LjI1NDggMTAuNzQ1MiA0OCAyNCA0OFoiIGZpbGw9IiMwN0MxNjAiLz4KPHBhdGggZD0iTTMwLjExNyAyMi4xMjVIMjIuMTI1VjE5Ljg3NUgzMC4xMTdWMjIuMTI1WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+',
     enabled: false // 暂时禁用微信支付
+  },
+  {
+    id: 99,
+    name: '模拟支付',
+    description: '开发测试用，直接模拟支付成功',
+    icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTI0IDQ4QzM3LjI1NDggNDggNDggMzcuMjU0OCA0OCAyNEM0OCAxMC43NDUyIDM3LjI1NDggMCAyNCAwQzEwLjc0NTIgMCAwIDEwLjc0NTIgMCAyNEMwIDM3LjI1NDggMTAuNzQ1MiA0OCAyNCA0OFoiIGZpbGw9IiNGRkI3MDAiLz4KPHBhdGggZD0iTTM0IDIxTDE5IDM2TDE0IDMxIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4=',
+    enabled: true
   }
 ])
 
@@ -229,15 +236,39 @@ const handlePay = async () => {
     paymentDialogVisible.value = true
     paymentStatus.value = 'pending'
 
-    // 使用支付工具类发起支付
-    const paymentResult = await PaymentUtils.createAlipayPayment(orderInfo.value.orderSn)
+    // 模拟支付
+    if (selectedPaymentMethod.value === 99) {
+      // 模拟支付延迟
+      await new Promise(resolve => setTimeout(resolve, 2000))
 
-    if (paymentResult.success && paymentResult.paymentUrl) {
-      paymentStatus.value = 'waiting'
-      // 开始轮询检查支付状态
-      startPaymentStatusCheck()
+      // 直接设置为支付成功
+      paymentStatus.value = 'success'
+
+      // 调用支付成功接口更新订单状态
+      try {
+        await orderPaySuccess(orderInfo.value.id, 1)
+        ElMessage.success('支付成功！')
+      } catch (error) {
+        console.error('更新订单状态失败:', error)
+      }
+
+      // 延迟跳转到支付结果页面
+      setTimeout(() => {
+        if (orderInfo.value) {
+          router.push('/mall/payment/result?status=success&orderSn=' + orderInfo.value.orderSn)
+        }
+      }, 2000)
     } else {
-      throw new Error(paymentResult.error || '获取支付URL失败')
+      // 真实支付宝支付
+      const paymentResult = await PaymentUtils.createAlipayPayment(orderInfo.value.orderSn)
+
+      if (paymentResult.success && paymentResult.paymentUrl) {
+        paymentStatus.value = 'waiting'
+        // 开始轮询检查支付状态
+        startPaymentStatusCheck()
+      } else {
+        throw new Error(paymentResult.error || '获取支付URL失败')
+      }
     }
   } catch (error) {
     console.error('发起支付失败:', error)
@@ -276,13 +307,24 @@ const checkPaymentStatus = async () => {
         stopPaymentStatusCheck()
         paymentStatus.value = 'success'
 
-        // 关闭支付窗口
-        if (paymentWindow.value) {
-          paymentWindow.value.close()
+        // 调用支付成功接口更新订单状态
+        try {
+          await orderPaySuccess(orderInfo.value.id, 1) // 支付宝支付
+        } catch (error) {
+          console.error('更新订单状态失败:', error)
         }
 
-        // 支付成功，更新状态
-        console.log('支付成功，订单号:', orderInfo.value.orderSn)
+        // 延迟跳转到支付结果页面
+        setTimeout(() => {
+          if (orderInfo.value) {
+            router.push('/mall/payment/result?status=success&orderSn=' + orderInfo.value.orderSn)
+          }
+        }, 2000)
+      } else if (PaymentUtils.isPaymentFailed(result.status)) {
+        // 支付失败
+        stopPaymentStatusCheck()
+        paymentStatus.value = 'failed'
+        paymentError.value = '支付失败，请重试'
       }
     }
   } catch (error) {

@@ -371,8 +371,8 @@ const viewOrderDetail = (orderId: number) => {
 
 // 支付订单
 const payOrder = (order: Order) => {
-  // 这里应该跳转到支付页面，传递订单信息
-  router.push(`/mall/order/pay/${order.id}`)
+  // 跳转到支付页面，传递订单信息
+  router.push(`/mall/payment/${order.id}`)
 }
 
 // 取消订单

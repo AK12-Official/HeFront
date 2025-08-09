@@ -290,8 +290,11 @@ const goToProduct = (productId: number) => {
 
 // 支付订单
 const payOrder = () => {
-    ElMessage.success('跳转到支付页面')
-    // router.push(`/mall/pay/${orderDetail.value?.id}`)
+    if (orderDetail.value?.id) {
+        router.push(`/mall/payment/${orderDetail.value.id}`)
+    } else {
+        ElMessage.error('订单信息异常')
+    }
 }
 
 // 确认收货

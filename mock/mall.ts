@@ -4603,38 +4603,32 @@ export const mallMockApi = {
     outTradeNo: string;
     subject: string;
     totalAmount: string
-  }) => ({
-    code: 200,
-    message: '操作成功',
-    data: {
-      body: `alipay_sdk=alipay-sdk-java-4.22.110.ALL&app_id=2021000117648026&biz_content=%7B%22out_trade_no%22%3A%22${outTradeNo}%22%2C%22total_amount%22%3A%22${totalAmount}%22%2C%22subject%22%3A%22${subject}%22%2C%22product_code%22%3A%22QUICK_MSECURITY_PAY%22%7D&charset=UTF-8&format=json&method=alipay.trade.app.pay&notify_url=http%3A%2F%2Flocalhost%3A8080%2Falipay%2Fnotify&sign_type=RSA2&timestamp=2024-01-01+10%3A00%3A00&version=1.0&sign=mock_sign`
-    }
-  }),
+  }) => {
+    // 直接返回HTML表单字符串，模拟支付宝网页支付
+    return `<form name="punchout_form" method="post" action="https://openapi.alipay.com/gateway.do?charset=UTF-8&method=alipay.trade.page.pay&sign=mock_sign&return_url=http%3A%2F%2Flocalhost%3A5174%2Fmall%2Fpayment%2Fresult&notify_url=http%3A%2F%2Flocalhost%3A8080%2Falipay%2Fnotify&version=1.0&app_id=2021000117648026&sign_type=RSA2&timestamp=2024-01-01+10%3A00%3A00&alipay_sdk=alipay-sdk-java-4.22.110.ALL&format=json">
+<input type="hidden" name="biz_content" value="{&quot;out_trade_no&quot;:&quot;${outTradeNo}&quot;,&quot;total_amount&quot;:&quot;${totalAmount}&quot;,&quot;subject&quot;:&quot;${subject}&quot;,&quot;product_code&quot;:&quot;FAST_INSTANT_TRADE_PAY&quot;}">
+<input type="submit" value="立即支付" style="display:none" >
+</form>
+<script>document.forms[0].submit();</script>`
+  },
 
   '/alipay/webPay': ({ outTradeNo, subject, totalAmount }: {
     outTradeNo: string;
     subject: string;
     totalAmount: string
-  }) => ({
-    code: 200,
-    message: '操作成功',
-    data: {
-      body: `<form name="punchout_form" method="post" action="https://openapi.alipay.com/gateway.do?charset=UTF-8&method=alipay.trade.page.pay&sign=mock_sign&return_url=http%3A%2F%2Flocalhost%3A8080%2Falipay%2Freturn&notify_url=http%3A%2F%2Flocalhost%3A8080%2Falipay%2Fnotify&version=1.0&app_id=2021000117648026&sign_type=RSA2&timestamp=2024-01-01+10%3A00%3A00&alipay_sdk=alipay-sdk-java-4.22.110.ALL&format=json">
+  }) => {
+    // 直接返回HTML表单字符串，模拟支付宝网页支付
+    return `<form name="punchout_form" method="post" action="https://openapi.alipay.com/gateway.do?charset=UTF-8&method=alipay.trade.page.pay&sign=mock_sign&return_url=http%3A%2F%2Flocalhost%3A5174%2Fmall%2Fpayment%2Fresult&notify_url=http%3A%2F%2Flocalhost%3A8080%2Falipay%2Fnotify&version=1.0&app_id=2021000117648026&sign_type=RSA2&timestamp=2024-01-01+10%3A00%3A00&alipay_sdk=alipay-sdk-java-4.22.110.ALL&format=json">
 <input type="hidden" name="biz_content" value="{&quot;out_trade_no&quot;:&quot;${outTradeNo}&quot;,&quot;total_amount&quot;:&quot;${totalAmount}&quot;,&quot;subject&quot;:&quot;${subject}&quot;,&quot;product_code&quot;:&quot;FAST_INSTANT_TRADE_PAY&quot;}">
 <input type="submit" value="立即支付" style="display:none" >
 </form>
 <script>document.forms[0].submit();</script>`
-    }
-  }),
+  },
 
   '/alipay/query': ({ outTradeNo }: { outTradeNo: string }) => ({
     code: 200,
     message: '操作成功',
-    data: {
-      trade_status: 'TRADE_SUCCESS',
-      total_amount: '100.00',
-      out_trade_no: outTradeNo
-    }
+    data: 'TRADE_SUCCESS' // 直接返回支付状态字符串
   }),
 
   // ==================== ElasticSearch商品搜索接口 ====================

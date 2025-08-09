@@ -23,9 +23,13 @@ export class PaymentUtils {
     error?: string
   }> {
     try {
-      // 获取订单详情 - 注意：orderDetail需要orderId，不是orderSn
-      // 这里我们假设orderSn就是orderId，或者需要先通过orderSn获取orderId
-      const orderResponse = await mall.orderDetail(parseInt(orderSn)) as unknown as CommonResult<OrderDetail>
+      // 由于orderDetail API需要orderId，我们这里使用orderSn的数字部分作为orderId
+      // 在实际项目中，应该有专门的API通过orderSn获取订单详情
+      const orderIdMatch = orderSn.match(/(\d+)$/)
+      const orderId = orderIdMatch ? parseInt(orderIdMatch[1]) : parseInt(orderSn)
+
+      // 获取订单详情
+      const orderResponse = await mall.orderDetail(orderId) as unknown as CommonResult<OrderDetail>
 
       if (orderResponse.code !== 200 || !orderResponse.data) {
         return {
@@ -39,12 +43,12 @@ export class PaymentUtils {
       // 构建支付参数
       const paymentParam: AlipayParams = {
         outTradeNo: orderSn,  // 商户订单号
-        subject: order.productName || '商品订单',  // 订单标题
+        subject: `订单支付-${orderSn}`,  // 订单标题
         totalAmount: order.totalAmount.toString()  // 订单总金额，转换为字符串
       }
 
-      // 调用支付接口，后端返回HTML页面
-      const paymentResponse = await mall.alipayPay(paymentParam) as unknown as string
+      // 调用网页支付接口，后端返回HTML页面
+      const paymentResponse = await mall.alipayWebPay(paymentParam) as unknown as string
 
       if (paymentResponse && typeof paymentResponse === 'string') {
         // 创建临时form并提交到支付宝
@@ -54,7 +58,13 @@ export class PaymentUtils {
 
         const form = tempDiv.querySelector('form')
         if (form) {
-          form.submit()
+          // 在新窗口中打开支付页面
+          const payWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes')
+          if (payWindow) {
+            payWindow.document.write(paymentResponse)
+            payWindow.document.close()
+          }
+
           document.body.removeChild(tempDiv)
 
           return {

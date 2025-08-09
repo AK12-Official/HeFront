@@ -420,6 +420,18 @@ export interface OrderListParams extends PageParams {
   status: number; // -1:全部 0:待付款 1:待发货 2:已发货 3:已完成 4:已关闭
 }
 
+// 订单生成响应数据
+export interface OrderGenerateResponse {
+  order: Order;
+  payInfo: {
+    orderId: number;
+    orderSn: string;
+    payAmount: number;
+    payType: number;
+    payUrl?: string;
+  };
+}
+
 // ==================== 支付相关 ====================
 
 // 支付宝支付参数（与后端AliPayParam对应）

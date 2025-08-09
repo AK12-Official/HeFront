@@ -179,7 +179,9 @@ import type {
   ConfirmOrderResult,
   MemberReceiveAddress,
   MemberCoupon,
-  OrderParam
+  OrderParam,
+  CommonResult,
+  OrderGenerateResponse
 } from '@/api/mall/types'
 
 const router = useRouter()
@@ -353,19 +355,17 @@ const submitOrder = async () => {
       orderParam.note = orderNote.value.trim()
     }
 
-    const response = await orderGenerateOrder(orderParam)
+    const response = await orderGenerateOrder(orderParam) as unknown as CommonResult<OrderGenerateResponse>
 
     if (response.code === 200) {
       ElMessage.success('订单提交成功')
       // 跳转到支付页面
-      router.push({
-        path: '/mall/payment',
-        query: {
-          orderId: response.data.id,
-          orderSn: response.data.orderSn,
-          amount: finalAmount.value
-        }
-      })
+      const orderId = response.data.order?.id || response.data.payInfo?.orderId
+      if (orderId) {
+        router.push(`/mall/payment/${orderId}`)
+      } else {
+        ElMessage.error('订单ID获取失败')
+      }
     } else {
       ElMessage.error(response.message)
     }

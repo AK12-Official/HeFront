@@ -1,0 +1,523 @@
+{
+  "info": {
+    "name": "MallLite电商系统接口",
+    "description": "MallLite电商系统前端对接接口集合",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "1. 会员认证",
+      "item": [
+        {
+          "name": "用户注册",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/sso/register?username=testuser&password=123456&telephone=18888888888&authCode=123456",
+              "host": ["{{baseUrl}}"],
+              "path": ["sso", "register"],
+              "query": [
+                {"key": "username", "value": "testuser"},
+                {"key": "password", "value": "123456"},
+                {"key": "telephone", "value": "18888888888"},
+                {"key": "authCode", "value": "123456"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "用户登录",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/sso/login?username=testuser&password=123456",
+              "host": ["{{baseUrl}}"],
+              "path": ["sso", "login"],
+              "query": [
+                {"key": "username", "value": "testuser"},
+                {"key": "password", "value": "123456"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取会员信息",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/sso/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["sso", "info"]
+            }
+          }
+        },
+        {
+          "name": "获取验证码",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/sso/getAuthCode?telephone=18888888888",
+              "host": ["{{baseUrl}}"],
+              "path": ["sso", "getAuthCode"],
+              "query": [
+                {"key": "telephone", "value": "18888888888"}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. 首页内容",
+      "item": [
+        {
+          "name": "首页内容信息",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/home/content",
+              "host": ["{{baseUrl}}"],
+              "path": ["home", "content"]
+            }
+          }
+        },
+        {
+          "name": "推荐商品列表",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/home/recommendProductList?pageNum=1&pageSize=4",
+              "host": ["{{baseUrl}}"],
+              "path": ["home", "recommendProductList"],
+              "query": [
+                {"key": "pageNum", "value": "1"},
+                {"key": "pageSize", "value": "4"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "人气商品列表",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/home/hotProductList?pageNum=1&pageSize=6",
+              "host": ["{{baseUrl}}"],
+              "path": ["home", "hotProductList"],
+              "query": [
+                {"key": "pageNum", "value": "1"},
+                {"key": "pageSize", "value": "6"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "新品推荐列表",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/home/newProductList?pageNum=1&pageSize=6",
+              "host": ["{{baseUrl}}"],
+              "path": ["home", "newProductList"],
+              "query": [
+                {"key": "pageNum", "value": "1"},
+                {"key": "pageSize", "value": "6"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取商品分类",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/home/productCateList/0",
+              "host": ["{{baseUrl}}"],
+              "path": ["home", "productCateList", "0"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. 商品管理",
+      "item": [
+        {
+          "name": "商品搜索",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/product/search?keyword=手机&pageNum=0&pageSize=5&sort=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["product", "search"],
+              "query": [
+                {"key": "keyword", "value": "手机"},
+                {"key": "pageNum", "value": "0"},
+                {"key": "pageSize", "value": "5"},
+                {"key": "sort", "value": "0"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "商品详情",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/product/detail/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["product", "detail", "1"]
+            }
+          }
+        },
+        {
+          "name": "商品分类树",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/product/categoryTreeList",
+              "host": ["{{baseUrl}}"],
+              "path": ["product", "categoryTreeList"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. 购物车",
+      "item": [
+        {
+          "name": "添加商品到购物车",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"productSkuId\": 1,\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/add",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "add"]
+            }
+          }
+        },
+        {
+          "name": "获取购物车列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "list"]
+            }
+          }
+        },
+        {
+          "name": "修改商品数量",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/update/quantity?id=1&quantity=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "update", "quantity"],
+              "query": [
+                {"key": "id", "value": "1"},
+                {"key": "quantity", "value": "3"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "删除购物车商品",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/delete?ids=1,2,3",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "delete"],
+              "query": [
+                {"key": "ids", "value": "1,2,3"}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. 订单管理",
+      "item": [
+        {
+          "name": "生成确认订单",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[1, 2, 3]"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/order/generateConfirmOrder",
+              "host": ["{{baseUrl}}"],
+              "path": ["order", "generateConfirmOrder"]
+            }
+          }
+        },
+        {
+          "name": "提交订单",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberReceiveAddressId\": 1,\n  \"couponId\": 1,\n  \"useIntegration\": 100,\n  \"payType\": 1,\n  \"cartIds\": [1, 2, 3]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/order/generateOrder",
+              "host": ["{{baseUrl}}"],
+              "path": ["order", "generateOrder"]
+            }
+          }
+        },
+        {
+          "name": "订单列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/order/list?status=-1&pageNum=1&pageSize=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["order", "list"],
+              "query": [
+                {"key": "status", "value": "-1"},
+                {"key": "pageNum", "value": "1"},
+                {"key": "pageSize", "value": "5"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "订单详情",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/order/detail/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["order", "detail", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. 支付接口",
+      "item": [
+        {
+          "name": "支付宝电脑网站支付",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/alipay/pay?outTradeNo=202301010001&subject=商品支付&totalAmount=199.00",
+              "host": ["{{baseUrl}}"],
+              "path": ["alipay", "pay"],
+              "query": [
+                {"key": "outTradeNo", "value": "202301010001"},
+                {"key": "subject", "value": "商品支付"},
+                {"key": "totalAmount", "value": "199.00"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "查询支付状态",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/alipay/query?outTradeNo=202301010001",
+              "host": ["{{baseUrl}}"],
+              "path": ["alipay", "query"],
+              "query": [
+                {"key": "outTradeNo", "value": "202301010001"}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. 会员地址",
+      "item": [
+        {
+          "name": "添加收货地址",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"张三\",\n  \"phoneNumber\": \"18888888888\",\n  \"province\": \"广东省\",\n  \"city\": \"深圳市\",\n  \"region\": \"南山区\",\n  \"detailAddress\": \"科技园南区\",\n  \"defaultStatus\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/member/address/add",
+              "host": ["{{baseUrl}}"],
+              "path": ["member", "address", "add"]
+            }
+          }
+        },
+        {
+          "name": "获取地址列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/member/address/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["member", "address", "list"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. 会员优惠券",
+      "item": [
+        {
+          "name": "优惠券列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/member/coupon/list?useStatus=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["member", "coupon", "list"],
+              "query": [
+                {"key": "useStatus", "value": "0"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "购物车可用优惠券",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/member/coupon/list/cart/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["member", "coupon", "list", "cart", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8085",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

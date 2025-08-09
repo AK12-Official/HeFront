@@ -25,7 +25,7 @@ function createVideoList(count: number = 20) {
 }
 
 // 存储视频数据
-let videoDatabase = createVideoList(20);
+const videoDatabase = createVideoList(20);
 
 // 格式化时长显示
 function formatDuration(seconds: number): string {

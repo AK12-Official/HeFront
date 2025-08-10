@@ -1,4 +1,3 @@
-<!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <template>
   <div class="cart-container">
     <!-- 头部 -->
@@ -245,7 +244,9 @@ const formatProductAttr = (attr: string) => {
 }
 
 // 获取商品属性
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getItemProp = (item: CartItem, prop: string): any => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (item as any)[prop] || ''
 }
 

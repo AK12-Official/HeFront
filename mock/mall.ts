@@ -2366,6 +2366,368 @@ const mockProducts = [
         ])
       }
     ]
+  },
+
+  // 家居用品 - 智能家居
+  {
+    id: 63,
+    name: '小米智能门锁Pro',
+    subTitle: '指纹+密码+NFC多重解锁，C级锁芯',
+    price: 1699,
+    originalPrice: 1999,
+    pic: generateImageUrl(63),
+    albumPics: [generateImageUrl(63), generateImageUrl(163), generateImageUrl(263)],
+    detailTitle: '小米智能门锁Pro 详细介绍',
+    detailDesc: '多重安全防护，智能便捷生活',
+    detailHtml: `
+      <div class="product-detail">
+        <h3>安全特性</h3>
+        <ul>
+          <li>C级直插式锁芯 - 防撬防钻防开启</li>
+          <li>指纹识别 - 360°全向识别，0.5秒极速解锁</li>
+          <li>虚位密码 - 防偷窥设计</li>
+          <li>门锁状态监测 - 实时推送异常提醒</li>
+        </ul>
+        <h3>智能功能</h3>
+        <ul>
+          <li>米家APP远程管理</li>
+          <li>临时密码分享</li>
+          <li>开锁记录查看</li>
+          <li>低电量提醒</li>
+        </ul>
+      </div>
+    `,
+    productCategoryId: 8,
+    productCategoryName: '智能家居',
+    brandId: 3,
+    brandName: '小米',
+    stock: 45,
+    sale: 280,
+    publishStatus: 1,
+    newStatus: 1,
+    recommandStatus: 1,
+    sort: 95,
+    productAttributeValueList: [
+      { id: 114, value: '黑色', productAttributeId: 2, productAttributeName: '颜色' },
+      { id: 115, value: 'C级', productAttributeId: 14, productAttributeName: '锁芯等级' }
+    ],
+    skuStockList: [
+      {
+        id: 63,
+        productId: 63,
+        skuCode: 'SKU063',
+        price: 1699,
+        stock: 45,
+        lowStock: 5,
+        spData: JSON.stringify([
+          { key: '颜色', value: '黑色' },
+          { key: '锁芯等级', value: 'C级' }
+        ])
+      }
+    ]
+  },
+
+  // 服装鞋帽 - 运动鞋
+  {
+    id: 64,
+    name: 'Nike Air Max 270',
+    subTitle: '气垫缓震，透气舒适，时尚百搭',
+    price: 899,
+    originalPrice: 1199,
+    pic: generateImageUrl(64),
+    albumPics: [generateImageUrl(64), generateImageUrl(164), generateImageUrl(264)],
+    detailTitle: 'Nike Air Max 270 详细介绍',
+    detailDesc: 'Max Air 气垫单元，全天候舒适体验',
+    detailHtml: `
+      <div class="product-detail">
+        <h3>设计特色</h3>
+        <ul>
+          <li>Max Air 气垫单元 - 提供卓越缓震效果</li>
+          <li>轻质网眼鞋面 - 透气性佳，脚感舒适</li>
+          <li>橡胶外底 - 耐磨防滑，抓地力强</li>
+          <li>经典配色 - 时尚百搭，适合日常穿着</li>
+        </ul>
+        <h3>适用场景</h3>
+        <ul>
+          <li>日常休闲</li>
+          <li>轻量运动</li>
+          <li>街头搭配</li>
+          <li>旅行出行</li>
+        </ul>
+      </div>
+    `,
+    productCategoryId: 9,
+    productCategoryName: '运动鞋',
+    brandId: 8,
+    brandName: 'Nike',
+    stock: 120,
+    sale: 580,
+    publishStatus: 1,
+    newStatus: 0,
+    recommandStatus: 1,
+    sort: 88,
+    productAttributeValueList: [
+      { id: 116, value: '42', productAttributeId: 15, productAttributeName: '尺码' },
+      { id: 117, value: '白黑', productAttributeId: 2, productAttributeName: '颜色' }
+    ],
+    skuStockList: [
+      {
+        id: 64,
+        productId: 64,
+        skuCode: 'SKU064',
+        price: 899,
+        stock: 30,
+        lowStock: 5,
+        spData: JSON.stringify([
+          { key: '尺码', value: '42' },
+          { key: '颜色', value: '白黑' }
+        ])
+      },
+      {
+        id: 65,
+        productId: 64,
+        skuCode: 'SKU065',
+        price: 899,
+        stock: 25,
+        lowStock: 5,
+        spData: JSON.stringify([
+          { key: '尺码', value: '43' },
+          { key: '颜色', value: '白黑' }
+        ])
+      }
+    ]
+  },
+
+  // 母婴用品
+  {
+    id: 65,
+    name: '飞鹤星飞帆婴幼儿奶粉',
+    subTitle: '3段800g，适合12-36个月宝宝',
+    price: 328,
+    originalPrice: 398,
+    pic: generateImageUrl(65),
+    albumPics: [generateImageUrl(65), generateImageUrl(165), generateImageUrl(265)],
+    detailTitle: '飞鹤星飞帆婴幼儿奶粉 详细介绍',
+    detailDesc: '更适合中国宝宝体质的奶粉',
+    detailHtml: `
+      <div class="product-detail">
+        <h3>营养配方</h3>
+        <ul>
+          <li>OPO结构脂 - 更好吸收，减少便秘</li>
+          <li>水解蛋白 - 易消化，降低过敏风险</li>
+          <li>益生元组合 - 促进肠道健康</li>
+          <li>DHA+ARA - 支持大脑和视力发育</li>
+        </ul>
+        <h3>适用人群</h3>
+        <p>12-36个月幼儿</p>
+        <h3>冲调方法</h3>
+        <p>40°C温开水，先加水后加粉，1平勺奶粉（约4.6g）配30ml水</p>
+      </div>
+    `,
+    productCategoryId: 10,
+    productCategoryName: '母婴用品',
+    brandId: 9,
+    brandName: '飞鹤',
+    stock: 200,
+    sale: 1200,
+    publishStatus: 1,
+    newStatus: 0,
+    recommandStatus: 1,
+    sort: 92,
+    productAttributeValueList: [
+      { id: 118, value: '3段', productAttributeId: 16, productAttributeName: '适用年龄' },
+      { id: 119, value: '800g', productAttributeId: 17, productAttributeName: '规格' }
+    ],
+    skuStockList: [
+      {
+        id: 66,
+        productId: 65,
+        skuCode: 'SKU066',
+        price: 328,
+        stock: 200,
+        lowStock: 20,
+        spData: JSON.stringify([
+          { key: '适用年龄', value: '3段' },
+          { key: '规格', value: '800g' }
+        ])
+      }
+    ]
+  },
+
+  // 图书音像
+  {
+    id: 66,
+    name: '《活着》余华著',
+    subTitle: '茅盾文学奖获奖作品，当代文学经典',
+    price: 29.8,
+    originalPrice: 39.8,
+    pic: generateImageUrl(66),
+    albumPics: [generateImageUrl(66), generateImageUrl(166), generateImageUrl(266)],
+    detailTitle: '《活着》余华著 详细介绍',
+    detailDesc: '一部感人至深的当代文学经典',
+    detailHtml: `
+      <div class="product-detail">
+        <h3>作品简介</h3>
+        <p>《活着》是作家余华的代表作之一，讲述了在大时代背景下，随着内战、三年自然灾害、文化大革命等社会变革，徐福贵的人生和家庭不断经受着苦难，到了最后所有亲人都先后离他而去，仅剩下他和一头老牛相依为命。</p>
+        <h3>作者介绍</h3>
+        <p>余华，1960年4月3日生于浙江杭州，当代作家。中国作家协会委员会委员。代表作有《活着》《许三观卖血记》《兄弟》等。</p>
+        <h3>获奖情况</h3>
+        <ul>
+          <li>意大利格林扎纳·卡佛文学奖</li>
+          <li>法国文学和艺术骑士勋章</li>
+          <li>中华图书特殊贡献奖</li>
+        </ul>
+      </div>
+    `,
+    productCategoryId: 11,
+    productCategoryName: '图书音像',
+    brandId: 10,
+    brandName: '南海出版公司',
+    stock: 500,
+    sale: 3500,
+    publishStatus: 1,
+    newStatus: 0,
+    recommandStatus: 1,
+    sort: 90,
+    productAttributeValueList: [
+      { id: 120, value: '平装', productAttributeId: 18, productAttributeName: '装帧' },
+      { id: 121, value: '191页', productAttributeId: 19, productAttributeName: '页数' }
+    ],
+    skuStockList: [
+      {
+        id: 67,
+        productId: 66,
+        skuCode: 'SKU067',
+        price: 29.8,
+        stock: 500,
+        lowStock: 50,
+        spData: JSON.stringify([
+          { key: '装帧', value: '平装' },
+          { key: '页数', value: '191页' }
+        ])
+      }
+    ]
+  },
+
+  // 汽车用品
+  {
+    id: 67,
+    name: '70迈行车记录仪A800',
+    subTitle: '4K超清录制，内置GPS，停车监控',
+    price: 599,
+    originalPrice: 799,
+    pic: generateImageUrl(67),
+    albumPics: [generateImageUrl(67), generateImageUrl(167), generateImageUrl(267)],
+    detailTitle: '70迈行车记录仪A800 详细介绍',
+    detailDesc: '专业级行车安全守护',
+    detailHtml: `
+      <div class="product-detail">
+        <h3>核心功能</h3>
+        <ul>
+          <li>4K超清录制 - 3840×2160分辨率</li>
+          <li>内置GPS - 记录行车轨迹和速度</li>
+          <li>停车监控 - 24小时守护爱车</li>
+          <li>语音控制 - 解放双手，专注驾驶</li>
+          <li>Wi-Fi连接 - 手机APP查看回放</li>
+        </ul>
+        <h3>技术规格</h3>
+        <table>
+          <tr><td>镜头</td><td>Sony IMX415传感器</td></tr>
+          <tr><td>视角</td><td>150°超大广角</td></tr>
+          <tr><td>存储</td><td>支持最大128GB TF卡</td></tr>
+          <tr><td>电源</td><td>5V/2A，支持降压线</td></tr>
+        </table>
+      </div>
+    `,
+    productCategoryId: 12,
+    productCategoryName: '汽车用品',
+    brandId: 11,
+    brandName: '70迈',
+    stock: 80,
+    sale: 420,
+    publishStatus: 1,
+    newStatus: 1,
+    recommandStatus: 1,
+    sort: 87,
+    productAttributeValueList: [
+      { id: 122, value: '4K', productAttributeId: 20, productAttributeName: '分辨率' },
+      { id: 123, value: '内置GPS', productAttributeId: 21, productAttributeName: '特殊功能' }
+    ],
+    skuStockList: [
+      {
+        id: 68,
+        productId: 67,
+        skuCode: 'SKU068',
+        price: 599,
+        stock: 80,
+        lowStock: 8,
+        spData: JSON.stringify([
+          { key: '分辨率', value: '4K' },
+          { key: '特殊功能', value: '内置GPS' }
+        ])
+      }
+    ]
+  },
+
+  // 医药健康
+  {
+    id: 68,
+    name: '鱼跃血压计YE680CR',
+    subTitle: '医用级精准测量，大屏显示，语音播报',
+    price: 269,
+    originalPrice: 359,
+    pic: generateImageUrl(68),
+    albumPics: [generateImageUrl(68), generateImageUrl(168), generateImageUrl(268)],
+    detailTitle: '鱼跃血压计YE680CR 详细介绍',
+    detailDesc: '家庭健康监测的可靠选择',
+    detailHtml: `
+      <div class="product-detail">
+        <h3>产品特点</h3>
+        <ul>
+          <li>医用级精准 - 符合国际标准ESH、BHS、AAMI</li>
+          <li>大屏显示 - 3.5英寸高清液晶屏</li>
+          <li>语音播报 - 真人发声，老人易用</li>
+          <li>智能加压 - 自动识别血压范围</li>
+          <li>数据存储 - 可存储99组测量数据</li>
+        </ul>
+        <h3>适用人群</h3>
+        <ul>
+          <li>高血压患者日常监测</li>
+          <li>中老年人健康管理</li>
+          <li>医疗机构辅助设备</li>
+        </ul>
+        <h3>注意事项</h3>
+        <p>请在安静环境下测量，测量前休息5分钟，避免在运动后立即测量。</p>
+      </div>
+    `,
+    productCategoryId: 13,
+    productCategoryName: '医药健康',
+    brandId: 12,
+    brandName: '鱼跃',
+    stock: 150,
+    sale: 680,
+    publishStatus: 1,
+    newStatus: 0,
+    recommandStatus: 1,
+    sort: 89,
+    productAttributeValueList: [
+      { id: 124, value: '上臂式', productAttributeId: 22, productAttributeName: '测量方式' },
+      { id: 125, value: '语音播报', productAttributeId: 23, productAttributeName: '特色功能' }
+    ],
+    skuStockList: [
+      {
+        id: 69,
+        productId: 68,
+        skuCode: 'SKU069',
+        price: 269,
+        stock: 150,
+        lowStock: 15,
+        spData: JSON.stringify([
+          { key: '测量方式', value: '上臂式' },
+          { key: '特色功能', value: '语音播报' }
+        ])
+      }
+    ]
   }
 ]
 
@@ -2378,9 +2740,12 @@ const mockCategories = [
   { id: 5, name: '服饰鞋帽', parentId: 0, level: 0, showStatus: 1, sort: 80, icon: generateImageUrl(305) },
   { id: 6, name: '美妆护肤', parentId: 0, level: 0, showStatus: 1, sort: 75, icon: generateImageUrl(306) },
   { id: 7, name: '食品饮料', parentId: 0, level: 0, showStatus: 1, sort: 70, icon: generateImageUrl(307) },
-  { id: 8, name: '母婴用品', parentId: 0, level: 0, showStatus: 1, sort: 65, icon: generateImageUrl(308) },
+  { id: 8, name: '智能家居', parentId: 0, level: 0, showStatus: 1, sort: 65, icon: generateImageUrl(308) },
   { id: 9, name: '运动户外', parentId: 0, level: 0, showStatus: 1, sort: 60, icon: generateImageUrl(309) },
-  { id: 10, name: '汽车用品', parentId: 0, level: 0, showStatus: 1, sort: 55, icon: generateImageUrl(310) },
+  { id: 10, name: '母婴用品', parentId: 0, level: 0, showStatus: 1, sort: 55, icon: generateImageUrl(310) },
+  { id: 11, name: '图书音像', parentId: 0, level: 0, showStatus: 1, sort: 50, icon: generateImageUrl(311) },
+  { id: 12, name: '汽车用品', parentId: 0, level: 0, showStatus: 1, sort: 45, icon: generateImageUrl(312) },
+  { id: 13, name: '医药健康', parentId: 0, level: 0, showStatus: 1, sort: 40, icon: generateImageUrl(313) },
 
   // 二级分类
   { id: 101, name: '智能手机', parentId: 1, level: 1, showStatus: 1, sort: 100 },
@@ -2415,17 +2780,29 @@ const mockCategories = [
   { id: 703, name: '粮油米面', parentId: 7, level: 1, showStatus: 1, sort: 90 },
   { id: 704, name: '零食', parentId: 7, level: 1, showStatus: 1, sort: 85 },
 
-  { id: 801, name: '奶粉', parentId: 8, level: 1, showStatus: 1, sort: 100 },
-  { id: 802, name: '纸尿裤', parentId: 8, level: 1, showStatus: 1, sort: 95 },
-  { id: 803, name: '玩具', parentId: 8, level: 1, showStatus: 1, sort: 90 },
+  { id: 801, name: '智能锁', parentId: 8, level: 1, showStatus: 1, sort: 100 },
+  { id: 802, name: '智能音箱', parentId: 8, level: 1, showStatus: 1, sort: 95 },
+  { id: 803, name: '智能插座', parentId: 8, level: 1, showStatus: 1, sort: 90 },
 
-  { id: 901, name: '运动鞋服', parentId: 9, level: 1, showStatus: 1, sort: 100 },
+  { id: 901, name: '运动鞋', parentId: 9, level: 1, showStatus: 1, sort: 100 },
   { id: 902, name: '健身器材', parentId: 9, level: 1, showStatus: 1, sort: 95 },
   { id: 903, name: '户外装备', parentId: 9, level: 1, showStatus: 1, sort: 90 },
 
-  { id: 1001, name: '汽车配件', parentId: 10, level: 1, showStatus: 1, sort: 100 },
-  { id: 1002, name: '车载电器', parentId: 10, level: 1, showStatus: 1, sort: 95 },
-  { id: 1003, name: '汽车美容', parentId: 10, level: 1, showStatus: 1, sort: 90 }
+  { id: 1001, name: '奶粉', parentId: 10, level: 1, showStatus: 1, sort: 100 },
+  { id: 1002, name: '纸尿裤', parentId: 10, level: 1, showStatus: 1, sort: 95 },
+  { id: 1003, name: '玩具', parentId: 10, level: 1, showStatus: 1, sort: 90 },
+
+  { id: 1101, name: '文学小说', parentId: 11, level: 1, showStatus: 1, sort: 100 },
+  { id: 1102, name: '教育学习', parentId: 11, level: 1, showStatus: 1, sort: 95 },
+  { id: 1103, name: '音像制品', parentId: 11, level: 1, showStatus: 1, sort: 90 },
+
+  { id: 1201, name: '行车记录仪', parentId: 12, level: 1, showStatus: 1, sort: 100 },
+  { id: 1202, name: '车载电器', parentId: 12, level: 1, showStatus: 1, sort: 95 },
+  { id: 1203, name: '汽车美容', parentId: 12, level: 1, showStatus: 1, sort: 90 },
+
+  { id: 1301, name: '血压计', parentId: 13, level: 1, showStatus: 1, sort: 100 },
+  { id: 1302, name: '血糖仪', parentId: 13, level: 1, showStatus: 1, sort: 95 },
+  { id: 1303, name: '保健品', parentId: 13, level: 1, showStatus: 1, sort: 90 }
 ]
 
 // 模拟品牌数据
@@ -2469,7 +2846,11 @@ const mockBrands = [
   { id: 37, name: 'Hermès', firstLetter: 'H', logo: generateImageUrl(437), showStatus: 1, productCount: 1, brandStory: '法国奢侈品品牌' },
   { id: 38, name: 'LV', firstLetter: 'L', logo: generateImageUrl(438), showStatus: 1, productCount: 1, brandStory: '法国奢侈品牌路易威登' },
   { id: 39, name: 'Gucci', firstLetter: 'G', logo: generateImageUrl(439), showStatus: 1, productCount: 1, brandStory: '意大利奢侈时装品牌' },
-  { id: 40, name: 'Prada', firstLetter: 'P', logo: generateImageUrl(440), showStatus: 1, productCount: 1, brandStory: '意大利奢侈品牌' }
+  { id: 40, name: 'Prada', firstLetter: 'P', logo: generateImageUrl(440), showStatus: 1, productCount: 1, brandStory: '意大利奢侈品牌' },
+  { id: 41, name: '飞鹤', firstLetter: 'F', logo: generateImageUrl(441), showStatus: 1, productCount: 1, brandStory: '更适合中国宝宝体质的奶粉' },
+  { id: 42, name: '南海出版公司', firstLetter: 'N', logo: generateImageUrl(442), showStatus: 1, productCount: 1, brandStory: '专业图书出版社' },
+  { id: 43, name: '70迈', firstLetter: 'Q', logo: generateImageUrl(443), showStatus: 1, productCount: 1, brandStory: '专业车载智能设备品牌' },
+  { id: 44, name: '鱼跃', firstLetter: 'Y', logo: generateImageUrl(444), showStatus: 1, productCount: 1, brandStory: '专业医疗器械制造商' }
 ]
 
 // 模拟购物车数据
@@ -3422,6 +3803,91 @@ const mockCoupons = [
     receiveCount: 8000,
     enableTime: '2024-11-01 00:00:00',
     code: 'DOUBLE11_200',
+    memberLevel: 0
+  },
+  {
+    id: 19,
+    name: '智能家居专享券',
+    type: 2,
+    amount: 200,
+    minPoint: 1000,
+    startTime: '2024-01-01',
+    endTime: '2024-12-31',
+    useStatus: 0,
+    note: '智能家居产品专享优惠券',
+    publishCount: 1000,
+    useCount: 45,
+    receiveCount: 500,
+    enableTime: '2024-01-01 00:00:00',
+    code: 'SMARTHOME200',
+    memberLevel: 0
+  },
+  {
+    id: 20,
+    name: '运动鞋服券',
+    type: 2,
+    amount: 80,
+    minPoint: 400,
+    startTime: '2024-01-01',
+    endTime: '2024-12-31',
+    useStatus: 0,
+    note: '运动鞋服类商品专用',
+    publishCount: 2000,
+    useCount: 280,
+    receiveCount: 1200,
+    enableTime: '2024-01-01 00:00:00',
+    code: 'SPORTS80',
+    memberLevel: 0
+  },
+  {
+    id: 21,
+    name: '图书音像券',
+    type: 2,
+    amount: 15,
+    minPoint: 50,
+    startTime: '2024-01-01',
+    endTime: '2024-12-31',
+    useStatus: 0,
+    note: '图书音像类商品专享',
+    publishCount: 5000,
+    useCount: 1200,
+    receiveCount: 3500,
+    enableTime: '2024-01-01 00:00:00',
+    code: 'BOOKS15',
+    memberLevel: 0
+  },
+  {
+    id: 22,
+    name: '汽车用品券',
+    type: 2,
+    amount: 100,
+    minPoint: 500,
+    startTime: '2024-01-01',
+    endTime: '2024-12-31',
+    useStatus: 0,
+    note: '汽车用品类商品专用',
+    publishCount: 800,
+    useCount: 120,
+    receiveCount: 400,
+    enableTime: '2024-01-01 00:00:00',
+    code: 'AUTO100',
+    memberLevel: 0
+  },
+  {
+    id: 23,
+    name: '医药健康券',
+    type: 2,
+    amount: 50,
+    minPoint: 200,
+    startTime: '2024-01-01',
+    endTime: '2024-12-31',
+    useStatus: 0,
+    note: '医药健康类商品专享',
+    publishCount: 1500,
+    useCount: 380,
+    receiveCount: 900,
+    enableTime: '2024-01-01 00:00:00',
+    code: 'HEALTH50',
     memberLevel: 0
   }
 ]
@@ -4638,11 +5104,15 @@ export const mallMockApi = {
 <script>document.forms[0].submit();</script>`
   },
 
-  '/alipay/query': ({ outTradeNo }: { outTradeNo: string }) => ({
-    code: 200,
-    message: '操作成功',
-    data: 'TRADE_SUCCESS' // 直接返回支付状态字符串
-  }),
+  '/alipay/query': ({ outTradeNo }: { outTradeNo: string }) => {
+    // 根据订单号查询支付状态
+    console.log('查询支付状态，订单号:', outTradeNo)
+    return {
+      code: 200,
+      message: '操作成功',
+      data: 'TRADE_SUCCESS' // 直接返回支付状态字符串
+    }
+  },
 
   // ==================== ElasticSearch商品搜索接口 ====================
   '/esProduct/search/simple': ({ keyword = '', pageNum = 0, pageSize = 5 }: {

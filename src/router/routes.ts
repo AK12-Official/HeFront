@@ -147,5 +147,78 @@ export const Routes = [
     path: '/me',
     component: () => import('@/views/me/index.vue'),
     name: 'me',
+  },
+  // 后台管理系统路由
+  {
+    path: '/mall/admin/login',
+    component: () => import('@/views/MallAdmin/login.vue'),
+    name: 'admin-login',
+  },
+  {
+    path: '/mall/admin',
+    component: () => import('@/views/MallAdmin/layout.vue'),
+    redirect: '/mall/admin/dashboard',
+    children: [
+      {
+        path: 'dashboard',
+        component: () => import('@/views/MallAdmin/index.vue'),
+        name: 'admin-dashboard',
+        meta: { title: '仪表盘' }
+      },
+      {
+        path: 'users',
+        component: () => import('@/views/MallAdmin/users.vue'),
+        name: 'admin-users',
+        meta: { title: '管理员列表' }
+      },
+      {
+        path: 'products',
+        component: () => import('@/views/MallAdmin/products.vue'),
+        name: 'admin-products',
+        meta: { title: '商品列表' }
+      },
+      {
+        path: 'orders',
+        component: () => import('@/views/MallAdmin/orders.vue'),
+        name: 'admin-orders',
+        meta: { title: '订单列表' }
+      },
+      {
+        path: 'products/create',
+        component: () => import('@/views/MallAdmin/ProductCreate.vue'),
+        name: 'admin-product-create',
+        meta: { title: '添加商品' }
+      },
+      {
+        path: 'products/edit/:id',
+        component: () => import('@/views/MallAdmin/ProductEdit.vue'),
+        name: 'admin-product-edit',
+        meta: { title: '编辑商品' }
+      },
+      {
+        path: 'categories',
+        component: () => import('@/views/MallAdmin/Categories.vue'),
+        name: 'admin-categories',
+        meta: { title: '商品分类' }
+      },
+      {
+        path: 'upload',
+        component: () => import('@/views/MallAdmin/Upload.vue'),
+        name: 'admin-upload',
+        meta: { title: '文件管理' }
+      },
+      {
+        path: 'roles',
+        component: () => import('@/views/MallAdmin/Roles.vue'),
+        name: 'admin-roles',
+        meta: { title: '角色管理' }
+      },
+      {
+        path: 'resources',
+        component: () => import('@/views/MallAdmin/Resources.vue'),
+        name: 'admin-resources',
+        meta: { title: '资源管理' }
+      }
+    ]
   }
 ]

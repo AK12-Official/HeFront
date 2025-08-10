@@ -12,6 +12,9 @@ export * as sso from './sso';
 // 电商系统主要功能
 export * as mall from './mall';
 
+// 后台管理系统
+export * as malladmin from './malladmin';
+
 // 用户相关
 export * as user from './user';
 
@@ -21,6 +24,7 @@ export * as points from './points';
 // 默认导出便于整体导入
 export { default as ssoAPI } from './sso';
 export { default as mallAPI } from './mall';
+export { default as malladminAPI } from './malladmin';
 
 // 导出常用类型
 export type { CommonResult, PageResult, PageParams } from './mall/types';

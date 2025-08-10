@@ -1,3 +1,4 @@
+<!-- eslint-disable @typescript-eslint/no-unused-vars -->
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <template>
   <div class="user-center-container">
@@ -36,7 +37,7 @@
       </div>
     </div>
 
-    <div class="quick-actions">
+    <!-- <div class="quick-actions">
       <h3>快捷操作</h3>
       <div class="action-grid">
         <div v-for="action in quickActions" :key="action.key" class="action-item"
@@ -47,7 +48,7 @@
           <span class="action-title">{{ action.title }}</span>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <div class="settings-section">
       <div class="setting-item" @click="showEditProfile">
@@ -193,6 +194,7 @@ const menuItems = [
 ]
 
 // 快捷操作
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const quickActions = [
   { key: 'scan', title: '扫一扫', icon: 'el-icon-camera' },
   { key: 'share', title: '分享好友', icon: 'el-icon-share' },
@@ -226,6 +228,7 @@ const navigateTo = (path: string) => {
 }
 
 // 处理快捷操作
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleQuickAction = (action: string) => {
   switch (action) {
     case 'scan':

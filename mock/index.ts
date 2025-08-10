@@ -5,6 +5,8 @@
  */
 import { MockMethod } from 'vite-plugin-mock'
 import { mallMockApi } from './mall'
+import { adminMockApi } from './admin'
+import { userSeparationMockApi } from './user-separation'
 
 // 用户模拟数据（保留原有的）
 const userMocks: MockMethod[] = [
@@ -133,5 +135,7 @@ Object.entries(mallMockApi).forEach(([url, handler]) => {
 
 export default [
   ...userMocks,
-  ...mallMocks
+  ...mallMocks,
+  ...adminMockApi,  // 后台管理系统mock API
+  ...userSeparationMockApi  // 用户系统分离mock API
 ]

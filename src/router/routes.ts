@@ -14,10 +14,88 @@ export const Routes = [
     component: () => import('@/views/error/404.vue'),
     name: '404',
   },
-  { //商城
-    path: '/shop',
-    component: () => import('@/views/shop/index.vue'),
-    name: 'shop',
+  // 电商相关路由
+  {
+    path: '/mall',
+    component: () => import('@/views/mall/index.vue'),
+    redirect: '/mall/home', // 默认重定向到商城首页
+    children: [
+      {
+        path: 'login',
+        component: () => import('@/views/mall/login/index.vue'),
+        name: 'mall-login',
+      },
+      {
+        path: 'register',
+        component: () => import('@/views/mall/register/index.vue'),
+        name: 'mall-register',
+      },
+      {
+        path: 'home',
+        component: () => import('@/views/mall/home/index.vue'),
+        name: 'mall-home',
+      },
+      {
+        path: 'category',
+        component: () => import('@/views/mall/category/index.vue'),
+        name: 'mall-category',
+      },
+      {
+        path: 'product/detail/:id',
+        component: () => import('@/views/mall/product/detail.vue'),
+        name: 'mall-product-detail',
+      },
+      {
+        path: 'product/list',
+        component: () => import('@/views/mall/product/list.vue'),
+        name: 'mall-product-list',
+      },
+      {
+        path: 'cart',
+        component: () => import('@/views/mall/cart/index.vue'),
+        name: 'mall-cart',
+      },
+      {
+        path: 'order',
+        component: () => import('@/views/mall/order/index.vue'),
+        name: 'mall-order',
+      },
+      {
+        path: 'order/create',
+        component: () => import('@/views/mall/order/create.vue'),
+        name: 'mall-order-create',
+      },
+      {
+        path: 'order/:id',
+        component: () => import('@/views/mall/order/detail.vue'),
+        name: 'mall-order-detail',
+      },
+      {
+        path: 'address',
+        component: () => import('@/views/mall/address/index.vue'),
+        name: 'mall-address',
+      },
+      {
+        path: 'address/edit',
+        component: () => import('@/views/mall/address/edit.vue'),
+        name: 'mall-address-edit',
+      },
+      {
+        path: 'user',
+        component: () => import('@/views/mall/user/index.vue'),
+        name: 'mall-user',
+      },
+      {
+        path: 'coupon',
+        component: () => import('@/views/mall/coupon/index.vue'),
+        name: 'mall-coupon',
+      },
+      {
+        path: 'test',
+        component: () => import('@/views/mall/test.vue'),
+        name: 'mall-test',
+      },
+    ]
   },
   { //广场
     path: '/square',

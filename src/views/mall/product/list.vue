@@ -14,12 +14,20 @@
 
       <div class="filter-bar">
         <div class="filter-item">
-          <span class="filter-label">分类：</span>
-          <el-select v-model="selectedCategory" :key="`category-${categoryList.length}`" placeholder="全部分类"
-            @change="handleCategoryChange">
-            <el-option label="全部分类" value="0"></el-option>
-            <el-option v-for="category in categoryList" :key="category.id" :label="category.name"
-              :value="String(category.id)"></el-option>
+          <span class="filter-label">一级分类：</span>
+          <el-select v-model="selectedFirstCategory" placeholder="请选择一级分类" clearable
+            @change="handleFirstCategoryChange">
+            <el-option v-for="category in firstCategoryList" :key="category.id" :label="category.name"
+              :value="category.id" />
+          </el-select>
+        </div>
+
+        <div class="filter-item">
+          <span class="filter-label">二级分类：</span>
+          <el-select v-model="selectedSecondCategory" placeholder="请选择二级分类" clearable :disabled="!selectedFirstCategory"
+            @change="handleSecondCategoryChange">
+            <el-option v-for="category in secondCategoryList" :key="category.id" :label="category.name"
+              :value="category.id" />
           </el-select>
         </div>
 
@@ -111,14 +119,6 @@ interface Product {
   promotionType?: number
 }
 
-interface Category {
-  id: number
-  name: string
-  level?: number
-  parentId?: number
-  fullPath?: string // 完整路径，用于显示
-}
-
 interface PriceRange {
   min: string
   max: string
@@ -130,10 +130,13 @@ const router = useRouter()
 // 数据
 const loading = ref(false)
 const productList = ref<Product[]>([])
-const categoryList = ref<Category[]>([])
 const categoryTreeData = ref<ProductCategoryTree[]>([]) // 原始分类树数据
+const firstCategoryList = ref<ProductCategoryTree[]>([]) // 一级分类列表
+const secondCategoryList = ref<ProductCategoryTree[]>([]) // 二级分类列表
 const searchKeyword = ref('')
 const selectedCategory = ref('0')
+const selectedFirstCategory = ref<number | null>(null) // 选中的一级分类
+const selectedSecondCategory = ref<number | null>(null) // 选中的二级分类
 const sortType = ref('')
 const priceRange = ref<PriceRange>({ min: '', max: '' })
 const currentPage = ref(1)
@@ -167,47 +170,12 @@ const loadCategoryList = async () => {
           // 保存原始分类树数据
           categoryTreeData.value = data
 
-          // 处理树形结构的分类数据，展平为一级列表
-          const flatCategories: Category[] = []
+          // 提取一级分类（level为0或者parentId为null/0的分类）
+          firstCategoryList.value = data.filter(category =>
+            category.showStatus === 1 && (category.level === 0 || !category.parentId || category.parentId === 0)
+          )
 
-          // 递归处理分类树，生成带层级的分类选项
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const flattenCategories = (categories: any[], level = 0, parentPath = '') => {
-            categories.forEach((category) => {
-              if (category.showStatus === 1) { // 只显示启用的分类
-                const prefix = '　'.repeat(level) // 使用全角空格表示层级
-                const displayName = level > 0 ? `${prefix}${category.name}` : category.name
-                const fullPath = parentPath ? `${parentPath} > ${category.name}` : category.name
-
-                flatCategories.push({
-                  id: category.id,
-                  name: displayName,
-                  level: category.level || level,
-                  parentId: category.parentId,
-                  fullPath: fullPath
-                })
-
-                // 递归处理子分类
-                if (category.children && Array.isArray(category.children) && category.children.length > 0) {
-                  flattenCategories(category.children, level + 1, fullPath)
-                }
-              }
-            })
-          }
-
-          flattenCategories(data)
-          categoryList.value = flatCategories
-          console.log('成功加载分类列表:', categoryList.value.length, '个分类')
-
-          // 调试：检查当前选中的分类是否在列表中
-          if (selectedCategory.value && selectedCategory.value !== '0') {
-            const foundCategory = categoryList.value.find(cat => String(cat.id) === selectedCategory.value)
-            if (foundCategory) {
-              console.log('找到选中的分类:', foundCategory.name)
-            } else {
-              console.warn('未找到选中的分类ID:', selectedCategory.value)
-            }
-          }
+          console.log('成功加载分类列表:', firstCategoryList.value.length, '个一级分类')
         } else {
           console.warn('API返回分类数据格式异常，使用默认分类数据')
           loadDefaultCategories()
@@ -230,35 +198,69 @@ const loadCategoryList = async () => {
 // 加载默认分类数据（当API失败时）
 const loadDefaultCategories = () => {
   console.log('使用默认分类数据')
-  categoryList.value = [
-    // 一级分类
-    { id: 1, name: '服装鞋包', level: 0, parentId: 0, fullPath: '服装鞋包' },
-    { id: 7, name: '　外套', level: 1, parentId: 1, fullPath: '服装鞋包 > 外套' },
-    { id: 43, name: '　　羽绒服', level: 2, parentId: 7, fullPath: '服装鞋包 > 外套 > 羽绒服' },
-    { id: 44, name: '　　风衣', level: 2, parentId: 7, fullPath: '服装鞋包 > 外套 > 风衣' },
-    { id: 8, name: '　鞋靴', level: 1, parentId: 1, fullPath: '服装鞋包 > 鞋靴' },
-    { id: 45, name: '　　运动鞋', level: 2, parentId: 8, fullPath: '服装鞋包 > 鞋靴 > 运动鞋' },
+  firstCategoryList.value = [
+    { id: 1, name: '服装鞋包', level: 0, parentId: 0, showStatus: 1, children: [] },
+    { id: 2, name: '手机数码', level: 0, parentId: 0, showStatus: 1, children: [] },
+    { id: 3, name: '电脑办公', level: 0, parentId: 0, showStatus: 1, children: [] },
+    { id: 4, name: '家用电器', level: 0, parentId: 0, showStatus: 1, children: [] },
+    { id: 5, name: '家居生活', level: 0, parentId: 0, showStatus: 1, children: [] },
+    { id: 6, name: '图书音像', level: 0, parentId: 0, showStatus: 1, children: [] }
+  ]
 
-    { id: 2, name: '手机数码', level: 0, parentId: 0, fullPath: '手机数码' },
-    { id: 9, name: '　手机通讯', level: 1, parentId: 2, fullPath: '手机数码 > 手机通讯' },
-    { id: 10, name: '　数码配件', level: 1, parentId: 2, fullPath: '手机数码 > 数码配件' },
-
-    { id: 3, name: '电脑办公', level: 0, parentId: 0, fullPath: '电脑办公' },
-    { id: 11, name: '　笔记本电脑', level: 1, parentId: 3, fullPath: '电脑办公 > 笔记本电脑' },
-    { id: 12, name: '　台式机', level: 1, parentId: 3, fullPath: '电脑办公 > 台式机' },
-    { id: 13, name: '　办公设备', level: 1, parentId: 3, fullPath: '电脑办公 > 办公设备' },
-
-    { id: 4, name: '家用电器', level: 0, parentId: 0, fullPath: '家用电器' },
-    { id: 14, name: '　大家电', level: 1, parentId: 4, fullPath: '家用电器 > 大家电' },
-    { id: 15, name: '　小家电', level: 1, parentId: 4, fullPath: '家用电器 > 小家电' },
-
-    { id: 5, name: '家居生活', level: 0, parentId: 0, fullPath: '家居生活' },
-    { id: 16, name: '　家具', level: 1, parentId: 5, fullPath: '家居生活 > 家具' },
-    { id: 17, name: '　家纺', level: 1, parentId: 5, fullPath: '家居生活 > 家纺' },
-
-    { id: 6, name: '图书音像', level: 0, parentId: 0, fullPath: '图书音像' },
-    { id: 18, name: '　图书', level: 1, parentId: 6, fullPath: '图书音像 > 图书' },
-    { id: 19, name: '　音像制品', level: 1, parentId: 6, fullPath: '图书音像 > 音像制品' }
+  // 模拟分类树数据
+  categoryTreeData.value = [
+    {
+      id: 1, name: '服装鞋包', level: 0, parentId: 0, showStatus: 1,
+      children: [
+        {
+          id: 7, name: '外套', level: 1, parentId: 1, showStatus: 1, children: [
+            { id: 43, name: '羽绒服', level: 2, parentId: 7, showStatus: 1, children: [] },
+            { id: 44, name: '风衣', level: 2, parentId: 7, showStatus: 1, children: [] }
+          ]
+        },
+        {
+          id: 8, name: '鞋靴', level: 1, parentId: 1, showStatus: 1, children: [
+            { id: 45, name: '运动鞋', level: 2, parentId: 8, showStatus: 1, children: [] }
+          ]
+        }
+      ]
+    },
+    {
+      id: 2, name: '手机数码', level: 0, parentId: 0, showStatus: 1,
+      children: [
+        { id: 9, name: '手机通讯', level: 1, parentId: 2, showStatus: 1, children: [] },
+        { id: 10, name: '数码配件', level: 1, parentId: 2, showStatus: 1, children: [] }
+      ]
+    },
+    {
+      id: 3, name: '电脑办公', level: 0, parentId: 0, showStatus: 1,
+      children: [
+        { id: 11, name: '笔记本电脑', level: 1, parentId: 3, showStatus: 1, children: [] },
+        { id: 12, name: '台式机', level: 1, parentId: 3, showStatus: 1, children: [] },
+        { id: 13, name: '办公设备', level: 1, parentId: 3, showStatus: 1, children: [] }
+      ]
+    },
+    {
+      id: 4, name: '家用电器', level: 0, parentId: 0, showStatus: 1,
+      children: [
+        { id: 14, name: '大家电', level: 1, parentId: 4, showStatus: 1, children: [] },
+        { id: 15, name: '小家电', level: 1, parentId: 4, showStatus: 1, children: [] }
+      ]
+    },
+    {
+      id: 5, name: '家居生活', level: 0, parentId: 0, showStatus: 1,
+      children: [
+        { id: 16, name: '家具', level: 1, parentId: 5, showStatus: 1, children: [] },
+        { id: 17, name: '家纺', level: 1, parentId: 5, showStatus: 1, children: [] }
+      ]
+    },
+    {
+      id: 6, name: '图书音像', level: 0, parentId: 0, showStatus: 1,
+      children: [
+        { id: 18, name: '图书', level: 1, parentId: 6, showStatus: 1, children: [] },
+        { id: 19, name: '音像制品', level: 1, parentId: 6, showStatus: 1, children: [] }
+      ]
+    }
   ]
 }
 
@@ -553,15 +555,31 @@ const loadDefaultProducts = () => {
     // 使用分类结构进行筛选，支持父子分类
     const findAllCategoryIds = (targetId: number): number[] => {
       const result = [targetId]
-      const findChildren = (parentId: number) => {
-        categoryList.value.forEach(cat => {
-          if (cat.parentId === parentId) {
+      const findChildren = (categories: ProductCategoryTree[], parentId: number) => {
+        categories.forEach(cat => {
+          if (cat.parentId === parentId && cat.showStatus === 1) {
             result.push(cat.id)
-            findChildren(cat.id) // 递归查找子分类
+            if (cat.children && cat.children.length > 0) {
+              findChildren(cat.children, cat.id) // 递归查找子分类
+            }
           }
         })
       }
-      findChildren(targetId)
+
+      // 在分类树中查找
+      const flattenCategories = (categories: ProductCategoryTree[]): ProductCategoryTree[] => {
+        const flat: ProductCategoryTree[] = []
+        categories.forEach(cat => {
+          flat.push(cat)
+          if (cat.children && cat.children.length > 0) {
+            flat.push(...flattenCategories(cat.children))
+          }
+        })
+        return flat
+      }
+
+      const allCategories = flattenCategories(categoryTreeData.value)
+      findChildren(allCategories, targetId)
       return result
     }
 
@@ -642,23 +660,73 @@ const handleSearch = () => {
   loadProductList()
 }
 
-// 分类变化
-const handleCategoryChange = () => {
+// 一级分类选择变化
+const handleFirstCategoryChange = (value: number | null) => {
   currentPage.value = 1
 
-  // 更新URL参数，保持其他查询参数
+  // 清空二级分类选择
+  selectedSecondCategory.value = null
+  secondCategoryList.value = []
+
+  if (value) {
+    // 根据选择的一级分类，加载对应的二级分类
+    const firstCategory = categoryTreeData.value.find(cat => cat.id === value)
+    if (firstCategory && firstCategory.children) {
+      secondCategoryList.value = firstCategory.children.filter(child => child.showStatus === 1)
+    }
+
+    // 更新选中的分类ID（使用一级分类ID）
+    selectedCategory.value = String(value)
+  } else {
+    selectedCategory.value = '0'
+  }
+
+  // 更新URL参数
   const query = { ...route.query }
-  if (selectedCategory.value && selectedCategory.value !== '0') {
-    query.categoryId = selectedCategory.value
+  if (value) {
+    query.categoryId = String(value)
   } else {
     delete query.categoryId
   }
 
-  // 导航到新的URL（不会触发页面刷新，只更新URL）
   router.replace({
     path: route.path,
     query
   })
+
+  // 重新加载商品列表
+  loadProductList()
+}
+
+// 二级分类选择变化
+const handleSecondCategoryChange = (value: number | null) => {
+  currentPage.value = 1
+
+  if (value) {
+    // 使用二级分类ID作为选中的分类
+    selectedCategory.value = String(value)
+  } else {
+    // 如果清空二级分类，回到一级分类
+    selectedCategory.value = selectedFirstCategory.value ? String(selectedFirstCategory.value) : '0'
+  }
+
+  // 更新URL参数
+  const query = { ...route.query }
+  if (value) {
+    query.categoryId = String(value)
+  } else if (selectedFirstCategory.value) {
+    query.categoryId = String(selectedFirstCategory.value)
+  } else {
+    delete query.categoryId
+  }
+
+  router.replace({
+    path: route.path,
+    query
+  })
+
+  // 重新加载商品列表
+  loadProductList()
 }
 
 // 排序变化
@@ -705,8 +773,49 @@ watch(
     currentPage.value = 1
 
     if (newQuery.categoryId) {
-      selectedCategory.value = String(newQuery.categoryId)
+      const categoryId = Number(newQuery.categoryId)
+
+      // 查找分类信息，确定是一级还是二级分类
+      const findCategoryInfo = (id: number) => {
+        for (const firstCat of categoryTreeData.value) {
+          if (firstCat.id === id) {
+            return { isFirst: true, firstCat, secondCat: null }
+          }
+          if (firstCat.children) {
+            for (const secondCat of firstCat.children) {
+              if (secondCat.id === id) {
+                return { isFirst: false, firstCat, secondCat }
+              }
+            }
+          }
+        }
+        return null
+      }
+
+      const categoryInfo = findCategoryInfo(categoryId)
+      if (categoryInfo) {
+        if (categoryInfo.isFirst) {
+          // 是一级分类
+          selectedFirstCategory.value = categoryId
+          selectedSecondCategory.value = null
+          secondCategoryList.value = categoryInfo.firstCat.children?.filter(child => child.showStatus === 1) || []
+        } else {
+          // 是二级分类
+          selectedFirstCategory.value = categoryInfo.firstCat.id
+          selectedSecondCategory.value = categoryId
+          secondCategoryList.value = categoryInfo.firstCat.children?.filter(child => child.showStatus === 1) || []
+        }
+        selectedCategory.value = String(categoryId)
+      } else {
+        selectedFirstCategory.value = null
+        selectedSecondCategory.value = null
+        secondCategoryList.value = []
+        selectedCategory.value = '0'
+      }
     } else {
+      selectedFirstCategory.value = null
+      selectedSecondCategory.value = null
+      secondCategoryList.value = []
       selectedCategory.value = '0'
     }
 
@@ -718,7 +827,6 @@ watch(
 
     loadProductList()
   }
-  // 移除 immediate: true，因为我们在 onMounted 中手动处理初始状态
 )
 
 onMounted(async () => {
@@ -733,9 +841,50 @@ onMounted(async () => {
 
   // 重新同步路由参数到组件状态
   if (route.query.categoryId) {
-    selectedCategory.value = String(route.query.categoryId)
+    const categoryId = Number(route.query.categoryId)
+
+    // 查找分类信息，确定是一级还是二级分类
+    const findCategoryInfo = (id: number) => {
+      for (const firstCat of categoryTreeData.value) {
+        if (firstCat.id === id) {
+          return { isFirst: true, firstCat, secondCat: null }
+        }
+        if (firstCat.children) {
+          for (const secondCat of firstCat.children) {
+            if (secondCat.id === id) {
+              return { isFirst: false, firstCat, secondCat }
+            }
+          }
+        }
+      }
+      return null
+    }
+
+    const categoryInfo = findCategoryInfo(categoryId)
+    if (categoryInfo) {
+      if (categoryInfo.isFirst) {
+        // 是一级分类
+        selectedFirstCategory.value = categoryId
+        selectedSecondCategory.value = null
+        secondCategoryList.value = categoryInfo.firstCat.children?.filter(child => child.showStatus === 1) || []
+      } else {
+        // 是二级分类
+        selectedFirstCategory.value = categoryInfo.firstCat.id
+        selectedSecondCategory.value = categoryId
+        secondCategoryList.value = categoryInfo.firstCat.children?.filter(child => child.showStatus === 1) || []
+      }
+      selectedCategory.value = String(categoryId)
+    } else {
+      selectedFirstCategory.value = null
+      selectedSecondCategory.value = null
+      secondCategoryList.value = []
+      selectedCategory.value = '0'
+    }
     console.log('onMounted: 设置分类ID为', selectedCategory.value)
   } else {
+    selectedFirstCategory.value = null
+    selectedSecondCategory.value = null
+    secondCategoryList.value = []
     selectedCategory.value = '0'
     console.log('onMounted: 设置默认分类')
   }
@@ -751,12 +900,12 @@ onMounted(async () => {
 
   // 检查选中的分类是否在列表中
   if (selectedCategory.value !== '0') {
-    const foundCategory = categoryList.value.find(cat => String(cat.id) === selectedCategory.value)
     console.log('onMounted: 选中分类验证', {
       selectedCategory: selectedCategory.value,
-      found: !!foundCategory,
-      categoryName: foundCategory?.name,
-      totalCategories: categoryList.value.length
+      selectedFirstCategory: selectedFirstCategory.value,
+      selectedSecondCategory: selectedSecondCategory.value,
+      firstCategoryCount: firstCategoryList.value.length,
+      secondCategoryCount: secondCategoryList.value.length
     })
   }
 
@@ -811,22 +960,7 @@ onMounted(async () => {
 
       // 分类选择器样式优化
       .el-select {
-        min-width: 200px;
-
-        .el-select-dropdown__item {
-
-          // 层级分类的字体大小调整
-          &.level-1 {
-            padding-left: 20px;
-            font-size: 13px;
-          }
-
-          &.level-2 {
-            padding-left: 40px;
-            font-size: 12px;
-            color: #666;
-          }
-        }
+        min-width: 180px;
       }
     }
   }

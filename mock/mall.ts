@@ -3923,11 +3923,24 @@ export const mallMockApi = {
     }
   },
 
-  '/product/categoryTreeList': () => ({
-    code: 200,
-    message: '操作成功',
-    data: mockCategories
-  }),
+  '/product/categoryTreeList': () => {
+    // 构建树形结构的分类数据
+    const buildCategoryTree = (categories: any[], parentId = 0): any[] => {
+      return categories
+        .filter(cat => cat.parentId === parentId && cat.showStatus === 1)
+        .map(category => ({
+          ...category,
+          children: buildCategoryTree(categories, category.id)
+        }))
+        .sort((a, b) => (b.sort || 0) - (a.sort || 0))
+    }
+
+    return {
+      code: 200,
+      message: '操作成功',
+      data: buildCategoryTree(mockCategories)
+    }
+  },
 
   // ==================== 购物车 ====================
   '/cart/add': (data: { productId: number; productSkuId: number; quantity: number }) => {

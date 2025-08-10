@@ -25,7 +25,7 @@ function createVideoList(count: number = 20) {
 }
 
 // 存储视频数据
-const videoDatabase = createVideoList(20);
+let videoDatabase = createVideoList(20);
 
 // 格式化时长显示
 function formatDuration(seconds: number): string {
@@ -409,5 +409,326 @@ export default [
         }
       };
     }
-  }
-];
+  },
+
+  // 秒传检测
+  {
+    url: '/api/videos/check-duplicate',
+    method: 'post',
+    response: (req) => {
+      const { sha256, fileSize, deviceType } = req.body || {};
+      
+      if (!sha256 || !fileSize) {
+        return {
+          code: 40000,
+          message: '参数错误：sha256和fileSize不能为空',
+          data: null
+        };
+      }
+
+      // 模拟10%的概率文件已存在（秒传成功）
+      const isDuplicate = Math.random() < 0.1;
+      
+      if (isDuplicate) {
+        return {
+          code: 10000,
+          message: '文件已存在，秒传成功',
+          data: {
+            status: 'COMPLETED',
+            videoId: `video_${Date.now()}`,
+            uploadUrl: null,
+            chunkSize: null
+          }
+        };
+      } else {
+        return {
+          code: 10000,
+          message: '文件不存在，需要上传',
+          data: {
+            status: 'NOT_FOUND',
+            videoId: null,
+            uploadUrl: `http://localhost:8090/upload/${sha256}`,
+            chunkSize: 1024 * 1024 * 5 // 5MB分块大小
+          }
+        };
+      }
+    }
+  },
+
+  // 小文件上传
+  {
+    url: '/api/videos/upload-person-video',
+    method: 'post',
+    response: (req) => {
+      const { title, description, sha256, deviceType } = req.body || {};
+      
+      if (!title || !sha256) {
+        return {
+          code: 40000,
+          message: '参数错误：title和sha256不能为空',
+          data: null
+        };
+      }
+
+      // 模拟上传处理时间
+      setTimeout(() => {}, 1000);
+
+      const newVideoId = `video_${Date.now()}`;
+      const newVideo = {
+        videoId: newVideoId,
+        title: title,
+        description: description || '',
+        coverUrl: `https://picsum.photos/300/400?random=${Date.now()}`,
+        playUrl: '/src/assets/videos/demo.mp4',
+        duration: Math.floor(Math.random() * 300) + 60,
+        uploadTime: new Date().toISOString(),
+        status: 'published',
+        userPhone: '13800000000', // 模拟当前用户
+        viewCount: 0,
+        likeCount: 0,
+        commentCount: 0,
+        shareCount: 0,
+        author: {
+          id: 999,
+          name: '当前用户',
+          avatar: 'https://picsum.photos/40/40?random=999',
+        }
+      };
+
+      // 添加到视频数据库
+      videoDatabase.unshift(newVideo);
+
+      return {
+        code: 10000,
+        message: '视频上传成功',
+        data: {
+          videoId: newVideoId,
+          status: 'SUCCESS',
+          playUrl: newVideo.playUrl,
+          coverUrl: newVideo.coverUrl
+        }
+      };
+    }
+  },
+
+  // 初始化分块上传
+  {
+    url: '/api/videos/init-chunk-upload',
+    method: 'post',
+    response: (req) => {
+      const { sha256, fileSize, fileName, chunkSize } = req.body || {};
+      
+      if (!sha256 || !fileSize || !fileName) {
+        return {
+          code: 40000,
+          message: '参数错误：sha256、fileSize和fileName不能为空',
+          data: null
+        };
+      }
+
+      const uploadId = `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const totalChunks = Math.ceil(fileSize / (chunkSize || 1024 * 1024 * 5));
+
+      return {
+        code: 10000,
+        message: '初始化分块上传成功',
+        data: {
+          uploadId: uploadId,
+          chunkSize: chunkSize || 1024 * 1024 * 5,
+          totalChunks: totalChunks,
+          uploadUrls: Array.from({ length: totalChunks }, (_, i) => 
+            `http://localhost:8090/upload/chunk/${uploadId}/${i + 1}`
+          )
+        }
+      };
+    }
+  },
+
+  // 分块上传
+  {
+    url: '/api/videos/upload-chunk',
+    method: 'post',
+    response: (req) => {
+      const { uploadId, chunkNumber, chunkSize } = req.body || {};
+      
+      if (!uploadId || !chunkNumber) {
+        return {
+          code: 40000,
+          message: '参数错误：uploadId和chunkNumber不能为空',
+          data: null
+        };
+      }
+
+      // 模拟上传处理时间
+      setTimeout(() => {}, 500);
+
+      return {
+        code: 10000,
+        message: '分块上传成功',
+        data: {
+          uploadId: uploadId,
+          chunkNumber: parseInt(chunkNumber),
+          status: 'SUCCESS',
+          etag: `etag_${uploadId}_${chunkNumber}_${Date.now()}`
+        }
+      };
+    }
+  },
+
+  // 合并分块
+  {
+    url: '/api/videos/merge-chunks',
+    method: 'post',
+    response: (req) => {
+      const { uploadId, sha256, title, description } = req.body || {};
+      
+      if (!uploadId || !sha256) {
+        return {
+          code: 40000,
+          message: '参数错误：uploadId和sha256不能为空',
+          data: null
+        };
+      }
+
+      // 模拟合并处理时间
+      setTimeout(() => {}, 2000);
+
+      const newVideoId = `video_${Date.now()}`;
+      const newVideo = {
+        videoId: newVideoId,
+        title: title || '未命名视频',
+        description: description || '',
+        coverUrl: `https://picsum.photos/300/400?random=${Date.now()}`,
+        playUrl: '/src/assets/videos/demo.mp4',
+        duration: Math.floor(Math.random() * 300) + 60,
+        uploadTime: new Date().toISOString(),
+        status: 'published',
+        userPhone: '13800000000',
+        viewCount: 0,
+        likeCount: 0,
+        commentCount: 0,
+        shareCount: 0,
+        author: {
+          id: 999,
+          name: '当前用户',
+          avatar: 'https://picsum.photos/40/40?random=999',
+        }
+      };
+
+      // 添加到视频数据库
+      videoDatabase.unshift(newVideo);
+
+      return {
+        code: 10000,
+        message: '视频合并成功',
+        data: {
+          videoId: newVideoId,
+          status: 'SUCCESS',
+          playUrl: newVideo.playUrl,
+          coverUrl: newVideo.coverUrl
+        }
+      };
+    }
+  },
+
+  // 删除视频
+  {
+    url: '/api/videos/delete-video',
+    method: 'delete',
+    response: (req) => {
+      const { videoId } = req.query || {};
+      
+      if (!videoId) {
+        return {
+          code: 40000,
+          message: '参数错误：videoId不能为空',
+          data: null
+        };
+      }
+
+      const videoIndex = videoDatabase.findIndex(video => video.videoId === videoId);
+      
+      if (videoIndex === -1) {
+        return {
+          code: 40400,
+          message: '视频不存在',
+          data: null
+        };
+      }
+
+      // 从数据库中删除视频
+      videoDatabase.splice(videoIndex, 1);
+
+      return {
+        code: 10000,
+        message: '视频删除成功',
+        data: {
+          videoId: videoId,
+          status: 'DELETED'
+        }
+      };
+    }
+  },
+
+  // 查询上传进度
+  {
+    url: '/api/videos/get-upload-progress',
+    method: 'get',
+    response: (req) => {
+      const { uploadId } = req.query || {};
+      
+      if (!uploadId) {
+        return {
+          code: 40000,
+          message: '参数错误：uploadId不能为空',
+          data: null
+        };
+      }
+
+      // 模拟上传进度
+      const progress = Math.floor(Math.random() * 100);
+      const status = progress === 100 ? 'COMPLETED' : 'UPLOADING';
+
+      return {
+        code: 10000,
+        message: '获取上传进度成功',
+        data: {
+          uploadId: uploadId,
+          status: status,
+          progress: progress,
+          uploadedChunks: Math.floor(progress / 10),
+          totalChunks: 10,
+          uploadSpeed: Math.floor(Math.random() * 1000) + 500, // KB/s
+          remainingTime: status === 'COMPLETED' ? 0 : Math.floor(Math.random() * 300) + 60 // 秒
+        }
+      };
+    }
+  },
+
+  // 取消上传
+  {
+    url: '/api/videos/cancel-upload',
+    method: 'post',
+    response: (req) => {
+      const { uploadId } = req.body || {};
+      
+      if (!uploadId) {
+        return {
+          code: 40000,
+          message: '参数错误：uploadId不能为空',
+          data: null
+        };
+      }
+
+      return {
+        code: 10000,
+        message: '上传已取消',
+        data: {
+          uploadId: uploadId,
+          status: 'CANCELLED',
+          cancelTime: new Date().toISOString()
+        }
+      };
+     }
+   }
+ ];

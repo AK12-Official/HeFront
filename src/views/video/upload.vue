@@ -2,7 +2,7 @@
   <div class="upload-page">
     <Background />
     <div class="back-button">
-      <el-button @click="goBack" icon="ArrowLeft" round>返回视频列表</el-button>
+      <el-button @click="goBack" :icon="ArrowLeft" round>返回视频列表</el-button>
     </div>
     <div class="video-upload-container">
     <div class="upload-card">
@@ -39,10 +39,23 @@
       <div class="upload-progress" v-if="isUploading">
         <el-progress :percentage="uploadProgress" :format="progressFormat" :status="uploadStatus"></el-progress>
         <p class="progress-text">{{ progressText }}</p>
+        <!-- 分块上传详细信息 -->
+        <div v-if="uploadId && totalChunks > 0" class="chunk-info">
+          <span>分块进度: {{ currentChunk }}/{{ totalChunks }}</span>
+          <span class="chunk-size">分块大小: {{ (CHUNK_SIZE / 1024 / 1024).toFixed(1) }}MB</span>
+        </div>
       </div>
       
       <div class="action-buttons">
         <el-button @click="goBack">取消</el-button>
+        <el-button 
+          v-if="isUploading && uploadId"
+          type="danger"
+          @click="handleCancelUpload"
+          :icon="Delete"
+        >
+          取消上传
+        </el-button>
         <el-button type="primary" @click="uploadVideo" :disabled="!canUpload" :loading="isUploading">上传</el-button>
       </div>
     </div>
@@ -55,8 +68,15 @@ import { ref, computed, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { Upload, VideoCamera, Delete, ArrowLeft } from '@element-plus/icons-vue';
-import { checkDuplicate, uploadPersonVideo } from '@/api/Video';
-import type { getUploadProgress } from '@/api/Video';
+import { 
+  checkDuplicate, 
+  uploadPersonVideo, 
+  initChunkUpload, 
+  uploadChunk, 
+  mergeChunks, 
+  getUploadProgress, 
+  cancelUpload 
+} from '@/api/Video';
 import Background from '@/components/Background.vue';
 
 const router = useRouter();
@@ -67,6 +87,16 @@ const isUploading = ref(false);
 const uploadProgress = ref(0);
 const uploadStatus = ref('');
 const progressText = ref('');
+
+// 分块上传相关状态
+const uploadId = ref('');
+const currentChunk = ref(0);
+const totalChunks = ref(0);
+const uploadedChunks = ref<string[]>([]);
+const progressInterval = ref<number | null>(null);
+
+// 分块大小常量（5MB）
+const CHUNK_SIZE = 5 * 1024 * 1024;
 
 const videoForm = reactive({
   title: '',
@@ -160,17 +190,94 @@ const calculateSHA256 = async (file: File): Promise<string> => {
   return `${file.name}-${file.size}-${Date.now()}`;
 };
 
+// 将文件分块
+const createFileChunks = (file: File): Blob[] => {
+  const chunks: Blob[] = [];
+  let start = 0;
+  
+  while (start < file.size) {
+    const end = Math.min(start + CHUNK_SIZE, file.size);
+    chunks.push(file.slice(start, end));
+    start = end;
+  }
+  
+  return chunks;
+};
+
+// 查询上传进度
+const queryUploadProgress = async () => {
+  if (!uploadId.value) return;
+  
+  try {
+    const response = await getUploadProgress({ uploadSessionId: uploadId.value });
+    if (response.code === 10000) {
+      const { progressPercent, status, completedChunks } = response.data;
+      uploadProgress.value = progressPercent || 0;
+      // 注意：API返回的是completedChunks，不是uploadedChunks
+      if (completedChunks !== undefined) {
+        currentChunk.value = completedChunks;
+      }
+      
+      if (status === 'COMPLETED') {
+        uploadProgress.value = 100;
+        uploadStatus.value = 'success';
+        progressText.value = '上传完成！';
+        clearProgressInterval();
+      }
+    }
+  } catch (error) {
+    console.error('查询上传进度失败:', error);
+  }
+};
+
+// 清除进度查询定时器
+const clearProgressInterval = () => {
+  if (progressInterval.value) {
+    clearInterval(progressInterval.value);
+    progressInterval.value = null;
+  }
+};
+
+// 取消上传
+const handleCancelUpload = async () => {
+  if (!uploadId.value) {
+    isUploading.value = false;
+    return;
+  }
+    try {
+    await cancelUpload({ uploadSessionId: uploadId.value });
+    ElMessage.success('上传已取消');
+  } catch (error) {
+    console.error('取消上传失败:', error);
+  } finally {
+    clearProgressInterval();
+    resetUploadState();
+  }
+};
+
+// 重置上传状态
+const resetUploadState = () => {
+  isUploading.value = false;
+  uploadProgress.value = 0;
+  uploadStatus.value = '';
+  progressText.value = '';
+  uploadId.value = '';
+  currentChunk.value = 0;
+  totalChunks.value = 0;
+  uploadedChunks.value = [];
+  clearProgressInterval();
+};
+
 // 上传视频
 const uploadVideo = async () => {
   if (!selectedFile.value || !canUpload.value) return;
   
+  resetUploadState();
   isUploading.value = true;
-  uploadProgress.value = 0;
-  uploadStatus.value = '';
   progressText.value = '准备上传...';
   
   try {
-    // 计算文件哈希值（实际项目中应使用真实的SHA256计算）
+    // 计算文件哈希值
     const sha256 = await calculateSHA256(selectedFile.value);
     
     // 秒传检测
@@ -196,26 +303,47 @@ const uploadVideo = async () => {
       return;
     }
     
-    // 上传文件
-    progressText.value = '正在上传视频...';
-    uploadProgress.value = 20;
+    // 判断文件大小，选择上传方式
+    const fileSize = selectedFile.value.size;
+    const isLargeFile = fileSize > 50 * 1024 * 1024; // 50MB以上使用分块上传
     
-    // 模拟上传进度
-    const progressInterval = setInterval(() => {
-      if (uploadProgress.value < 90) {
-        uploadProgress.value += 10;
-      }
-    }, 1000);
+    if (isLargeFile) {
+      await uploadLargeFile(selectedFile.value, sha256);
+    } else {
+      await uploadSmallFile(selectedFile.value, sha256);
+    }
     
-    const result = await uploadPersonVideo({
+  } catch (error) {
+    console.error('上传失败', error);
+    uploadStatus.value = 'exception';
+    progressText.value = '上传失败，请重试';
+    ElMessage.error('上传失败，请重试');
+    resetUploadState();
+  }
+};
+
+// 小文件上传
+const uploadSmallFile = async (file: File, sha256: string) => {
+  progressText.value = '正在上传视频...';
+  uploadProgress.value = 20;
+  
+  // 模拟上传进度
+  const interval = setInterval(() => {
+    if (uploadProgress.value < 90) {
+      uploadProgress.value += 10;
+    }
+  }, 1000);
+  
+  try {
+    await uploadPersonVideo({
       title: videoForm.title,
       description: videoForm.description,
       sha256,
       deviceType: 'WEB',
-      file: selectedFile.value
+      file
     });
     
-    clearInterval(progressInterval);
+    clearInterval(interval);
     
     // 上传成功
     uploadProgress.value = 100;
@@ -226,13 +354,90 @@ const uploadVideo = async () => {
     setTimeout(() => {
       router.push('/video');
     }, 1500);
+  } catch (error) {
+    clearInterval(interval);
+    throw error;
+  }
+};
+
+// 大文件分块上传
+const uploadLargeFile = async (file: File, sha256: string) => {
+  try {
+    // 1. 初始化分块上传
+    progressText.value = '初始化分块上传...';
+    uploadProgress.value = 5;
+    
+    const chunks = createFileChunks(file);
+    totalChunks.value = chunks.length;
+    
+    const initResult = await initChunkUpload({
+      title: videoForm.title,
+      description: videoForm.description,
+      sha256,
+      fileSize: file.size,
+      totalChunks: chunks.length,
+      deviceType: 'WEB'
+    });
+    
+    uploadId.value = initResult.data.uploadSessionId || '';
+    
+    // 2. 开始分块上传
+    progressText.value = `开始分块上传 (共${chunks.length}块)...`;
+    
+    // 启动进度查询定时器
+    progressInterval.value = setInterval(queryUploadProgress, 2000);
+    
+    for (let i = 0; i < chunks.length; i++) {
+      currentChunk.value = i + 1;
+      progressText.value = `上传分块 ${i + 1}/${chunks.length}...`;
+      
+      // 将Blob转换为File类型
+      const chunkFile = new File([chunks[i]], `${file.name}.chunk${i}`, {
+        type: file.type,
+        lastModified: file.lastModified
+      });
+      
+      const chunkResult = await uploadChunk({
+        uploadSessionId: uploadId.value,
+        chunkIndex: i,
+        chunkSha256: `chunk-${i}-${Date.now()}`, 
+        chunkSize: chunks[i].size,
+        file: chunkFile
+      });
+      
+      // 注意：根据API返回结构调整
+      if (chunkResult.data) {
+        uploadedChunks.value.push(`chunk-${i}`);
+      }
+      
+      // 更新进度
+      const progress = Math.floor(((i + 1) / chunks.length) * 80) + 10; // 10-90%
+      uploadProgress.value = progress;
+    }
+    
+    // 3. 合并分块
+    progressText.value = '正在合并文件...';
+    uploadProgress.value = 95;
+    
+    await mergeChunks({
+      uploadSessionId: uploadId.value,
+      finalSha256: sha256
+    });
+    
+    // 上传完成
+    clearProgressInterval();
+    uploadProgress.value = 100;
+    uploadStatus.value = 'success';
+    progressText.value = '上传成功！';
+    
+    ElMessage.success('视频上传成功！');
+    setTimeout(() => {
+      router.push('/video');
+    }, 1500);
     
   } catch (error) {
-    console.error('上传失败', error);
-    uploadStatus.value = 'exception';
-    progressText.value = '上传失败，请重试';
-    ElMessage.error('上传失败，请重试');
-    isUploading.value = false;
+    clearProgressInterval();
+    throw error;
   }
 };
 
@@ -250,14 +455,14 @@ const goBack = () => {
 .upload-page {
   position: relative;
   width: 100%;
-  min-height: calc(100vh - 180px); /* 减去header和footer的高度，增加更多空间 */
-  overflow: visible; /* 修改为visible，确保footer可见 */
+  min-height: calc(100vh - 180px); 
+  overflow: visible; 
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 70px; /* 为footer留出更多空间 */
-  z-index: 1; /* 确保内容在背景之上，但低于footer */
-  padding-top: 60px; /* 为返回按钮留出空间 */
+  margin-bottom: 70px; 
+  z-index: 1; 
+  padding-top: 60px; 
 }
 
 .video-upload-container {
@@ -377,6 +582,19 @@ const goBack = () => {
     margin-top: 8px;
     text-align: center;
     color: #606266;
+  }
+
+  .chunk-info {
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #999;
+    padding: 0 4px;
+  }
+
+  .chunk-size {
+    color: #666;
   }
 }
 

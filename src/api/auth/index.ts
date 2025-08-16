@@ -15,7 +15,7 @@ enum API {
   REGISTER_URL = '/auth/register',     // 用户注册
   LOGIN_CODE_URL = '/auth/login-code', // 验证码登录
   LOGIN_PASSWORD_URL = '/auth/login-password', // 密码登录
-  LOGOUT_URL = '/user/logout',         // 用户登出
+  LOGOUT_URL = '/api/user/logout',         // 用户登出
   RESET_PASSWORD_URL = '/auth/reset-password', // 重置密码
   REFRESH_TOKEN_URL = '/auth/refresh-token',   // 刷新访问令牌
 }
@@ -42,7 +42,7 @@ export const sendVerificationCode = (params: SendCodeParams) => {
  * @param params.phone 手机号码
  * @param params.code 验证码
  * @param params.password 密码
- * @param params.confirmPassword 确认密码
+ * @param params.nickname 用户昵称
  * @returns 注册结果
  */
 export const register = (params: RegisterParams) => {

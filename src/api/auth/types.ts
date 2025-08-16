@@ -10,7 +10,7 @@ export interface RegisterParams {
   phone: string;
   code: string;
   password: string;
-  confirmPassword: string;
+  nickname: string;
 }
 
 // 验证码登录参数

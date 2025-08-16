@@ -1,4 +1,5 @@
 import { loginWithCode, loginWithPassword, logout, } from "@/api/auth";
+import { getPoints } from "@/api/points"; // 新增积分API导入
 import { defineStore } from "pinia";
 import { ref, watch, computed } from "vue";
 import type { UserState } from "./types/types";
@@ -8,11 +9,18 @@ import type { LoginCodeParams, LoginPasswordParams } from "@/api/auth/types";
 const useUserStore = defineStore('User', () => {
   // state
   const state = ref<UserState>({
-    accessToken: getToken('ACCESS_TOKEN'), // 从 localStorage 初始化 token
-    refreshToken: getToken('REFRESH_TOKEN'), // 用户登录成功后返回的refreshToken
-    expiresIn: getToken('expiresIn'), // token的过期时间
-    score: 610, // 用户积分
+    accessToken: getToken('ACCESS_TOKEN'),
+    refreshToken: getToken('REFRESH_TOKEN'),
+    expiresIn: getToken('expiresIn'),
+    score: null, // 初始为null，通过API获取
+    // 从localStorage恢复用户信息
+    userId: localStorage.getItem('userId') ? Number(localStorage.getItem('userId')) : undefined,
+    phone: localStorage.getItem('userPhone') || undefined,
+    nickname: localStorage.getItem('userNickname') || undefined,
+    desc: localStorage.getItem('userDesc') || undefined,
   });
+
+  const scoreLoading = ref(false);
 
   // 监听 localStorage 的变化，确保多标签页之间的状态一致性
   window.addEventListener('storage', (event) => {
@@ -59,6 +67,32 @@ const useUserStore = defineStore('User', () => {
     }
   );
 
+  // 获取用户积分的方法
+  const fetchUserScore = async () => {
+    if (!state.value.phone) {
+      console.warn('无法获取积分：缺少手机号信息');
+      return;
+    }
+
+    scoreLoading.value = true; // 开始加载
+    try {
+      const response = await getPoints({ phone: state.value.phone });
+      if (response.code === 10000 && response.data) {
+        state.value.score = response.data.points;
+        // 同步到localStorage
+        localStorage.setItem('userScore', response.data.points.toString());
+      } else {
+        console.error('获取积分失败:', response.message);
+        state.value.score = null;
+      }
+    } catch (error) {
+      console.error('获取积分API调用失败:', error);
+      state.value.score = null;
+    } finally {
+      scoreLoading.value = false; // 确保加载状态被重置
+    }
+  };
+
   // actions
   const userLoginCode = async (data: LoginCodeParams) => {
     const result = await loginWithCode(data);
@@ -66,15 +100,32 @@ const useUserStore = defineStore('User', () => {
     if (result.code === 10000) {
       state.value.accessToken = result.data.accessToken || null;
       state.value.refreshToken = result.data.refreshToken || null;
-      state.value.expiresIn = result.data.expiresIn || null;
+      // 将相对过期时间转换为绝对时间戳
+      if (result.data.expiresIn) {
+        // 当前时间戳 + 过期秒数 = 绝对过期时间戳
+        state.value.expiresIn = Math.floor(Date.now() / 1000) + result.data.expiresIn;
+      } else {
+        state.value.expiresIn = null;
+      }
+      state.value.userId = result.data.userId || null;
+      state.value.phone = data.phone;// 保存手机号
+
       if (state.value.accessToken && state.value.refreshToken && state.value.expiresIn !== null) {
         setToken("ACCESS_TOKEN", state.value.accessToken);
         setToken("REFRESH_TOKEN", state.value.refreshToken);
         setToken("expiresIn", state.value.expiresIn);
+
+        // 保存用户信息到localStorage
+        if (state.value.phone) {
+          localStorage.setItem('userPhone', state.value.phone);
+        }
+        if (state.value.userId) {
+          localStorage.setItem('userId', state.value.userId.toString());
+        }
       }
 
-      // 登录成功后获取用户信息
-      // await userInfo();
+      // 登录成功后立即获取用户积分
+      await fetchUserScore(); // 调用外部定义的fetchUserScore方法
 
       return 'ok';
     } else {
@@ -88,15 +139,31 @@ const useUserStore = defineStore('User', () => {
     if (result.code === 10000) {
       state.value.accessToken = result.data.accessToken || null;
       state.value.refreshToken = result.data.refreshToken || null;
-      state.value.expiresIn = result.data.expiresIn || null;
+      // 将相对过期时间转换为绝对时间戳
+      if (result.data.expiresIn) {
+        state.value.expiresIn = Math.floor(Date.now() / 1000) + result.data.expiresIn;
+      } else {
+        state.value.expiresIn = null;
+      }
+      state.value.userId = result.data.userId || null;
+      state.value.phone = data.phone;
+
       if (state.value.accessToken && state.value.refreshToken && state.value.expiresIn !== null) {
         setToken("ACCESS_TOKEN", state.value.accessToken);
         setToken("REFRESH_TOKEN", state.value.refreshToken);
         setToken("expiresIn", state.value.expiresIn);
+
+        // 保存用户信息到localStorage
+        if (state.value.phone) {
+          localStorage.setItem('userPhone', state.value.phone);
+        }
+        if (state.value.userId) {
+          localStorage.setItem('userId', state.value.userId.toString());
+        }
       }
 
-      // 登录成功后获取用户信息
-      // await userInfo();
+      // 登录成功后立即获取用户积分
+      await fetchUserScore();
 
       return 'ok';
     } else {
@@ -131,24 +198,28 @@ const useUserStore = defineStore('User', () => {
 
   const userLogout = async () => {
     try {
-      const result = await logout();
-      if (result.code == 10000) {
-        // console.log('退出登录成功');
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.warn('退出登录时发生错误:', error.message);
-      } else {
-        console.warn('退出登录时发生错误:', error);
-      }
+      await logout();
+    } catch (error) {
+      console.error('登出API调用失败:', error);
     } finally {
-      // 无论后端是否返回错误，都清除本地状态
+      // 清除所有状态
       state.value.accessToken = null;
       state.value.refreshToken = null;
       state.value.expiresIn = null;
-      clearAllTokens(); // 删除 token
+      state.value.score = null; // 清除积分
+      state.value.userId = undefined;
+      state.value.phone = undefined;
+      state.value.nickname = undefined;
+      state.value.desc = undefined;
+
+      // 清除localStorage
+      clearAllTokens();
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userPhone');
+      localStorage.removeItem('userNickname');
+      localStorage.removeItem('userDesc');
+      localStorage.removeItem('userScore');
     }
-    return 'ok';
   };
 
   // getters
@@ -228,15 +299,24 @@ const useUserStore = defineStore('User', () => {
   //   }
   // };
 
+  // 刷新积分的方法（供外部调用）
+  const refreshUserScore = async () => {
+    await fetchUserScore();
+  };
+
 
   return {
     state,
+    scoreLoading,
     userLoginCode,
     userLoginPwd,
-    isLoggedIn,
-    // userInfo,
-    userLogout
+    userLogout,
+    fetchUserScore,
+    refreshUserScore, // 导出刷新积分方法
+    isLoggedIn
   };
-});
+}
+
+  ,);
 
 export default useUserStore;

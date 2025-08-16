@@ -19,7 +19,11 @@
         <div class="score-text">您的爱心积分</div>
 
         <!-- 已登录状态显示积分 -->
-        <div v-if="userStore.isLoggedIn" class="score-value">610</div>
+        <div v-if="userStore.isLoggedIn" class="score-value">
+          <span v-if="userStore.scoreLoading">加载中...</span>
+          <span v-else-if="userStore.state.score !== null">{{ userStore.state.score }}</span>
+          <span v-else>获取失败</span>
+        </div>
 
         <!-- 未登录状态显示提示和登录按钮 -->
         <div v-else class="score-not-logged">
@@ -47,13 +51,36 @@
 
 <script setup lang="ts">
 // 这里可以后续引入接口获取积分等
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import useUserStore from '@/store/modules/user';
+import { ElMessage } from 'element-plus';
 
 const router = useRouter();
 const userStore = useUserStore();
 const dialogVisible = ref(false);
+const userPoints = ref<number | null>(null);
+const loading = ref(false);
+
+// 监听登录状态变化，自动获取积分
+import { watch } from 'vue';
+watch(
+  () => userStore.isLoggedIn,
+  (newValue) => {
+    if (newValue) {
+      // 登录后自动获取积分
+      userStore.fetchUserScore();
+    }
+  },
+  { immediate: true }
+);
+
+// 组件挂载时，如果已登录则获取积分
+onMounted(() => {
+  if (userStore.isLoggedIn) {
+    userStore.fetchUserScore();
+  }
+});
 
 // 方法：控制捐赠对话框显示
 const changeDonatVisibility = () => {
@@ -68,7 +95,7 @@ const goToLogin = () => {
 // 方法：登出
 const logout = () => {
   userStore.userLogout();
-  // router.push('/login');
+  ElMessage.success('已成功登出');
 };
 </script>
 

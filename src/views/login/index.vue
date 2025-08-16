@@ -71,6 +71,9 @@
         <el-form-item prop="confirmPassword">
           <el-input type="password" v-model="registerForm.confirmPassword" placeholder="请确认密码"></el-input>
         </el-form-item>
+        <el-form-item prop="nickname">
+          <el-input type="text" v-model="registerForm.nickname" placeholder="请输入用户名"></el-input>
+        </el-form-item>
         <el-form-item>
           <el-button class="login_btn" type="primary" size="default" @click="register()">注册</el-button>
         </el-form-item>
@@ -82,7 +85,8 @@
 <script setup lang="ts">
 import { register as registerAPI, sendVerificationCode } from '@/api/auth';
 import useUserStore from '@/store/modules/user';
-import { ElNotification, ElMessage } from 'element-plus';
+import { ElMessage } from 'element-plus';
+import { ElNotification } from 'element-plus';
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -116,7 +120,8 @@ const registerForm = reactive({
   phone: '',
   code: '',
   password: '',
-  confirmPassword: ''
+  confirmPassword: '',
+  nickname: ''
 });
 
 const countdown = ref(0);
@@ -204,16 +209,14 @@ const login = async () => {
       // 你可以根据实际情况决定是否要存token等
     }
 
-    ElNotification({
-      type: 'success',
+    ElNotification.success({
       message: "登录成功",
       title: "欢迎回来",
     });
 
     router.push('/');
   } catch (error) {
-    ElNotification({
-      type: 'error',
+    ElNotification.error({
       message: error instanceof Error ? error.message : '登录失败'
     });
   }
@@ -227,8 +230,7 @@ const register = async () => {
   try {
     await registerAPI(registerForm);
 
-    ElNotification({
-      type: 'success',
+    ElNotification.success({
       message: "注册成功，请登录",
       title: "注册成功",
     });
@@ -236,8 +238,7 @@ const register = async () => {
     switchMode('login');
     loginForm.phone = registerForm.phone;
   } catch (error) {
-    ElNotification({
-      type: 'error',
+    ElNotification.error({
       message: error instanceof Error ? error.message : '注册失败'
     });
   }

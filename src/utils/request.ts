@@ -8,7 +8,7 @@ import { ElMessage } from "element-plus";
 const request = axios.create({
   //基础路径
   baseURL: import.meta.env.VITE_APP_API_URL,//基础路径会携带/api
-  timeout: 5000 // 超时时间的设置
+  timeout: 300000 // 超时时间的设置
 });
 
 // step 2:给axios实例添加请求与响应拦截器

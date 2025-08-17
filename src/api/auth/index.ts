@@ -4,7 +4,7 @@
  * 包含登录、注册、验证码、令牌刷新等功能
  */
 import request from "@/utils/request";
-import type { LoginCodeParams, LoginPasswordParams, RegisterParams, ResetPasswordParams, SendCodeParams } from "./types";
+import type { LoginCodeParams, LoginPasswordParams, RegisterParams, ResetPasswordParams, SendCodeParams,RefreshTokenParams, RefreshTokenResponse } from "./types";
 
 /**
  * API 路径枚举
@@ -100,6 +100,7 @@ export const resetPassword = (params: ResetPasswordParams) => {
   return request.post<any, any>(API.RESET_PASSWORD_URL, null, { params });
 };
 
+
 /**
  * 刷新访问令牌
  * 使用刷新令牌获取新的访问令牌
@@ -108,5 +109,8 @@ export const resetPassword = (params: ResetPasswordParams) => {
  * @returns 新的访问令牌和过期时间
  */
 export const refreshToken = (refreshToken: string) => {
-  return request.post<any, any>(API.REFRESH_TOKEN_URL, { refreshToken });
+  return request.post<ResponseData<RefreshTokenResponse>, ResponseData<RefreshTokenResponse>>(
+    API.REFRESH_TOKEN_URL, 
+    { refreshToken }
+  );
 };

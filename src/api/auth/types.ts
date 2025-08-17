@@ -40,3 +40,15 @@ export interface ResponseData<T = any> {
   message: string;
   data: T;
 }
+
+// 刷新token参数
+export interface RefreshTokenParams {
+  refreshToken: string;
+}
+
+// 刷新token响应数据
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn: number;
+}

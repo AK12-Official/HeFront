@@ -4,7 +4,7 @@ import { defineStore } from "pinia";
 import { ref, watch, computed } from "vue";
 import type { UserState } from "./types/types";
 import { setToken, getToken, removeToken, clearAllTokens } from "@/utils/auth";
-import type { LoginCodeParams, LoginPasswordParams } from "@/api/auth/types";
+import type { LoginCodeParams, LoginPasswordParams, RefreshTokenParams, ResponseData } from "@/api/auth/types";
 
 const useUserStore = defineStore('User', () => {
   // state
@@ -304,6 +304,113 @@ const useUserStore = defineStore('User', () => {
     await fetchUserScore();
   };
 
+  // Token 刷新相关方法
+  let isRefreshing = false;
+  let refreshPromise: Promise<boolean> | null = null;
+
+  // 判断 token 是否即将过期（提前5分钟刷新）
+  const shouldRefreshToken = () => {
+    if (!state.value.accessToken || !state.value.expiresIn) {
+      return false;
+    }
+    const now = Math.floor(Date.now() / 1000);
+    const timeUntilExpiry = state.value.expiresIn - now;
+    return timeUntilExpiry < 300; // 5分钟内过期
+  };
+
+  // 判断 token 是否已过期
+  const isTokenExpired = () => {
+    if (!state.value.expiresIn) {
+      return false;
+    }
+    const now = Math.floor(Date.now() / 1000);
+    return now >= state.value.expiresIn;
+  };
+
+  // 刷新访问令牌
+  const refreshAccessToken = async (): Promise<boolean> => {
+    // 防止重复刷新
+    if (isRefreshing && refreshPromise) {
+      return refreshPromise;
+    }
+
+    if (!state.value.refreshToken) {
+      console.warn('没有刷新令牌，无法刷新访问令牌');
+      return false;
+    }
+
+    isRefreshing = true;
+    
+    try {
+      // 动态导入 refreshToken API
+      const { refreshToken } = await import('@/api/auth');
+      
+      refreshPromise = (async () => {
+        try {
+          const response = await refreshToken({ refreshToken: state.value.refreshToken! });
+          
+          if (response.code === 10000 && response.data) {
+            // 更新 token 信息
+            state.value.accessToken = response.data.accessToken;
+            if (response.data.refreshToken) {
+              state.value.refreshToken = response.data.refreshToken;
+            }
+            if (response.data.expiresIn) {
+              state.value.expiresIn = Math.floor(Date.now() / 1000) + response.data.expiresIn;
+            }
+            
+            console.log('Token 刷新成功');
+            return true;
+          } else {
+            console.error('Token 刷新失败:', response.message);
+            await userLogout();
+            return false;
+          }
+        } catch (error) {
+          console.error('Token 刷新请求失败:', error);
+          await userLogout();
+          return false;
+        }
+      })();
+      
+      return await refreshPromise;
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  };
+
+  // 确保 token 有效（在发送请求前调用）
+  const ensureValidToken = async (): Promise<boolean> => {
+    // 如果没有 token，直接返回 false
+    if (!state.value.accessToken) {
+      return false;
+    }
+
+    // 如果 token 已过期，尝试刷新
+    if (isTokenExpired()) {
+      console.log('Token 已过期，尝试刷新...');
+      return await refreshAccessToken();
+    }
+
+    // 如果 token 即将过期，主动刷新
+    if (shouldRefreshToken()) {
+      console.log('Token 即将过期，主动刷新...');
+      // 这里不等待刷新结果，让当前请求继续，刷新在后台进行
+      refreshAccessToken().catch(error => {
+        console.error('后台刷新 Token 失败:', error);
+      });
+    }
+
+    return true;
+  };
+
+  // 处理 401 错误的方法
+  const handle401Error = async (): Promise<boolean> => {
+    console.log('收到 401 错误，尝试刷新 Token...');
+    return await refreshAccessToken();
+  };
+
 
   return {
     state,
@@ -313,7 +420,13 @@ const useUserStore = defineStore('User', () => {
     userLogout,
     fetchUserScore,
     refreshUserScore, // 导出刷新积分方法
-    isLoggedIn
+    isLoggedIn,
+    // Token 刷新相关方法
+    shouldRefreshToken,
+    isTokenExpired,
+    refreshAccessToken,
+    ensureValidToken,
+    handle401Error
   };
 }
 

@@ -96,8 +96,8 @@ const totalChunks = ref(0);
 const uploadedChunks = ref<string[]>([]);
 const progressInterval = ref<number | null>(null);
 
-// 分块大小常量（5MB）
-const CHUNK_SIZE = 5 * 1024 * 1024;
+// 分块大小常量（10MB）
+const CHUNK_SIZE = 10 * 1024 * 1024;
 
 const videoForm = reactive({
   title: '',
@@ -212,29 +212,60 @@ const createFileChunks = (file: File): Blob[] => {
   return chunks;
 };
 
-// 查询上传进度
+// 查询上传进度 - 优化版本
 const queryUploadProgress = async () => {
   if (!uploadId.value) return;
 
   try {
     const response = await getUploadProgress({ uploadSessionId: uploadId.value });
     if (response.code === 10000) {
-      const { progressPercent, status, completedChunks } = response.data;
-      uploadProgress.value = progressPercent || 0;
-      // 注意：API返回的是completedChunks，不是uploadedChunks
+      const { progressPercent, status, completedChunks, totalChunks: serverTotalChunks } = response.data;
+      
+      // 使用服务端进度
+      if (progressPercent !== undefined) {
+        uploadProgress.value = progressPercent;
+      }
+      
+      // 更新分块信息
       if (completedChunks !== undefined) {
         currentChunk.value = completedChunks;
       }
+      
+      // 同步总分块数
+      if (serverTotalChunks !== undefined && serverTotalChunks !== totalChunks.value) {
+        console.warn(`分块数不一致: 本地${totalChunks.value}, 服务端${serverTotalChunks}`);
+        totalChunks.value = serverTotalChunks;
+      }
 
-      if (status === 'COMPLETED') {
-        uploadProgress.value = 100;
-        uploadStatus.value = 'success';
-        progressText.value = '上传完成！';
-        clearProgressInterval();
+      // 根据状态更新进度文本
+      switch (status) {
+        case 'UPLOADING':
+          progressText.value = `上传中... ${completedChunks}/${totalChunks.value} 分块`;
+          break;
+        case 'MERGING':
+          progressText.value = '正在合并文件...';
+          break;
+        case 'COMPLETED':
+          uploadProgress.value = 100;
+          uploadStatus.value = 'success';
+          progressText.value = '上传完成！';
+          clearProgressInterval();
+          
+          ElMessage.success('视频上传成功！');
+          setTimeout(() => {
+            router.push('/video');
+          }, 1500);
+          break;
+        case 'FAILED':
+          uploadStatus.value = 'exception';
+          progressText.value = '上传失败';
+          clearProgressInterval();
+          throw new Error('服务端上传失败');
       }
     }
   } catch (error) {
     console.error('查询上传进度失败:', error);
+    // 不因为查询失败就停止上传
   }
 };
 
@@ -351,7 +382,7 @@ const uploadSmallFile = async (file: File, sha256: string) => {
     clearInterval(interval);
 
     console.log(result);
-    
+
     if (result.data.status == 'COMPLETED') {
       // 上传成功
       uploadProgress.value = 100;
@@ -395,7 +426,7 @@ const uploadLargeFile = async (file: File, sha256: string) => {
     progressText.value = `开始分块上传 (共${chunks.length}块)...`;
 
     // 启动进度查询定时器
-    progressInterval.value = setInterval(queryUploadProgress, 2000);
+    progressInterval.value = setInterval(queryUploadProgress, 1000);
 
     for (let i = 0; i < chunks.length; i++) {
       currentChunk.value = i + 1;
@@ -407,10 +438,12 @@ const uploadLargeFile = async (file: File, sha256: string) => {
         lastModified: file.lastModified
       });
 
+      const chunkSha256 = await calculateSHA256(chunkFile);
+
       const chunkResult = await uploadChunk({
         uploadSessionId: uploadId.value,
         chunkIndex: i,
-        chunkSha256: `chunk-${i}-${Date.now()}`,
+        chunkSha256: chunkSha256,
         chunkSize: chunks[i].size,
         file: chunkFile
       });
@@ -420,14 +453,11 @@ const uploadLargeFile = async (file: File, sha256: string) => {
         uploadedChunks.value.push(`chunk-${i}`);
       }
 
-      // 更新进度
-      const progress = Math.floor(((i + 1) / chunks.length) * 80) + 10; // 10-90%
-      uploadProgress.value = progress;
+      await queryUploadProgress();
     }
 
     // 3. 合并分块
     progressText.value = '正在合并文件...';
-    uploadProgress.value = 95;
 
     await mergeChunks({
       uploadSessionId: uploadId.value,
@@ -438,12 +468,10 @@ const uploadLargeFile = async (file: File, sha256: string) => {
     clearProgressInterval();
     uploadProgress.value = 100;
     uploadStatus.value = 'success';
+    isUploading.value = false; 
     progressText.value = '上传成功！';
 
     ElMessage.success('视频上传成功！');
-    setTimeout(() => {
-      router.push('/video');
-    }, 1500);
 
   } catch (error) {
     clearProgressInterval();

@@ -25,18 +25,26 @@ export interface UploadProgressDTO {
 // 视频信息DTO
 export interface VideoInfoDTO {
   videoId: string;
+  userPhone: string;
   title: string;
   description?: string;
-  uploadTime: string;
-  duration?: number;
-  coverUrl?: string;
-  playUrl?: string;
-  status: string;
-  userPhone?: string;
-  viewCount?: number;
-  likeCount?: number;
-  commentCount?: number;
-  shareCount?: number;
+  duration: number;           // 视频时长（秒）
+  width: number;              // 视频宽度
+  height: number;             // 视频高度
+  fileSize: number;           // 文件大小（字节）
+  fastdfsFileId: string;      // FastDFS文件ID
+  coverFileId: string;        // 封面文件ID
+  cdnVideoUrl: string;        // CDN视频URL
+  cdnCoverUrl: string;        // CDN封面URL
+  status: string;             // 视频状态
+  createTime: string;         // 创建时间
+  uploadTime?: string;        // 兼容旧字段
+  coverUrl?: string;          // 兼容旧字段
+  playUrl?: string;           // 兼容旧字段
+  viewCount?: number;         // 播放量
+  likeCount?: number;         // 点赞数
+  commentCount?: number;      // 评论数
+  shareCount?: number;        // 分享数
 }
 
 // 视频列表分页结果
@@ -45,7 +53,7 @@ export interface VideoListResult {
   pageSize: number;
   total: number;
   pages: number;
-  list: VideoInfoDTO[];
+  rows: VideoInfoDTO[];  
 }
 
 // 播放信息DTO
@@ -118,11 +126,17 @@ export interface GetVideoInfoParams {
 
 // 获取视频列表请求参数
 export interface GetVideoListParams {
-  pageIndex: number;
-  pageSize: number;
-  userPhone?: string;
-  title?: string;
-  status?: string;
+  pageIndex: number;        // 查询页码 (必需)
+  pageSize: number;         // 查询条数 (必需)
+  userPhone?: string;       // 上传视频的用户手机号 (可选)
+  title?: string;           // 视频标题 (可选)
+  status?: string;          // 视频状态 (可选) UPLOADING|PROCESSING|PUBLISHED|DELETED
+  minDuration?: number;     // 最小视频时长 (可选)
+  maxDuration?: number;     // 最大视频时长 (可选)
+  startTime?: string;       // 视频开始时间 (可选)
+  endTime?: string;         // 视频结束时间 (可选)
+  orderBy?: string;         // 排序字段 (可选) CREATE_TIME|PLAY_COUNT|LIKE_COUNT
+  orderDirection?: string;  // 排序方向 (可选) ASC|DESC
 }
 
 // 更新视频信息请求参数

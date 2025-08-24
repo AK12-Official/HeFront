@@ -186,7 +186,7 @@ import {
   DocumentCopy,
   InfoFilled,
 } from '@element-plus/icons-vue'
-import { getPlayInfo, getRecommendList, recordPlay, getStats, updateStats, getVideoInfo } from '@/api/Video'
+import { getPlayInfo, getRecommendList, getStats, updateStats, getVideoInfo } from '@/api/Video'
 import { getUserInfoByPhone } from '@/api/user'
 import type { VideoInfoDTO, RecommendListResponseDTO } from '@/api/Video/types'
 import type { UserResponse, UserInfoByPhoneDTO } from '@/api/user/types'
@@ -295,16 +295,6 @@ const handleVideoEnd = () => {
 }
 
 const playVideo = async (video: any) => {
-  try {
-    // 记录播放
-    await recordPlay({
-      videoId: video.id,
-      playDuration: 0,
-      playProgress: 0
-    })
-  } catch (error) {
-    console.error('播放记录失败:', error)
-  }
   router.push(`/video/${video.id}`)
 }
 
@@ -502,25 +492,6 @@ const handleCollect = async () => {
   }
 }
 
-// 记录播放行为
-const recordVideoPlay = async () => {
-  try {
-    const response = await recordPlay({
-      videoId: route.params.id as string,
-      playDuration: 0,
-      playProgress: 0
-    })
-
-    if (response.data.code === 10000) {
-      console.log('播放记录成功')
-    } else {
-      console.error('播放记录失败:', response.data.message)
-    }
-  } catch (error) {
-    console.error('播放记录API调用失败:', error)
-  }
-}
-
 // 显示右键菜单
 const showContextMenu = (event: MouseEvent) => {
   event.preventDefault()
@@ -633,7 +604,6 @@ onMounted(async () => {
       fetchPlayInfo(),
       fetchStats(),
       fetchRecommendList(),
-      recordVideoPlay()
     ])
   } catch (error) {
     console.error('页面数据加载失败:', error)

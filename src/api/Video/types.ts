@@ -60,10 +60,23 @@ export interface VideoListResult {
 export interface PlayInfoDTO {
   videoId: string;
   title: string;
-  description?: string;
-  playUrl: string;
-  coverUrl?: string;
-  duration: number;
+  description: string;
+  videoUrl: string;          // 注意：后端返回的是 videoUrl，不是 playUrl
+  coverUrl: string;
+  sha256: string;
+  fileSize: number;
+  duration: number;          // 视频时长（秒）
+  width: number;             // 视频宽度
+  height: number;            // 视频高度
+  playCount: number;         // 播放次数
+  likeCount: number;         // 点赞数
+  commentCount: number;      // 评论数
+  shareCount: number;        // 分享数
+  favoriteCount: number;     // 收藏数
+  uploaderPhone: string;     // 上传者手机号
+  createTime: string;        // 创建时间
+  // 兼容旧字段
+  playUrl?: string;          // 兼容前端可能使用的字段名
   resolution?: string;
   format?: string;
 }

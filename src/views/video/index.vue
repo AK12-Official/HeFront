@@ -75,6 +75,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useVideoDetail } from '@/composables/useVideoDetail'
 import { useRouter } from 'vue-router'
 // import { ElCard, ElImage, ElAvatar } from 'element-plus'
 import {
@@ -89,6 +90,7 @@ import { getVideoList } from '@/api/Video'
 import type { VideoInfoDTO } from '@/api/Video/types'
 import useUserStore from '@/store/modules/user'
 import { ElMessage } from 'element-plus'
+import { getUserInfoByPhone } from '@/api/user';
 
 interface Author {
 	id: number
@@ -118,6 +120,30 @@ interface Video {
 
 const router = useRouter()
 
+const { fetchVideoDetail, videoInfo } = useVideoDetail()
+
+// 从路由参数获取视频ID
+const videoId = router.currentRoute.value.params.id as string
+
+// 获取视频信息
+onMounted(async () => {
+	if (videoId) {
+		await fetchVideoDetail(videoId)
+	}
+})
+
+// 获取用户信息
+const fetchUserInfo = async (phone: string) => {
+	try {
+		const userInfo = await getUserInfoByPhone({ phone });
+		console.log('用户信息:', userInfo);
+		// userInfo 包含: userId, phone, nickname, avatarUrl, registerTime
+		return userInfo;
+	} catch (error) {
+		console.error('获取用户信息失败:', error);
+	}
+};
+
 // 视频数据
 const videoList = ref<Video[]>([])
 const loading = ref(false)
@@ -145,10 +171,11 @@ const fetchVideoList = async () => {
 			orderDirection: '',
 		})
 
-		console.log(response);
-
 		if (response.code === 10000) {
-			videoList.value = response.data.rows.map((item: VideoInfoDTO) => ({
+			// 创建用户信息缓存
+			const userInfoCache = new Map();
+
+			const processedVideos = response.data.rows.map((item: VideoInfoDTO) => ({
 				videoId: item.videoId,
 				title: item.title,
 				cover: cleanUrl(item.cdnCoverUrl) || cleanUrl(item.coverUrl) || '', // 清理URL并优先使用 cdnCoverUrl
@@ -158,7 +185,7 @@ const fetchVideoList = async () => {
 				comments: item.commentCount || 0,
 				author: {
 					id: 1,
-					name: '用户' + (item.userPhone?.slice(-4) || item.videoId.slice(-4)),
+					name: item.userPhone,//临时
 					avatar: `https://picsum.photos/40/40?random=${item.videoId}`
 				},
 				description: item.description,
@@ -171,6 +198,68 @@ const fetchVideoList = async () => {
 				likeCount: item.likeCount,
 				commentCount: item.commentCount
 			}))
+
+			// 先设置基本数据，让页面能够显示
+			videoList.value = processedVideos;
+
+			// 异步获取用户信息并更新 - 使用 Promise.all 优化
+			const updatePromises = processedVideos.map(async (video, index) => {
+				if (video.userPhone) {
+					try {
+						console.log(`开始获取用户 ${video.userPhone} 的信息...`);
+
+						// 检查缓存
+						if (userInfoCache.has(video.userPhone)) {
+							const cachedUserInfo = userInfoCache.get(video.userPhone);
+							videoList.value[index].author.name = cachedUserInfo.nickname;
+							videoList.value[index].author.avatar = cachedUserInfo.avatarUrl || video.author.avatar;
+							console.log(`使用缓存更新用户信息: ${cachedUserInfo.nickname}`);
+						} else {
+							// 获取用户信息
+							const userInfo = await getUserInfoByPhone({ phone: video.userPhone });
+							console.log(`API 返回用户信息:`, userInfo);
+
+							// 检查返回数据的结构
+							if (userInfo) {
+								// 可能的数据结构：userInfo.data.nickname 或 userInfo.nickname
+								const nickname = userInfo.data?.nickname;
+								const avatarUrl = userInfo.data?.avatarUrl;
+
+								if (nickname) {
+									// 缓存用户信息
+									userInfoCache.set(video.userPhone, { nickname, avatarUrl });
+
+									// 更新视频列表中的用户信息
+									videoList.value[index].author.name = nickname;
+									videoList.value[index].author.avatar = avatarUrl || video.author.avatar;
+
+									console.log(`✅ 成功更新视频 ${video.videoId} 的用户信息:`, {
+										phone: video.userPhone,
+										nickname: nickname,
+										avatarUrl: avatarUrl
+									});
+								} else {
+									console.warn(`⚠️ 用户 ${video.userPhone} 的 nickname 为空:`, userInfo);
+								}
+							} else {
+								console.warn(`⚠️ 获取用户 ${video.userPhone} 信息返回空数据`);
+							}
+						}
+					} catch (error) {
+						console.error(`❌ 获取用户 ${video.userPhone} 信息失败:`, error);
+						// 保持使用手机号作为显示名称
+					}
+				}
+			});
+
+			// 等待所有用户信息获取完成
+			try {
+				await Promise.all(updatePromises);
+				console.log('✅ 所有用户信息更新完成');
+			} catch (error) {
+				console.error('❌ 部分用户信息更新失败:', error);
+			}
+
 			console.log('视频列表处理完成，共', videoList.value.length, '个视频')
 		} else {
 			console.error('API返回错误：', response)

@@ -45,17 +45,12 @@
 									</el-icon>
 									{{ formatNumber(item.views || item.viewCount || 0) }}
 								</span>
-								<button 
-							class="stat-item like-btn" 
-							:class="{ 'liked': likedVideos.has(item.videoId) }"
-							@click="handleLike(item, $event)"
-							type="button"
-						>
-							<el-icon>
-								<Star />
-							</el-icon>
-							{{ formatNumber(item.likes || item.likeCount || 0) }}
-						</button>
+								<span class="stat-item">
+									<el-icon>
+										<Star />
+									</el-icon>
+									{{ formatNumber(item.likes || item.likeCount || 0) }}
+								</span>
 								<span class="stat-item">
 									<el-icon>
 										<ChatDotRound />
@@ -315,56 +310,6 @@ const fetchVideoList = async () => {
 		}
 	} finally {
 		loading.value = false
-	}
-}
-
-// 点赞状态管理
-const likedVideos = ref<Set<string>>(new Set())
-
-// 处理点赞/取消点赞
-const handleLike = async (video: Video, event: Event) => {
-	console.log('点赞按钮被点击了！', video.videoId)
-	
-	// 阻止事件冒泡，防止触发视频跳转
-	event.stopPropagation()
-	event.preventDefault()
-
-	const isLiked = likedVideos.value.has(video.videoId)
-	const actionType = isLiked ? 'UNLIKE' : 'LIKE'
-	const actionValue = isLiked ? -1 : 1
-
-	console.log('点赞参数:', { videoId: video.videoId, actionType, actionValue })
-
-	try {
-		const response = await updateStats({
-			videoId: video.videoId,
-			actionType: actionType,
-			actionValue: actionValue
-		})
-
-		console.log('点赞API响应:', response)
-
-		if (response.code === 10000) {
-			// 更新本地点赞数和状态
-			const videoIndex = videoList.value.findIndex(v => v.videoId === video.videoId)
-			if (videoIndex !== -1) {
-				videoList.value[videoIndex].likes += actionValue
-
-				// 更新点赞状态
-				if (isLiked) {
-					likedVideos.value.delete(video.videoId)
-				} else {
-					likedVideos.value.add(video.videoId)
-				}
-			}
-
-			ElMessage.success(isLiked ? '取消点赞成功！' : '点赞成功！')
-		} else {
-			ElMessage.error(response.message || '操作失败')
-		}
-	} catch (error) {
-		console.error('点赞操作失败:', error)
-		ElMessage.error('操作失败，请重试')
 	}
 }
 
@@ -655,65 +600,35 @@ const goToUpload = () => {
 						display: flex;
 						align-items: center;
 						gap: 4px;
-						transition: color 0.3s;
 
-						&:hover {
-							color: $tertiary-color;
-						}
+
+
 
 						.el-icon {
 							font-size: 16px;
 						}
 					}
 
-					.like-btn {
-						cursor: pointer;
-						transition: all 0.3s ease;
-						border-radius: 6px;
-						padding: 4px 8px;
-						user-select: none;
-						position: relative;
-						// 移除button默认样式
-						border: none;
-						background: transparent;
-						font-size: inherit;
-						color: inherit;
-						font-family: inherit;
-						outline: none;
 
-						&:hover {
-							background-color: rgba(255, 193, 7, 0.1);
-							color: #ffc107;
-							transform: scale(1.05);
-							box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
-						}
 
-						&:active {
-							transform: scale(0.95);
-						}
+					&.liked {
+						color: #ff6b6b;
+						background-color: rgba(255, 107, 107, 0.1);
+						box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
 
-						&.liked {
+						.el-icon {
 							color: #ff6b6b;
-							background-color: rgba(255, 107, 107, 0.1);
-							box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
-
-							.el-icon {
-								color: #ff6b6b;
-								animation: heartbeat 0.6s ease-in-out;
-							}
-
-							&:hover {
-								background-color: rgba(255, 107, 107, 0.2);
-								color: #ff5252;
-								box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
-							}
+							animation: heartbeat 0.6s ease-in-out;
 						}
+
+
 					}
 				}
 			}
 		}
 	}
 }
+
 
 @include respond-to('xl') {
 	.home .waterfall {
@@ -732,19 +647,6 @@ const goToUpload = () => {
 		grid-template-columns: repeat(2, 1fr);
 		overflow-y: auto;
 		/* 确保在较小屏幕下仍然可以滚动 */
-	}
-}
-
-// 点赞动画
-@keyframes heartbeat {
-	0% {
-		transform: scale(1);
-	}
-	50% {
-		transform: scale(1.2);
-	}
-	100% {
-		transform: scale(1);
 	}
 }
 </style>

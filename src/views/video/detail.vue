@@ -60,7 +60,8 @@
 
           <div class="action-bar">
             <div class="action-group">
-              <el-button class="action-btn like" :icon="Star" @click="handleLike">
+              <el-button class="action-btn like" :class="{ liked: videoData.isLiked }"
+                :icon="videoData.isLiked ? StarFilled : Star" @click="handleLike">
                 {{ formatNumber(videoData.likes) }}
               </el-button>
               <el-button class="action-btn dislike" :icon="StarFilled">
@@ -225,6 +226,7 @@ const videoData = ref({
   dislikes: 0,
   comments: 0,
   videoUrl: '',
+  isLiked: false,
 },
 )
 
@@ -459,19 +461,52 @@ const fetchRecommendList = async () => {
 
 // 处理点赞
 const handleLike = async () => {
+  console.log('点赞按钮被点击，当前状态:', {
+    isLiked: videoData.value.isLiked,
+    likes: videoData.value.likes,
+    videoId: route.params.id,
+    videoIdType: typeof route.params.id
+  })
+  
+  // 检查videoId是否有效
+  if (!route.params.id || typeof route.params.id !== 'string') {
+    ElMessage.error('视频ID无效')
+    return
+  }
+  
   try {
-    const response = await updateStats({
+    const actionValue = videoData.value.isLiked ? -1 : 1
+    const requestParams = {
       videoId: route.params.id as string,
-      actionType: 'like',
-      actionValue: 1
-    })
+      actionType: 'LIKE',
+      actionValue: actionValue
+    }
+    
+    console.log('准备发送API请求，参数:', requestParams)
+    
+    const response = await updateStats(requestParams)
+    
+    console.log('API响应:', response)
+
     if (response.code === 10000) {
-      videoData.value.likes += 1
-      ElMessage.success('点赞成功！')
+      // 更新点赞状态和数量
+      videoData.value.isLiked = !videoData.value.isLiked
+      videoData.value.likes += actionValue
+
+      const message = videoData.value.isLiked ? '点赞成功！' : '取消点赞成功！'
+      ElMessage.success(message)
+      
+      console.log('点赞状态更新成功:', {
+        newIsLiked: videoData.value.isLiked,
+        newLikes: videoData.value.likes
+      })
+    } else {
+      console.error('API返回错误:', response)
+      ElMessage.error('操作失败：' + (response.message || '未知错误'))
     }
   } catch (error) {
-    console.error('点赞失败:', error)
-    ElMessage.error('点赞失败，请重试')
+    console.error('点赞操作失败:', error)
+    ElMessage.error('操作失败，请重试')
   }
 }
 
@@ -841,6 +876,20 @@ onUnmounted(() => {
         background: rgba(255, 255, 255, 0.9);
         border: 1px solid rgba($border-color, 0.5);
         color: $text-color;
+
+        &.like {
+          transition: all 0.3s ease;
+
+          &.liked {
+            color: #ff6b6b;
+            background-color: rgba(255, 107, 107, 0.1);
+            border-color: #ff6b6b;
+
+            &:hover {
+              background-color: rgba(255, 107, 107, 0.2);
+            }
+          }
+        }
 
         &:hover {
           background: rgba(255, 255, 255, 1);

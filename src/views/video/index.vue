@@ -184,7 +184,7 @@ const fetchVideoList = async () => {
 				likes: item.likeCount || 0,
 				comments: item.commentCount || 0,
 				author: {
-					id: 1,
+					id: item.videoId,
 					name: item.userPhone,//临时
 					avatar: `https://picsum.photos/40/40?random=${item.videoId}`
 				},

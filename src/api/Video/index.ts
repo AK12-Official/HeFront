@@ -22,7 +22,8 @@ import type {
   VideoInfoDTO,
   VideoListResult,
   PlayInfoDTO,
-  VideoStatsDTO
+  VideoStatsDTO,
+  RecommendListResponseDTO,
 } from "./types";
 
 
@@ -201,7 +202,7 @@ export const getPlayInfo = (params: GetPlayInfoParams) => {
  * @returns 推荐视频列表
  */
 export const getRecommendList = (params: GetRecommendListParams) => {
-  return request.get<VideoResponse<VideoInfoDTO[]>, VideoResponse<VideoInfoDTO[]>>(
+  return request.get<VideoResponse<RecommendListResponseDTO>, VideoResponse<RecommendListResponseDTO>>(
     API.GET_RECOMMEND_LIST_URL,
     { params }
   );
@@ -213,12 +214,8 @@ export const getRecommendList = (params: GetRecommendListParams) => {
  * @returns 记录结果
  */
 export const recordPlay = (params: RecordPlayParams) => {
-  return request.post<StringResponse, StringResponse>(
-    API.RECORD_PLAY_URL,
-    null,
-    { params }
-  );
-};
+  return request.post(API.RECORD_PLAY_URL, params) // ✅ 正确：使用完整的属性名
+}
 
 /**
  * 获取统计信息请求
@@ -240,8 +237,8 @@ export const getStats = (params: GetStatsParams) => {
 export const updateStats = (params: UpdateStatsParams) => {
   return request.post<StringResponse, StringResponse>(
     API.UPDATE_STATS_URL,
-    null,
-    { params }
+    null,  // 请求体为空
+    { params }  // 参数通过URL查询参数传递
   );
 };
 

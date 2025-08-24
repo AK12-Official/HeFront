@@ -171,9 +171,10 @@ export interface GetPlayInfoParams {
 
 // 获取推荐列表请求参数
 export interface GetRecommendListParams {
-  currentVideoId: string;
-  recommendCount?: number;
-  excludeVideoIds?: string;
+  currentVideoId: string;        // 必须参数
+  recommendCount?: number;       // 非必须，默认可以是0
+  excludeVideoIds?: string;      // 非必须，默认可以是空字符串
+  deviceType?: string;           // 非必须，默认可以是空字符串
 }
 
 // 记录播放请求参数
@@ -203,4 +204,10 @@ export interface GetUploadProgressParams {
 // 取消上传请求参数
 export interface CancelUploadParams {
   uploadSessionId: string;
+}
+
+// 推荐列表响应数据结构
+export interface RecommendListResponseDTO {
+  recommendVideos: VideoInfoDTO[];
+  cacheExpireTime?: string;
 }

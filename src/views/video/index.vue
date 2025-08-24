@@ -86,7 +86,7 @@ import {
 	VideoPlay,
 	Upload,
 } from '@element-plus/icons-vue'
-import { getVideoList } from '@/api/Video'
+import { getVideoList, getStats } from '@/api/Video'
 import type { VideoInfoDTO } from '@/api/Video/types'
 import useUserStore from '@/store/modules/user'
 import { ElMessage } from 'element-plus'
@@ -179,135 +179,91 @@ const fetchVideoList = async () => {
 			const processedVideos = response.data.rows.map((item: VideoInfoDTO, index) => ({
 				videoId: item.videoId,
 				title: item.title,
-				cover: cleanUrl(item.cdnCoverUrl) || cleanUrl(item.coverUrl) || '', // 清理URL并优先使用 cdnCoverUrl
-				duration: formatDuration(item.duration), // 格式化时长
+				cover: cleanUrl(item.cdnCoverUrl) || cleanUrl(item.coverUrl) || '',
+				duration: formatDuration(item.duration),
+				// 先使用基础数据，后续会通过 getStats 更新
 				views: item.viewCount || 0,
 				likes: item.likeCount || 0,
 				comments: item.commentCount || 0,
 				author: {
 					id: index + 1,
-					name: item.userPhone,//临时
+					name: item.userPhone,
 					avatar: `https://picsum.photos/40/40?random=${item.videoId}`
 				},
 				description: item.description,
-				uploadTime: item.createTime, // 使用 createTime
+				uploadTime: item.createTime,
 				status: item.status,
 				userPhone: item.userPhone,
-				// 保留原始数据
 				coverUrl: cleanUrl(item.cdnCoverUrl),
 				viewCount: item.viewCount,
 				likeCount: item.likeCount,
 				commentCount: item.commentCount
 			}))
 
-			// 先设置基本数据，让页面能够显示
+			// 先设置基本数据
 			videoList.value = processedVideos;
 
-			// 异步获取用户信息并更新 - 使用 Promise.all 优化
+			// 异步获取用户信息和统计数据
 			const updatePromises = processedVideos.map(async (video, index) => {
+				// 获取用户信息的逻辑保持不变
 				if (video.userPhone) {
 					try {
 						console.log(`开始获取用户 ${video.userPhone} 的信息...`);
 
-						// 检查缓存
 						if (userInfoCache.has(video.userPhone)) {
 							const cachedUserInfo = userInfoCache.get(video.userPhone);
 							videoList.value[index].author.name = cachedUserInfo.nickname;
 							videoList.value[index].author.avatar = cachedUserInfo.avatarUrl || video.author.avatar;
-							console.log(`使用缓存更新用户信息: ${cachedUserInfo.nickname}`);
 						} else {
-							// 获取用户信息
 							const userInfo = await getUserInfoByPhone({ phone: video.userPhone });
-							console.log(`API 返回用户信息:`, userInfo);
-
-							// 检查返回数据的结构
-							if (userInfo) {
-								// 可能的数据结构：userInfo.data.nickname 或 userInfo.nickname
-								const nickname = userInfo.data?.nickname;
-								const avatarUrl = userInfo.data?.avatarUrl;
-
-								if (nickname) {
-									// 缓存用户信息
-									userInfoCache.set(video.userPhone, { nickname, avatarUrl });
-
-									// 更新视频列表中的用户信息
-									videoList.value[index].author.name = nickname;
-									videoList.value[index].author.avatar = avatarUrl || video.author.avatar;
-
-									console.log(`✅ 成功更新视频 ${video.videoId} 的用户信息:`, {
-										phone: video.userPhone,
-										nickname: nickname,
-										avatarUrl: avatarUrl
-									});
-								} else {
-									console.warn(`⚠️ 用户 ${video.userPhone} 的 nickname 为空:`, userInfo);
-								}
-							} else {
-								console.warn(`⚠️ 获取用户 ${video.userPhone} 信息返回空数据`);
+							if (userInfo?.data?.nickname) {
+								userInfoCache.set(video.userPhone, { 
+									nickname: userInfo.data.nickname, 
+									avatarUrl: userInfo.data.avatarUrl 
+								});
+								videoList.value[index].author.name = userInfo.data.nickname;
+								videoList.value[index].author.avatar = userInfo.data.avatarUrl || video.author.avatar;
 							}
 						}
 					} catch (error) {
-						console.error(`❌ 获取用户 ${video.userPhone} 信息失败:`, error);
-						// 保持使用手机号作为显示名称
+						console.error(`获取用户 ${video.userPhone} 信息失败:`, error);
 					}
+				}
+
+				// 获取准确的统计数据
+				try {
+					console.log(`开始获取视频 ${video.videoId} 的统计数据...`);
+					const statsResponse = await getStats({ videoId: video.videoId });
+					
+					if (statsResponse.code === 10000 && statsResponse.data) {
+						// 更新统计数据
+						videoList.value[index].views = statsResponse.data.viewCount || 0;
+						videoList.value[index].likes = statsResponse.data.likeCount || 0;
+						videoList.value[index].comments = statsResponse.data.commentCount || 0;
+						
+						console.log(`✅ 成功更新视频 ${video.videoId} 的统计数据:`, {
+							views: statsResponse.data.viewCount,
+							likes: statsResponse.data.likeCount,
+							comments: statsResponse.data.commentCount
+						});
+					} else {
+						console.warn(`⚠️ 获取视频 ${video.videoId} 统计数据失败:`, statsResponse);
+					}
+				} catch (error) {
+					console.error(`❌ 获取视频 ${video.videoId} 统计数据失败:`, error);
 				}
 			});
 
-			// 等待所有用户信息获取完成
-			try {
-				await Promise.all(updatePromises);
-				console.log('✅ 所有用户信息更新完成');
-			} catch (error) {
-				console.error('❌ 部分用户信息更新失败:', error);
-			}
-
-			console.log('视频列表处理完成，共', videoList.value.length, '个视频')
+			// 等待所有更新完成
+			await Promise.all(updatePromises);
+			console.log('✅ 所有视频信息和统计数据更新完成');
 		} else {
-			console.error('API返回错误：', response)
-			ElMessage.error(response.message || '获取视频列表失败')
+			console.error('获取视频列表失败:', response.message)
+			ElMessage.error('获取视频列表失败: ' + response.message)
 		}
-	} catch (error: any) {
-		console.error('获取视频列表失败:', error)
-
-		// 详细的错误处理
-		if (error.response) {
-			// 服务器返回了错误状态码
-			const status = error.response.status
-			const data = error.response.data
-
-			console.error('错误详情：', {
-				status,
-				data,
-				headers: error.response.headers
-			})
-
-			switch (status) {
-				case 400:
-					ElMessage.error('请求参数错误，请检查登录状态')
-					break
-				case 401:
-					ElMessage.error('登录已过期，请重新登录')
-					// 可以跳转到登录页面
-					// router.push('/login')
-					break
-				case 403:
-					ElMessage.error('没有权限访问')
-					break
-				case 500:
-					ElMessage.error('服务器内部错误')
-					break
-				default:
-					ElMessage.error(data?.message || '获取视频列表失败')
-			}
-		} else if (error.request) {
-			// 请求已发出但没有收到响应
-			console.error('网络错误：', error.request)
-			ElMessage.error('网络连接失败，请检查网络设置')
-		} else {
-			// 其他错误
-			console.error('未知错误：', error.message)
-			ElMessage.error('发生未知错误：' + error.message)
-		}
+	} catch (error) {
+		console.error('获取视频列表异常:', error)
+		ElMessage.error('获取视频列表异常')
 	} finally {
 		loading.value = false
 	}

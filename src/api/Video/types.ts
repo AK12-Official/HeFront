@@ -25,18 +25,26 @@ export interface UploadProgressDTO {
 // 视频信息DTO
 export interface VideoInfoDTO {
   videoId: string;
+  userPhone: string;
   title: string;
   description?: string;
-  uploadTime: string;
-  duration?: number;
-  coverUrl?: string;
-  playUrl?: string;
-  status: string;
-  userPhone?: string;
-  viewCount?: number;
-  likeCount?: number;
-  commentCount?: number;
-  shareCount?: number;
+  duration: number;           // 视频时长（秒）
+  width: number;              // 视频宽度
+  height: number;             // 视频高度
+  fileSize: number;           // 文件大小（字节）
+  fastdfsFileId: string;      // FastDFS文件ID
+  coverFileId: string;        // 封面文件ID
+  cdnVideoUrl: string;        // CDN视频URL
+  cdnCoverUrl: string;        // CDN封面URL
+  status: string;             // 视频状态
+  createTime: string;         // 创建时间
+  uploadTime?: string;        // 兼容旧字段
+  coverUrl?: string;          // 兼容旧字段
+  playUrl?: string;           // 兼容旧字段
+  viewCount?: number;         // 播放量
+  likeCount?: number;         // 点赞数
+  commentCount?: number;      // 评论数
+  shareCount?: number;        // 分享数
 }
 
 // 视频列表分页结果
@@ -45,17 +53,30 @@ export interface VideoListResult {
   pageSize: number;
   total: number;
   pages: number;
-  list: VideoInfoDTO[];
+  rows: VideoInfoDTO[];  
 }
 
 // 播放信息DTO
 export interface PlayInfoDTO {
   videoId: string;
   title: string;
-  description?: string;
-  playUrl: string;
-  coverUrl?: string;
-  duration: number;
+  description: string;
+  videoUrl: string;          // 注意：后端返回的是 videoUrl，不是 playUrl
+  coverUrl: string;
+  sha256: string;
+  fileSize: number;
+  duration: number;          // 视频时长（秒）
+  width: number;             // 视频宽度
+  height: number;            // 视频高度
+  playCount: number;         // 播放次数
+  likeCount: number;         // 点赞数
+  commentCount: number;      // 评论数
+  shareCount: number;        // 分享数
+  favoriteCount: number;     // 收藏数
+  uploaderPhone: string;     // 上传者手机号
+  createTime: string;        // 创建时间
+  // 兼容旧字段
+  playUrl?: string;          // 兼容前端可能使用的字段名
   resolution?: string;
   format?: string;
 }
@@ -118,11 +139,17 @@ export interface GetVideoInfoParams {
 
 // 获取视频列表请求参数
 export interface GetVideoListParams {
-  pageIndex: number;
-  pageSize: number;
-  userPhone?: string;
-  title?: string;
-  status?: string;
+  pageIndex: number;        // 查询页码 (必需)
+  pageSize: number;         // 查询条数 (必需)
+  userPhone?: string;       // 上传视频的用户手机号 (可选)
+  title?: string;           // 视频标题 (可选)
+  status?: string;          // 视频状态 (可选) UPLOADING|PROCESSING|PUBLISHED|DELETED
+  minDuration?: number;     // 最小视频时长 (可选)
+  maxDuration?: number;     // 最大视频时长 (可选)
+  startTime?: string;       // 视频开始时间 (可选)
+  endTime?: string;         // 视频结束时间 (可选)
+  orderBy?: string;         // 排序字段 (可选) CREATE_TIME|PLAY_COUNT|LIKE_COUNT
+  orderDirection?: string;  // 排序方向 (可选) ASC|DESC
 }
 
 // 更新视频信息请求参数
@@ -144,9 +171,10 @@ export interface GetPlayInfoParams {
 
 // 获取推荐列表请求参数
 export interface GetRecommendListParams {
-  currentVideoId: string;
-  recommendCount?: number;
-  excludeVideoIds?: string;
+  currentVideoId: string;        // 必须参数
+  recommendCount?: number;       // 非必须，默认可以是0
+  excludeVideoIds?: string;      // 非必须，默认可以是空字符串
+  deviceType?: string;           // 非必须，默认可以是空字符串
 }
 
 // 记录播放请求参数
@@ -176,4 +204,10 @@ export interface GetUploadProgressParams {
 // 取消上传请求参数
 export interface CancelUploadParams {
   uploadSessionId: string;
+}
+
+// 推荐列表响应数据结构
+export interface RecommendListResponseDTO {
+  recommendVideos: VideoInfoDTO[];
+  cacheExpireTime?: string;
 }

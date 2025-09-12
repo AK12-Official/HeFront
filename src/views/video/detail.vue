@@ -52,9 +52,6 @@
             <el-avatar :size="48" :src="videoData.author.avatar" />
             <div class="author-detail">
               <div class="name">{{ videoData.author.name }}</div>
-              <div class="followers">
-                {{ formatNumber(videoData.author.followers) }} 粉丝
-              </div>
             </div>
             <el-button class="follow-btn" type="primary" :icon="Plus">关注</el-button>
           </div>
@@ -63,7 +60,8 @@
 
           <div class="action-bar">
             <div class="action-group">
-              <el-button class="action-btn like" :icon="Star" @click="handleLike">
+              <el-button class="action-btn like" :class="{ liked: videoData.isLiked }"
+                :icon="videoData.isLiked ? StarFilled : Star" @click="handleLike">
                 {{ formatNumber(videoData.likes) }}
               </el-button>
               <el-button class="action-btn dislike" :icon="StarFilled">
@@ -122,7 +120,7 @@
           <h4>基本信息</h4>
           <div class="detail-item">
             <span class="label">视频ID:</span>
-            <span class="value">{{ videoData.id }}</span>
+            <span class="value">{{ videoData.videoId }}</span>
           </div>
           <div class="detail-item">
             <span class="label">标题:</span>
@@ -189,7 +187,11 @@ import {
   DocumentCopy,
   InfoFilled,
 } from '@element-plus/icons-vue'
-import { getPlayInfo, getRecommendList, recordPlay, getStats, updateStats } from '@/api/Video'
+import { getPlayInfo, getRecommendList, getStats, updateStats, getVideoInfo } from '@/api/Video'
+import { getUserInfoByPhone } from '@/api/user'
+import type { VideoInfoDTO, RecommendListResponseDTO } from '@/api/Video/types'
+import type { UserResponse, UserInfoByPhoneDTO } from '@/api/user/types'
+import { watch } from 'vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -197,28 +199,36 @@ const videoRef = ref<HTMLVideoElement | null>(null)
 const commentText = ref('')
 const isEntering = ref(false)
 
-// 模拟当前用户数据
-const currentUser = {
-  avatar: 'https://picsum.photos/36/36',
-}
 
 // 视频数据
 const videoData = ref({
-  id: route.params.id,
-  title: '这是一个精彩的短视频',
-  videoUrl: '/src/assets/videos/demo.mp4', // 使用本地demo视频
-  views: 1234567,
-  likes: 45678,
-  dislikes: 123,
-  comments: 9876,
-  createTime: new Date().getTime() - 24 * 60 * 60 * 1000, // 一天前
-  description: '这是一段视频描述，详细介绍了视频的内容和创作背景。',
+  videoId: route.params.id as string,
+  userPhone: '',
+  title: '加载中...',
+  description: '',
+  duration: 0,
+  width: 1920,
+  height: 1080,
+  fileSize: 0,
+  fastdfsFileId: '',
+  coverFileId: '',
+  cdnVideoUrl: '',
+  cdnCoverUrl: '',
+  status: 'PUBLISHED',
+  createTime: '',
+  // 扩展字段
   author: {
-    name: '视频创作者',
+    name: '加载中...',
     avatar: 'https://picsum.photos/48/48',
-    followers: 12345,
   },
-})
+  views: 0,
+  likes: 0,
+  dislikes: 0,
+  comments: 0,
+  videoUrl: '',
+  isLiked: false,
+},
+)
 
 // 播放信息
 const playInfo = ref<any>(null)
@@ -240,28 +250,34 @@ const availableQualities = ref([
   { label: '自动', value: 'auto' }
 ])
 
-// 添加推荐视频数据
-const recommendedVideos = ref(
-  Array.from({ length: 10 }, (_, i) => ({
-    id: i + 100,
-    title: `推荐视频标题 ${i + 1}`,
-    cover: `https://picsum.photos/320/180?random=${i}`,
-    duration: '3:15',
-    views: Math.floor(Math.random() * 1000000),
-    author: {
-      name: `创作者${i + 1}`,
-    },
-  }))
-)
+// 推荐视频数据 - 改为空数组，通过API获取
+const recommendedVideos = ref<Array<{
+  id: string;
+  title: string;
+  cover: string;
+  duration: string;
+  views: number;
+  author: {
+    name: string;
+    avatar?: string;
+  };
+}>>([])
 
-const formatNumber = (num: number): string => {
+const formatNumber = (num: number | undefined | null): string => {
+  // 添加安全检查
+  if (num === undefined || num === null || isNaN(num)) {
+    return '0'
+  }
   if (num >= 10000) {
     return (num / 10000).toFixed(1) + 'w'
   }
   return num.toString()
 }
 
-const formatDate = (timestamp: number): string => {
+const formatDate = (dateString: string): string => {
+  if (!dateString) return '未知时间'
+
+  const timestamp = new Date(dateString).getTime()
   const now = new Date().getTime()
   const diff = now - timestamp
   const days = Math.floor(diff / (24 * 60 * 60 * 1000))
@@ -281,32 +297,83 @@ const handleVideoEnd = () => {
 }
 
 const playVideo = async (video: any) => {
-  try {
-    // 记录播放
-    await recordPlay({
-      videoId: video.id,
-      playDuration: 0,
-      playProgress: 0
-    })
-  } catch (error) {
-    console.error('播放记录失败:', error)
-  }
   router.push(`/video/${video.id}`)
+}
+
+// 获取视频详情
+const fetchVideoInfo = async () => {
+  try {
+    const response = await getVideoInfo({ videoId: route.params.id as string })
+    if (response.code === 10000 && response.data) {
+      // 更新视频基本信息
+      Object.assign(videoData.value, {
+        ...response.data,
+        videoUrl: response.data.cdnVideoUrl || response.data.fastdfsFileId || '',
+      })
+
+      // 获取作者信息
+      if (response.data.userPhone) {
+        await fetchAuthorInfo(response.data.userPhone)
+      }
+    }
+  } catch (error) {
+    console.error('获取视频详情失败:', error)
+    ElMessage.error('获取视频详情失败')
+  }
+}
+
+// 获取作者信息
+const fetchAuthorInfo = async (userPhone: string) => {
+  try {
+    console.log('正在获取作者信息，手机号:', userPhone)
+
+    if (!userPhone) {
+      console.warn('手机号为空，使用默认作者信息')
+      return
+    }
+
+    const response = await getUserInfoByPhone({ phone: userPhone })
+    console.log('获取作者信息响应:', response)
+
+    if (response.code === 10000 && response.data) {
+      videoData.value.author = {
+        name: response.data.nickname || response.data.nickname || '未知用户',
+        avatar: response.data.avatarUrl || 'https://picsum.photos/48/48',
+      }
+      console.log('作者信息更新成功:', videoData.value.author)
+    } else {
+      console.warn('获取作者信息失败，响应码:', response.code)
+    }
+  } catch (error) {
+    console.error('获取作者信息失败:', error)
+    // 确保使用默认值，避免 undefined 错误
+    if (!videoData.value.author) {
+      videoData.value.author = {
+        name: '未知用户',
+        avatar: 'https://picsum.photos/48/48',
+      }
+    }
+  }
 }
 
 // 获取播放信息
 const fetchPlayInfo = async () => {
   try {
     const response = await getPlayInfo({ videoId: route.params.id as string })
-    if (response.code === 10000) {
-      playInfo.value = response.data
-      // 更新视频URL
-      if (response.data.playUrl) {
-        videoData.value.videoUrl = response.data.playUrl
+    if (response.code === 10000 && response.data) {
+      // 使用正确的字段名 videoUrl 而不是 playUrl
+      if (response.data.videoUrl && !videoData.value.videoUrl) {
+        videoData.value.videoUrl = response.data.videoUrl
       }
+      console.log('播放信息获取成功:', response.data)
+      console.log('当前视频URL:', videoData.value.videoUrl)
     }
   } catch (error) {
     console.error('获取播放信息失败:', error)
+    // 如果获取播放信息失败，可以使用视频详情中的 URL
+    if (!videoData.value.videoUrl && videoData.value.cdnVideoUrl) {
+      videoData.value.videoUrl = videoData.value.cdnVideoUrl
+    }
   }
 }
 
@@ -329,21 +396,63 @@ const fetchStats = async () => {
 // 获取推荐列表
 const fetchRecommendList = async () => {
   try {
+    console.log('开始获取推荐列表，videoId:', route.params.id)
+
     const response = await getRecommendList({
       currentVideoId: route.params.id as string,
-      recommendCount: 10
+      recommendCount: 10,
+      excludeVideoIds: "",
+      deviceType: ""
     })
+
+    console.log('推荐列表API响应:', response)
+
     if (response.code === 10000) {
-      recommendedVideos.value = response.data.map((item: any) => ({
-        id: item.videoId,
-        title: item.title,
-        cover: item.coverUrl || item.cover || `https://picsum.photos/320/180?random=${item.videoId}`,
-        duration: item.duration || '3:15',
-        views: item.viewCount || item.views || 0,
-        author: {
-          name: item.author?.name || `创作者${item.videoId.slice(-2)}`
+      if (response.data && response.data.recommendVideos) {
+        const recommendVideos = response.data.recommendVideos
+        console.log('推荐视频数据:', recommendVideos)
+
+        // 清理URL的函数
+        const cleanUrl = (url: string): string => {
+          if (!url) return ''
+          // 移除前后的反引号、空格和其他特殊字符
+          return url.replace(/^[\s`]+|[\s`]+$/g, '').trim()
         }
-      }))
+
+        recommendedVideos.value = recommendVideos.map((item: any) => {
+          // 处理duration - 将秒转换为分:秒格式
+          const formatDuration = (seconds: number): string => {
+            if (!seconds || seconds === 0) return '0:00'
+            const minutes = Math.floor(seconds / 60)
+            const remainingSeconds = seconds % 60
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+          }
+
+          const processedItem = {
+            id: item.videoId,
+            title: item.title || '未知标题',
+            cover: cleanUrl(item.coverUrl) || `https://picsum.photos/320/180?random=${item.videoId}`,
+            duration: typeof item.duration === 'number' ? formatDuration(item.duration) : (item.duration || '0:00'),
+            views: item.playCount || 0,
+            author: {
+              name: `创作者${item.videoId?.slice(-4) || ''}`,
+              avatar: 'https://picsum.photos/24/24'
+            }
+          }
+
+          console.log('处理后的视频项:', processedItem)
+          console.log('清理后的封面URL:', processedItem.cover)
+          return processedItem
+        })
+
+        console.log('推荐列表处理完成，数量:', recommendedVideos.value.length)
+      } else {
+        console.warn('API返回数据结构异常:', response.data)
+        recommendedVideos.value = []
+      }
+    } else {
+      console.error('获取推荐列表失败:', response.message)
+      recommendedVideos.value = []
     }
   } catch (error) {
     console.error('获取推荐列表失败:', error)
@@ -352,19 +461,52 @@ const fetchRecommendList = async () => {
 
 // 处理点赞
 const handleLike = async () => {
+  console.log('点赞按钮被点击，当前状态:', {
+    isLiked: videoData.value.isLiked,
+    likes: videoData.value.likes,
+    videoId: route.params.id,
+    videoIdType: typeof route.params.id
+  })
+
+  // 检查videoId是否有效
+  if (!route.params.id || typeof route.params.id !== 'string') {
+    ElMessage.error('视频ID无效')
+    return
+  }
+
   try {
-    const response = await updateStats({
+    const actionValue = videoData.value.isLiked ? -1 : 1
+    const requestParams = {
       videoId: route.params.id as string,
-      actionType: 'like',
-      actionValue: 1
-    })
+      actionType: 'LIKE',
+      actionValue: actionValue
+    }
+
+    console.log('准备发送API请求，参数:', requestParams)
+
+    const response = await updateStats(requestParams)
+
+    console.log('API响应:', response)
+
     if (response.code === 10000) {
-      videoData.value.likes += 1
-      ElMessage.success('点赞成功！')
+      // 更新点赞状态和数量
+      videoData.value.isLiked = !videoData.value.isLiked
+      videoData.value.likes += actionValue
+
+      const message = videoData.value.isLiked ? '点赞成功！' : '取消点赞成功！'
+      ElMessage.success(message)
+
+      console.log('点赞状态更新成功:', {
+        newIsLiked: videoData.value.isLiked,
+        newLikes: videoData.value.likes
+      })
+    } else {
+      console.error('API返回错误:', response)
+      ElMessage.error('操作失败：' + (response.message || '未知错误'))
     }
   } catch (error) {
-    console.error('点赞失败:', error)
-    ElMessage.error('点赞失败，请重试')
+    console.error('点赞操作失败:', error)
+    ElMessage.error('操作失败，请重试')
   }
 }
 
@@ -382,19 +524,6 @@ const handleCollect = async () => {
   } catch (error) {
     console.error('收藏失败:', error)
     ElMessage.error('收藏失败，请重试')
-  }
-}
-
-// 记录播放行为
-const recordVideoPlay = async () => {
-  try {
-    await recordPlay({
-      videoId: route.params.id as string,
-      playDuration: 0,
-      playProgress: 0
-    })
-  } catch (error) {
-    console.error('播放记录失败:', error)
   }
 }
 
@@ -474,6 +603,24 @@ const changeVideoQuality = async (quality: string) => {
   }
 }
 
+watch(
+  () => route.params.id,
+  async (newId, oldId) => {
+    if (newId && newId !== oldId) {
+      console.log('路由参数变化，重新加载视频:', newId)
+      // 重置视频数据
+      videoData.value.videoId = newId as string
+      videoData.value.title = '加载中...'
+      videoData.value.author.name = '加载中...'
+
+      // 重新获取视频信息
+      await fetchVideoInfo()
+      await fetchRecommendList()
+    }
+  },
+  { immediate: false }
+)
+
 onMounted(async () => {
   // 先设置为true,然后在下一帧设置为false以触发动画
   nextTick(() => {
@@ -483,13 +630,20 @@ onMounted(async () => {
   // 添加全局点击事件监听
   document.addEventListener('click', handleGlobalClick)
 
-  // 获取视频相关数据
-  await Promise.all([
-    fetchPlayInfo(),
-    fetchStats(),
-    fetchRecommendList(),
-    recordVideoPlay()
-  ])
+  try {
+    // 首先获取视频基本信息（包含作者信息）
+    await fetchVideoInfo()
+
+    // 然后并行获取其他数据
+    await Promise.all([
+      fetchPlayInfo(),
+      fetchStats(),
+      fetchRecommendList(),
+    ])
+  } catch (error) {
+    console.error('页面数据加载失败:', error)
+    ElMessage.error('页面加载失败，请刷新重试')
+  }
 })
 
 onUnmounted(() => {
@@ -723,6 +877,20 @@ onUnmounted(() => {
         background: rgba(255, 255, 255, 0.9);
         border: 1px solid rgba($border-color, 0.5);
         color: $text-color;
+
+        &.like {
+          transition: all 0.3s ease;
+
+          &.liked {
+            color: #ff6b6b;
+            background-color: rgba(255, 107, 107, 0.1);
+            border-color: #ff6b6b;
+
+            &:hover {
+              background-color: rgba(255, 107, 107, 0.2);
+            }
+          }
+        }
 
         &:hover {
           background: rgba(255, 255, 255, 1);

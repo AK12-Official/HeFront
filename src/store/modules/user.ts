@@ -1,18 +1,26 @@
 import { loginWithCode, loginWithPassword, logout, } from "@/api/auth";
+import { getPoints } from "@/api/points"; // 新增积分API导入
 import { defineStore } from "pinia";
 import { ref, watch, computed } from "vue";
 import type { UserState } from "./types/types";
 import { setToken, getToken, removeToken, clearAllTokens } from "@/utils/auth";
-import type { LoginCodeParams, LoginPasswordParams } from "@/api/auth/types";
+import type { LoginCodeParams, LoginPasswordParams, RefreshTokenParams, ResponseData } from "@/api/auth/types";
 
 const useUserStore = defineStore('User', () => {
   // state
   const state = ref<UserState>({
-    accessToken: getToken('ACCESS_TOKEN'), // 从 localStorage 初始化 token
-    refreshToken: getToken('REFRESH_TOKEN'), // 用户登录成功后返回的refreshToken
-    expiresIn: getToken('expiresIn'), // token的过期时间
-    score: 610, // 用户积分
+    accessToken: getToken('ACCESS_TOKEN'),
+    refreshToken: getToken('REFRESH_TOKEN'),
+    expiresIn: getToken('expiresIn'),
+    score: null, // 初始为null，通过API获取
+    // 从localStorage恢复用户信息
+    userId: localStorage.getItem('userId') ? Number(localStorage.getItem('userId')) : undefined,
+    phone: localStorage.getItem('userPhone') || undefined,
+    nickname: localStorage.getItem('userNickname') || undefined,
+    desc: localStorage.getItem('userDesc') || undefined,
   });
+
+  const scoreLoading = ref(false);
 
   // 监听 localStorage 的变化，确保多标签页之间的状态一致性
   window.addEventListener('storage', (event) => {
@@ -59,6 +67,32 @@ const useUserStore = defineStore('User', () => {
     }
   );
 
+  // 获取用户积分的方法
+  const fetchUserScore = async () => {
+    if (!state.value.phone) {
+      console.warn('无法获取积分：缺少手机号信息');
+      return;
+    }
+
+    scoreLoading.value = true; // 开始加载
+    try {
+      const response = await getPoints({ phone: state.value.phone });
+      if (response.code === 10000 && response.data) {
+        state.value.score = response.data.points;
+        // 同步到localStorage
+        localStorage.setItem('userScore', response.data.points.toString());
+      } else {
+        console.error('获取积分失败:', response.message);
+        state.value.score = null;
+      }
+    } catch (error) {
+      console.error('获取积分API调用失败:', error);
+      state.value.score = null;
+    } finally {
+      scoreLoading.value = false; // 确保加载状态被重置
+    }
+  };
+
   // actions
   const userLoginCode = async (data: LoginCodeParams) => {
     const result = await loginWithCode(data);
@@ -66,15 +100,32 @@ const useUserStore = defineStore('User', () => {
     if (result.code === 10000) {
       state.value.accessToken = result.data.accessToken || null;
       state.value.refreshToken = result.data.refreshToken || null;
-      state.value.expiresIn = result.data.expiresIn || null;
+      // 将相对过期时间转换为绝对时间戳
+      if (result.data.expiresIn) {
+        // 当前时间戳 + 过期秒数 = 绝对过期时间戳
+        state.value.expiresIn = Math.floor(Date.now() / 1000) + result.data.expiresIn;
+      } else {
+        state.value.expiresIn = null;
+      }
+      state.value.userId = result.data.userId || null;
+      state.value.phone = data.phone;// 保存手机号
+
       if (state.value.accessToken && state.value.refreshToken && state.value.expiresIn !== null) {
         setToken("ACCESS_TOKEN", state.value.accessToken);
         setToken("REFRESH_TOKEN", state.value.refreshToken);
         setToken("expiresIn", state.value.expiresIn);
+
+        // 保存用户信息到localStorage
+        if (state.value.phone) {
+          localStorage.setItem('userPhone', state.value.phone);
+        }
+        if (state.value.userId) {
+          localStorage.setItem('userId', state.value.userId.toString());
+        }
       }
 
-      // 登录成功后获取用户信息
-      // await userInfo();
+      // 登录成功后立即获取用户积分
+      await fetchUserScore(); // 调用外部定义的fetchUserScore方法
 
       return 'ok';
     } else {
@@ -88,15 +139,31 @@ const useUserStore = defineStore('User', () => {
     if (result.code === 10000) {
       state.value.accessToken = result.data.accessToken || null;
       state.value.refreshToken = result.data.refreshToken || null;
-      state.value.expiresIn = result.data.expiresIn || null;
+      // 将相对过期时间转换为绝对时间戳
+      if (result.data.expiresIn) {
+        state.value.expiresIn = Math.floor(Date.now() / 1000) + result.data.expiresIn;
+      } else {
+        state.value.expiresIn = null;
+      }
+      state.value.userId = result.data.userId || null;
+      state.value.phone = data.phone;
+
       if (state.value.accessToken && state.value.refreshToken && state.value.expiresIn !== null) {
         setToken("ACCESS_TOKEN", state.value.accessToken);
         setToken("REFRESH_TOKEN", state.value.refreshToken);
         setToken("expiresIn", state.value.expiresIn);
+
+        // 保存用户信息到localStorage
+        if (state.value.phone) {
+          localStorage.setItem('userPhone', state.value.phone);
+        }
+        if (state.value.userId) {
+          localStorage.setItem('userId', state.value.userId.toString());
+        }
       }
 
-      // 登录成功后获取用户信息
-      // await userInfo();
+      // 登录成功后立即获取用户积分
+      await fetchUserScore();
 
       return 'ok';
     } else {
@@ -131,24 +198,28 @@ const useUserStore = defineStore('User', () => {
 
   const userLogout = async () => {
     try {
-      const result = await logout();
-      if (result.code == 10000) {
-        // console.log('退出登录成功');
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.warn('退出登录时发生错误:', error.message);
-      } else {
-        console.warn('退出登录时发生错误:', error);
-      }
+      await logout();
+    } catch (error) {
+      console.error('登出API调用失败:', error);
     } finally {
-      // 无论后端是否返回错误，都清除本地状态
+      // 清除所有状态
       state.value.accessToken = null;
       state.value.refreshToken = null;
       state.value.expiresIn = null;
-      clearAllTokens(); // 删除 token
+      state.value.score = null; // 清除积分
+      state.value.userId = undefined;
+      state.value.phone = undefined;
+      state.value.nickname = undefined;
+      state.value.desc = undefined;
+
+      // 清除localStorage
+      clearAllTokens();
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userPhone');
+      localStorage.removeItem('userNickname');
+      localStorage.removeItem('userDesc');
+      localStorage.removeItem('userScore');
     }
-    return 'ok';
   };
 
   // getters
@@ -228,15 +299,137 @@ const useUserStore = defineStore('User', () => {
   //   }
   // };
 
+  // 刷新积分的方法（供外部调用）
+  const refreshUserScore = async () => {
+    await fetchUserScore();
+  };
+
+  // Token 刷新相关方法
+  let isRefreshing = false;
+  let refreshPromise: Promise<boolean> | null = null;
+
+  // 判断 token 是否即将过期（提前5分钟刷新）
+  const shouldRefreshToken = () => {
+    if (!state.value.accessToken || !state.value.expiresIn) {
+      return false;
+    }
+    const now = Math.floor(Date.now() / 1000);
+    const timeUntilExpiry = state.value.expiresIn - now;
+    return timeUntilExpiry < 300; // 5分钟内过期
+  };
+
+  // 判断 token 是否已过期
+  const isTokenExpired = () => {
+    if (!state.value.expiresIn) {
+      return false;
+    }
+    const now = Math.floor(Date.now() / 1000);
+    return now >= state.value.expiresIn;
+  };
+
+  // 刷新访问令牌
+  const refreshAccessToken = async (): Promise<boolean> => {
+    // 防止重复刷新
+    if (isRefreshing && refreshPromise) {
+      return refreshPromise;
+    }
+
+    if (!state.value.refreshToken) {
+      console.warn('没有刷新令牌，无法刷新访问令牌');
+      return false;
+    }
+
+    isRefreshing = true;
+    
+    try {
+      // 动态导入 refreshToken API
+      const { refreshToken } = await import('@/api/auth');
+      
+      refreshPromise = (async () => {
+        try {
+          const response = await refreshToken({ refreshToken: state.value.refreshToken! });
+          
+          if (response.code === 10000 && response.data) {
+            // 更新 token 信息
+            state.value.accessToken = response.data.accessToken;
+            if (response.data.refreshToken) {
+              state.value.refreshToken = response.data.refreshToken;
+            }
+            if (response.data.expiresIn) {
+              state.value.expiresIn = Math.floor(Date.now() / 1000) + response.data.expiresIn;
+            }
+            
+            console.log('Token 刷新成功');
+            return true;
+          } else {
+            console.error('Token 刷新失败:', response.message);
+            await userLogout();
+            return false;
+          }
+        } catch (error) {
+          console.error('Token 刷新请求失败:', error);
+          await userLogout();
+          return false;
+        }
+      })();
+      
+      return await refreshPromise;
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  };
+
+  // 确保 token 有效（在发送请求前调用）
+  const ensureValidToken = async (): Promise<boolean> => {
+    // 如果没有 token，直接返回 false
+    if (!state.value.accessToken) {
+      return false;
+    }
+
+    // 如果 token 已过期，尝试刷新
+    if (isTokenExpired()) {
+      console.log('Token 已过期，尝试刷新...');
+      return await refreshAccessToken();
+    }
+
+    // 如果 token 即将过期，主动刷新
+    if (shouldRefreshToken()) {
+      console.log('Token 即将过期，主动刷新...');
+      // 这里不等待刷新结果，让当前请求继续，刷新在后台进行
+      refreshAccessToken().catch(error => {
+        console.error('后台刷新 Token 失败:', error);
+      });
+    }
+
+    return true;
+  };
+
+  // 处理 401 错误的方法
+  const handle401Error = async (): Promise<boolean> => {
+    console.log('收到 401 错误，尝试刷新 Token...');
+    return await refreshAccessToken();
+  };
+
 
   return {
     state,
+    scoreLoading,
     userLoginCode,
     userLoginPwd,
+    userLogout,
+    fetchUserScore,
+    refreshUserScore, // 导出刷新积分方法
     isLoggedIn,
-    // userInfo,
-    userLogout
+    // Token 刷新相关方法
+    shouldRefreshToken,
+    isTokenExpired,
+    refreshAccessToken,
+    ensureValidToken,
+    handle401Error
   };
-});
+}
+
+  ,);
 
 export default useUserStore;

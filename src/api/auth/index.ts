@@ -4,7 +4,10 @@
  * 包含登录、注册、验证码、令牌刷新等功能
  */
 import request from "@/utils/request";
-import type { LoginCodeParams, LoginPasswordParams, RegisterParams, ResetPasswordParams, SendCodeParams } from "./types";
+import type {
+  LoginCodeParams, LoginPasswordParams, RegisterParams, ResetPasswordParams, SendCodeParams, RefreshTokenParams, RefreshTokenResponse,
+  ResponseData
+} from "./types";
 
 /**
  * API 路径枚举
@@ -15,7 +18,7 @@ enum API {
   REGISTER_URL = '/auth/register',     // 用户注册
   LOGIN_CODE_URL = '/auth/login-code', // 验证码登录
   LOGIN_PASSWORD_URL = '/auth/login-password', // 密码登录
-  LOGOUT_URL = '/user/logout',         // 用户登出
+  LOGOUT_URL = '/api/user/logout',         // 用户登出
   RESET_PASSWORD_URL = '/auth/reset-password', // 重置密码
   REFRESH_TOKEN_URL = '/auth/refresh-token',   // 刷新访问令牌
 }
@@ -42,7 +45,7 @@ export const sendVerificationCode = (params: SendCodeParams) => {
  * @param params.phone 手机号码
  * @param params.code 验证码
  * @param params.password 密码
- * @param params.confirmPassword 确认密码
+ * @param params.nickname 用户昵称
  * @returns 注册结果
  */
 export const register = (params: RegisterParams) => {
@@ -100,13 +103,17 @@ export const resetPassword = (params: ResetPasswordParams) => {
   return request.post<any, any>(API.RESET_PASSWORD_URL, null, { params });
 };
 
+
 /**
  * 刷新访问令牌
  * 使用刷新令牌获取新的访问令牌
  *
- * @param refreshToken 刷新令牌
+ * @param params 刷新令牌参数
  * @returns 新的访问令牌和过期时间
  */
-export const refreshToken = (refreshToken: string) => {
-  return request.post<any, any>(API.REFRESH_TOKEN_URL, { refreshToken });
+export const refreshToken = (params: RefreshTokenParams) => {
+  return request.post<ResponseData<RefreshTokenResponse>, ResponseData<RefreshTokenResponse>>(
+    API.REFRESH_TOKEN_URL, 
+    params
+  );
 };

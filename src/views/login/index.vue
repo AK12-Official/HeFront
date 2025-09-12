@@ -71,6 +71,9 @@
         <el-form-item prop="confirmPassword">
           <el-input type="password" v-model="registerForm.confirmPassword" placeholder="请确认密码"></el-input>
         </el-form-item>
+        <el-form-item prop="nickname">
+          <el-input type="text" v-model="registerForm.nickname" placeholder="请输入用户名"></el-input>
+        </el-form-item>
         <el-form-item>
           <el-button class="login_btn" type="primary" size="default" @click="register()">注册</el-button>
         </el-form-item>
@@ -82,7 +85,8 @@
 <script setup lang="ts">
 import { register as registerAPI, sendVerificationCode } from '@/api/auth';
 import useUserStore from '@/store/modules/user';
-import { ElNotification, ElMessage } from 'element-plus';
+import { ElMessage } from 'element-plus';
+import { ElNotification } from 'element-plus';
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -116,7 +120,8 @@ const registerForm = reactive({
   phone: '',
   code: '',
   password: '',
-  confirmPassword: ''
+  confirmPassword: '',
+  nickname: ''
 });
 
 const countdown = ref(0);

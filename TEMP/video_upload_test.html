@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>小文件上传测试</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="file"], textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { padding: 10px 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background-color: #0056b3; }
+        #log { margin-top: 20px; padding: 10px; background-color: #f0f0f0; border: 1px solid #ccc; white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+
+    <h1>小文件上传测试</h1>
+    <p>用于测试 <code>POST /api/videos/upload-person-video</code> 接口。</p>
+
+    <div class="form-group">
+        <label for="authToken">认证Token (JWT)</label>
+        <input type="text" id="authToken" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpdGllcyI6W10sImV4cCI6MTc1MzYxMzQ4OCwiaWQiOiI3MzhiYzgxZDA4ZTY0N2JiYmYyYzY4YmM4MjYwMTdlZiIsInVzZXJfbmFtZSI6IjE4NzM3NTE5NTUyIn0.W1UVaEbT_BfWKKpJUKRg6R8h2dzyphMaFSwJgoQzF4k">
+    </div>
+
+    <div class="form-group">
+        <label for="videoFile">选择视频文件</label>
+        <input type="file" id="videoFile" accept="video/mp4">
+    </div>
+
+    <div class="form-group">
+        <label for="title">标题</label>
+        <input type="text" id="title" value="test title">
+    </div>
+
+    <div class="form-group">
+        <label for="description">描述</label>
+        <textarea id="description" rows="3">test desc</textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="sha256">文件 SHA256 (自动计算)</label>
+        <input type="text" id="sha256" readonly>
+    </div>
+    
+    <div class="form-group">
+        <label for="deviceType">设备类型</label>
+        <input type="text" id="deviceType" value="WEB_TEST_PAGE">
+    </div>
+
+    <button id="uploadButton">上传文件</button>
+
+    <h3>日志</h3>
+    <pre id="log"></pre>
+
+    <script>
+        const videoFileInput = document.getElementById('videoFile');
+        const sha256Input = document.getElementById('sha256');
+        const uploadButton = document.getElementById('uploadButton');
+        const logOutput = document.getElementById('log');
+
+        let selectedFile = null;
+
+        // 当用户选择文件时，计算 SHA256
+        videoFileInput.addEventListener('change', async (event) => {
+            selectedFile = event.target.files[0];
+            if (!selectedFile) {
+                return;
+            }
+            log('开始计算文件的 SHA256...');
+            sha256Input.value = '计算中...';
+            try {
+                const hash = await calculateSHA256(selectedFile);
+                sha256Input.value = hash;
+                log(`SHA256 计算完成: ${hash}`);
+            } catch (error) {
+                const errorMessage = `SHA256 计算失败: ${error.message}`;
+                sha256Input.value = '计算失败';
+                log(errorMessage);
+                console.error(errorMessage, error);
+            }
+        });
+
+        // 点击上传按钮
+        uploadButton.addEventListener('click', async () => {
+            if (!selectedFile) {
+                log('错误：请先选择一个文件。');
+                return;
+            }
+            const authToken = document.getElementById('authToken').value;
+            if (!authToken) {
+                log('错误：请输入认证 Token。');
+                return;
+            }
+
+            const formData = new FormData();
+            // 注意：这里的字段名需要和后端 multipart 解析时使用的名称完全对应
+            formData.append('file', selectedFile, selectedFile.name); // 文件本身
+            formData.append('title', document.getElementById('title').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('sha256', sha256Input.value);
+            formData.append('deviceType', document.getElementById('deviceType').value);
+
+            log('开始上传...');
+            log('请求URL: POST /api/videos/upload-person-video');
+            log('FormData 内容:');
+            for (let [key, value] of formData.entries()) {
+                if (value instanceof File) {
+                    log(`  - ${key}: [File] name=${value.name}, size=${value.size}`);
+                } else {
+                    log(`  - ${key}: ${value}`);
+                }
+            }
+            
+            try {
+                const response = await fetch('http://localhost:8090/api/videos/upload-person-video', {
+                    method: 'POST',
+                    headers: {
+                        // Oatpp 默认的认证头是 'Authorization'
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+
+                const responseData = await response.json();
+                log(`\n服务器响应 (状态码: ${response.status}):`);
+                log(JSON.stringify(responseData, null, 2));
+
+            } catch (error) {
+                const errorMessage = `上传失败: ${error.message}`;
+                log(`\n${errorMessage}`);
+                console.error(errorMessage, error);
+            }
+        });
+
+        /**
+         * 使用浏览器原生 Crypto API 计算文件的 SHA256
+         * @param {File} file
+         * @returns {Promise<string>}
+         */
+        async function calculateSHA256(file) {
+            const buffer = await file.arrayBuffer();
+            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        function log(message) {
+            logOutput.textContent += message + '\n';
+        }
+    </script>
+
+</body>
+</html>

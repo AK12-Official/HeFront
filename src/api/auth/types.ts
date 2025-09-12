@@ -10,7 +10,7 @@ export interface RegisterParams {
   phone: string;
   code: string;
   password: string;
-  confirmPassword: string;
+  nickname: string;
 }
 
 // 验证码登录参数
@@ -39,4 +39,16 @@ export interface ResponseData<T = any> {
   code: number;
   message: string;
   data: T;
+}
+
+// 刷新token参数
+export interface RefreshTokenParams {
+  refreshToken: string;
+}
+
+// 刷新token响应数据
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn: number;
 }

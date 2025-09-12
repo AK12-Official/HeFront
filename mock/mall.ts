@@ -9,7 +9,7 @@
 const mockProducts: any[] = []
 
 // 模拟分类数据（已清空，仅用于API结构参考）
-const mockCategories: any[] = []
+// const mockCategories: any[] = []
 
 // 模拟订单数据（已清空，仅用于API结构参考）
 const mockOrders: any[] = []

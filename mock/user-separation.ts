@@ -6,14 +6,14 @@
 import { MockMethod } from 'vite-plugin-mock'
 
 // 刷新Token Mock数据
-const mockRefreshTokenResponse = {
-    code: 200,
-    message: 'Token刷新成功',
-    data: {
-        token: 'new-refreshed-token-12345',
-        tokenHead: 'Bearer '
-    }
-};
+// const mockRefreshTokenResponse = {
+//     code: 200,
+//     message: 'Token刷新成功',
+//     data: {
+//         token: 'new-refreshed-token-12345',
+//         tokenHead: 'Bearer '
+//     }
+// };
 
 // 前台商城用户数据（与后台管理员完全分离）
 const mockMallUsers = [

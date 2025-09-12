@@ -20,7 +20,6 @@ import type {
   Product,
   ProductDetail,
   CartItem,
-  CartListPromotionResponse,
   ConfirmOrderResult,
   Order,
   MemberReceiveAddress,

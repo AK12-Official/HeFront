@@ -1,6 +1,6 @@
 // 导入专门用于搜索功能的请求实例
 import { searchRequest } from "@/utils/mallRequest";
-import type { ProductSearchParams, CommonResult, PageResult, Product } from "./types";
+import type { ProductSearchParams } from "./types";
 
 // 高级搜索功能API
 export const esProductSearchSimple = (keyword: string) => {

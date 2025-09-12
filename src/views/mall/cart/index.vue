@@ -184,7 +184,7 @@ const removeItem = async (itemId: number) => {
   try {
     if (!confirm('确定要删除该商品吗？')) return
 
-    await cartDelete({ ids: String(itemId) })
+    await cartDelete([itemId])
     cartItems.value = cartItems.value.filter(item => item.id !== itemId)
     ElMessage.success('删除成功')
   } catch (error) {

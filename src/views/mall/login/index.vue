@@ -16,7 +16,7 @@
                 <div class="logo-section">
                     <img src="/img/vx_gzh.jpg" alt="Logo" class="logo">
                     <h1 class="title">MallLite</h1>
-                    <p class="subtitle">电商系统登录</p>
+                    <p class="subtitle">登录体验爱心商城</p>
                 </div>
 
                 <!-- 表单区域 -->
@@ -56,10 +56,12 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Lock, ArrowLeft } from '@element-plus/icons-vue'
-import { ssoLogin } from '@/api/sso'
+import { ssoLogin, ssoInfo } from '@/api/sso'
 import type { LoginParams } from '@/api/sso/types'
+import useMallUserStore from '@/store/modules/mallUser'
 
 const router = useRouter()
+const mallUserStore = useMallUserStore()
 const loginFormRef = ref()
 const loginLoading = ref(false)
 
@@ -91,13 +93,51 @@ const handleLogin = async () => {
             try {
                 const response = await ssoLogin(loginForm)
 
-                // 存储token
-                const token = response.data.tokenHead + response.data.token
-                localStorage.setItem('mall-token', token)
-                localStorage.setItem('mall-username', loginForm.username)
+                // 检查响应状态
+                if (response.code === 200) {
+                    // 使用电商专用store存储token
+                    const token = response.data.tokenHead + response.data.token
 
-                ElMessage.success('登录成功')
-                router.push('/mall/home')
+                    // 从JWT token中解析过期时间
+                    let expiresIn = null
+                    try {
+                        // JWT token的payload部分（第二部分）
+                        const payload = JSON.parse(atob(response.data.token.split('.')[1]))
+                        expiresIn = payload.exp // JWT中的exp字段是过期时间戳（秒）
+                    } catch (error) {
+                        console.warn('无法解析JWT token过期时间，使用默认24小时')
+                        // 如果解析失败，使用默认24小时
+                        expiresIn = Math.floor(Date.now() / 1000) + (24 * 60 * 60)
+                    }
+
+                    // 使用电商专用的登录信息设置方法
+                    mallUserStore.setLoginInfo({
+                        accessToken: token,
+                        expiresIn: expiresIn || undefined,
+                        username: loginForm.username,
+                        memberId: undefined // SSO API没有返回memberId
+                    })
+
+                    // 登录成功后获取用户详细信息
+                    try {
+                        const userInfoResponse = await ssoInfo() as any
+                        if (userInfoResponse.code === 200) {
+                            // 存储用户详细信息
+                            mallUserStore.setUserInfo(userInfoResponse.data)
+                            console.log('用户信息已获取并存储:', userInfoResponse.data)
+                        } else {
+                            console.warn('获取用户信息失败:', userInfoResponse.message)
+                        }
+                    } catch (error) {
+                        console.error('获取用户信息失败:', error)
+                        // 即使获取用户信息失败，也不影响登录流程
+                    }
+
+                    ElMessage.success('登录成功')
+                    router.push('/mall/home')
+                } else {
+                    ElMessage.error(response.message || '登录失败')
+                }
             } catch (error) {
                 console.error('登录失败:', error)
                 ElMessage.error('登录失败，请检查用户名和密码')

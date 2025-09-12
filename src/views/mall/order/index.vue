@@ -30,7 +30,9 @@
                 <span v-if="isRecentOrder(order.createTime)" class="new-order-badge">最新</span>
               </div>
               <div class="order-time" v-if="order.createTime">
-                <i class="el-icon-time"></i>
+                <el-icon>
+                  <Clock />
+                </el-icon>
                 下单时间：{{ formatTime(order.createTime) }}
               </div>
             </div>
@@ -249,96 +251,9 @@ const loadOrderList = async () => {
 
 // 加载默认订单数据（当API失败时）
 const loadDefaultOrders = () => {
-  console.log('使用默认订单数据')
-  const allDefaultOrders = [
-    {
-      id: 1,
-      orderSn: 'DEFAULT001',
-      status: 0,
-      totalAmount: 9999,
-      createTime: '2025-01-09 14:30:00',
-      orderItemList: [
-        {
-          id: 1,
-          productId: 1,
-          productName: 'iPhone 15 Pro Max (默认数据)',
-          productPic: 'https://via.placeholder.com/80x80?text=iPhone',
-          productPrice: 9999,
-          productQuantity: 1,
-          productAttr: '颜色:钛原色;容量:256GB'
-        }
-      ]
-    },
-    {
-      id: 2,
-      orderSn: 'DEFAULT002',
-      status: 1,
-      totalAmount: 6499,
-      createTime: '2025-01-09 12:15:00',
-      orderItemList: [
-        {
-          id: 2,
-          productId: 2,
-          productName: '小米14 Ultra (默认数据)',
-          productPic: 'https://via.placeholder.com/80x80?text=Xiaomi',
-          productPrice: 6499,
-          productQuantity: 1,
-          productAttr: '颜色:黑色;容量:512GB'
-        }
-      ]
-    },
-    {
-      id: 3,
-      orderSn: 'DEFAULT003',
-      status: 2,
-      totalAmount: 3999,
-      createTime: '2025-01-08 16:45:00',
-      orderItemList: [
-        {
-          id: 3,
-          productId: 3,
-          productName: 'iPad Air 5 (默认数据)',
-          productPic: 'https://via.placeholder.com/80x80?text=iPad',
-          productPrice: 3999,
-          productQuantity: 1,
-          productAttr: '颜色:深空灰;容量:256GB'
-        }
-      ]
-    },
-    {
-      id: 4,
-      orderSn: 'DEFAULT004',
-      status: 3,
-      totalAmount: 2999,
-      createTime: '2025-01-07 10:20:00',
-      orderItemList: [
-        {
-          id: 4,
-          productId: 4,
-          productName: 'Apple Watch Series 9 (默认数据)',
-          productPic: 'https://via.placeholder.com/80x80?text=Watch',
-          productPrice: 2999,
-          productQuantity: 1,
-          productAttr: '颜色:午夜色;表带:运动型表带'
-        }
-      ]
-    }
-  ]
-
-  // 按状态筛选
-  const filteredOrders = allDefaultOrders.filter(order =>
-    activeTab.value === -1 || order.status === activeTab.value
-  )
-
-  // 按创建时间倒序排序（最新的在前面）
-  filteredOrders.sort((a, b) => {
-    const timeA = new Date(a.createTime).getTime()
-    const timeB = new Date(b.createTime).getTime()
-    return timeB - timeA
-  })
-
-  orderList.value = filteredOrders
-  total.value = filteredOrders.length
+  console.log('API调用失败，显示空订单列表')
+  orderList.value = []
+  total.value = 0
 }
 
 // 切换标签

@@ -125,7 +125,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Loading, Clock, CircleCheck, CircleClose } from '@element-plus/icons-vue'
 import { orderDetail, orderPaySuccess } from '@/api/mall'
-import type { CommonResult } from '@/api/mall/types'
+import type { CommonResult, PayType } from '@/api/mall/types'
 import { PaymentUtils } from '@/utils/payment'
 
 interface OrderInfo {
@@ -153,7 +153,7 @@ const router = useRouter()
 const loading = ref(false)
 const paying = ref(false)
 const orderInfo = ref<OrderInfo | null>(null)
-const selectedPaymentMethod = ref(99) // 默认模拟支付，方便测试
+const selectedPaymentMethod = ref(1) // 默认支付宝支付
 const paymentDialogVisible = ref(false)
 const paymentStatus = ref<'pending' | 'waiting' | 'success' | 'failed'>('pending')
 const paymentError = ref('')
@@ -179,7 +179,7 @@ const paymentMethods = ref<PaymentMethod[]>([
   {
     id: 99,
     name: '模拟支付',
-    description: '开发测试用，直接模拟支付成功',
+    description: '支付宝支付',
     icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTI0IDQ4QzM3LjI1NDggNDggNDggMzcuMjU0OCA0OCAyNEM0OCAxMC43NDUyIDM3LjI1NDggMCAyNCAwQzEwLjc0NTIgMCAwIDEwLjc0NTIgMCAyNEMwIDM3LjI1NDggMTAuNzQ1MiA0OCAyNCA0OFoiIGZpbGw9IiNGRkI3MDAiLz4KPHBhdGggZD0iTTM0IDIxTDE5IDM2TDE0IDMxIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4=',
     enabled: true
   }
@@ -246,7 +246,7 @@ const handlePay = async () => {
 
       // 调用支付成功接口更新订单状态
       try {
-        await orderPaySuccess(orderInfo.value.id, 1)
+        await orderPaySuccess(orderInfo.value.id, PayType.ALIPAY)
         ElMessage.success('支付成功！')
       } catch (error) {
         console.error('更新订单状态失败:', error)
@@ -309,7 +309,7 @@ const checkPaymentStatus = async () => {
 
         // 调用支付成功接口更新订单状态
         try {
-          await orderPaySuccess(orderInfo.value.id, 1) // 支付宝支付
+          await orderPaySuccess(orderInfo.value.id, PayType.ALIPAY) // 支付宝支付
         } catch (error) {
           console.error('更新订单状态失败:', error)
         }

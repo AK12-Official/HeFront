@@ -204,16 +204,14 @@ const login = async () => {
       // 你可以根据实际情况决定是否要存token等
     }
 
-    ElNotification({
-      type: 'success',
+    ElNotification.success({
       message: "登录成功",
       title: "欢迎回来",
     });
 
     router.push('/');
   } catch (error) {
-    ElNotification({
-      type: 'error',
+    ElNotification.error({
       message: error instanceof Error ? error.message : '登录失败'
     });
   }
@@ -227,8 +225,7 @@ const register = async () => {
   try {
     await registerAPI(registerForm);
 
-    ElNotification({
-      type: 'success',
+    ElNotification.success({
       message: "注册成功，请登录",
       title: "注册成功",
     });
@@ -236,8 +233,7 @@ const register = async () => {
     switchMode('login');
     loginForm.phone = registerForm.phone;
   } catch (error) {
-    ElNotification({
-      type: 'error',
+    ElNotification.error({
       message: error instanceof Error ? error.message : '注册失败'
     });
   }

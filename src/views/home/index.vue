@@ -40,7 +40,7 @@
     </div>
     <template #footer>
       <el-button @click="changeDonatVisibility">关闭</el-button>
-      <el-button @click="logout" type="danger">登出(没地方放先写这里，主要是测试先)</el-button>
+      <el-button @click="logout" type="danger">登出</el-button>
     </template>
   </el-dialog>
 </template>

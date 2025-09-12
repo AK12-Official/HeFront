@@ -97,24 +97,44 @@ export interface CmsSubject {
 // 商品基本信息（用于列表显示）
 export interface Product {
   id: number;
+  brandId?: number;
+  productCategoryId?: number;
+  feightTemplateId?: number;
+  productAttributeCategoryId?: number;
   name: string;
+  pic: string;
+  productSn?: string;
+  deleteStatus?: number;
+  publishStatus?: number;
+  newStatus?: number;
+  recommandStatus?: number;
+  verifyStatus?: number;
+  sort?: number;
+  sale?: number;
+  price: number;
+  promotionPrice?: number;  // 促销价格
+  giftGrowth?: number;
+  giftPoint?: number;
+  usePointLimit?: number;
   subTitle?: string;        // 副标题
-  price: number;           // 现价
   originalPrice?: number;  // 原价
-  pic: string;            // 主图
-  albumPics?: string[];   // 商品相册
-  sale?: number;          // 销量
   stock: number;          // 库存
-  brandId?: number;       // 品牌ID
-  brandName?: string;     // 品牌名称
-  productCategoryId?: number;    // 分类ID
-  productCategoryName?: string;  // 分类名称
-  promotionType?: number; // 促销类型：1-限时抢购 2-新品首发 3-热销 4-推荐
-  newStatus?: number;     // 新品状态：0-非新品 1-新品
-  recommandStatus?: number; // 推荐状态：0-非推荐 1-推荐
+  lowStock?: number;
+  unit?: string;
+  weight?: number;
+  previewStatus?: number;
+  serviceIds?: string;
+  keywords?: string;
+  note?: string;
+  albumPics?: string;     // 商品相册（字符串格式，逗号分隔）
   detailTitle?: string;    // 详情标题
-  detailDesc?: string;     // 详情描述
-  detailHtml?: string;     // 详情HTML
+  promotionStartTime?: string;  // 促销开始时间
+  promotionEndTime?: string;    // 促销结束时间
+  promotionPerLimit?: number;
+  promotionType?: number; // 促销类型：1-限时抢购 2-新品首发 3-热销 4-推荐
+  brandName?: string;     // 品牌名称
+  productCategoryName?: string;  // 分类名称
+  description?: string;     // 详情描述
 }
 
 // 商品详情信息（商品详情页使用）
@@ -148,13 +168,15 @@ export interface ProductSku {
 export interface ProductCategory {
   id: number;
   name: string;
-  parentId?: number;
-  level?: number;
-  showStatus?: number;
-  sort?: number;
+  parentId: number;
+  level: number;
+  productCount: number;
+  productUnit: string;
+  navStatus: number;
+  showStatus: number;
+  sort: number;
   icon?: string;
-  keywords?: string;
-  description?: string;
+  keywords: string;
 }
 
 // 商品分类树（用于分类树展示，包含子分类）
@@ -167,9 +189,13 @@ export interface Brand {
   id: number;
   name: string;
   firstLetter?: string;
-  logo?: string;
+  sort?: number;
+  factoryStatus?: number;
   showStatus?: number;
   productCount?: number;
+  productCommentCount?: number;
+  logo?: string;
+  bigPic?: string;
   brandStory?: string;
 }
 
@@ -194,17 +220,20 @@ export interface CouponListParams {
 export interface MemberCoupon {
   id: number;
   name: string;
-  type: number;        // 优惠券类型：1-满减券 2-折扣券 3-现金券
+  type: number;        // 优惠券类型：0-满减券 1-折扣券 2-现金券
+  platform: number;   // 使用平台：0-全平台 1-移动端 2-PC端
+  count: number;       // 优惠券数量
   amount: number;      // 优惠金额
-  minPoint?: number;   // 使用门槛
-  startTime: string;
-  endTime: string;
-  useStatus: number;   // 使用状态：0-未使用 1-已使用 2-已过期
+  perLimit: number;    // 每人限领数量
+  minPoint: number;    // 使用门槛
+  startTime: string;   // 开始时间
+  endTime: string;     // 结束时间
+  useType: number;     // 使用类型：0-全场通用 1-指定分类 2-指定商品
+  publishCount: number; // 发行数量
+  useCount: number;    // 已使用数量
+  receiveCount: number; // 已领取数量
+  enableTime: string;  // 领取后几天内有效
   note?: string;
-  publishCount?: number;
-  useCount?: number;
-  receiveCount?: number;
-  enableTime?: string;
   code?: string;
   memberLevel?: number;
 }
@@ -272,10 +301,10 @@ export interface CartUpdateQuantityParams {
   quantity: number;
 }
 
-// 删除购物车商品参数
-export interface CartDeleteParams {
-  ids: string; // 逗号分隔的ID字符串
-}
+// 删除购物车商品参数（已废弃，现在直接使用number[]数组）
+// export interface CartDeleteParams {
+//   ids: string; // 逗号分隔的ID字符串
+// }
 
 // ==================== 订单相关 ====================
 
@@ -445,6 +474,28 @@ export interface AlipayParams {
 export interface PaymentQueryParams {
   outTradeNo?: string;  // 商户订单号
   tradeNo?: string;     // 支付宝交易号
+}
+
+// 支付成功回调参数
+export interface PaymentSuccessParams {
+  orderId: number;      // 订单ID
+  payType: number;      // 支付类型：1-支付宝，2-微信
+}
+
+// 支付状态枚举
+export enum PaymentStatus {
+  WAIT_BUYER_PAY = 'WAIT_BUYER_PAY',     // 等待买家付款
+  TRADE_SUCCESS = 'TRADE_SUCCESS',       // 交易成功
+  TRADE_FINISHED = 'TRADE_FINISHED',     // 交易完成
+  TRADE_CLOSED = 'TRADE_CLOSED',         // 交易关闭
+  TRADE_CREATED = 'TRADE_CREATED'        // 交易创建
+}
+
+// 支付类型枚举
+export enum PayType {
+  ALIPAY = 1,    // 支付宝
+  WECHAT = 2,    // 微信支付
+  UNION = 3      // 银联支付
 }
 
 // ==================== 收货地址相关 ====================

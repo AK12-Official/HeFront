@@ -2,7 +2,7 @@
  * MallLite后台管理系统API接口
  * 基于后台管理系统接口文档和Postman集合
  */
-import request from "@/utils/request";
+import { adminRequest } from "@/utils/mallRequest";
 import type {
     AdminCommonResult,
     AdminPageResult,
@@ -51,35 +51,35 @@ import type {
  * 用户注册
  */
 export const register = (params: AdminRegisterParams): Promise<AdminCommonResult<Admin>> => {
-    return request.post('/admin/register', params);
+    return adminRequest.post('/admin/register', params);
 };
 
 /**
  * 用户登录
  */
 export const login = (params: AdminLoginParams): Promise<AdminCommonResult<AdminLoginResponse>> => {
-    return request.post('/admin/login', params);
+    return adminRequest.post('/admin/login', params);
 };
 
 /**
  * 刷新Token
  */
 export const refreshToken = (): Promise<AdminCommonResult<AdminLoginResponse>> => {
-    return request.get('/admin/refreshToken');
+    return adminRequest.get('/admin/refreshToken');
 };
 
 /**
  * 获取当前用户信息
  */
 export const getAdminInfo = (): Promise<AdminCommonResult<AdminInfo>> => {
-    return request.get('/admin/info');
+    return adminRequest.get('/admin/info');
 };
 
 /**
  * 用户登出
  */
 export const logout = (): Promise<AdminCommonResult<null>> => {
-    return request.post('/admin/logout');
+    return adminRequest.post('/admin/logout');
 };
 
 // ==================== 用户管理接口 ====================
@@ -89,7 +89,7 @@ export const logout = (): Promise<AdminCommonResult<null>> => {
  */
 export const getAdminList = (params: AdminListParams = {}): Promise<AdminCommonResult<AdminPageResult<Admin>>> => {
     const { pageNum = 1, pageSize = 5, keyword } = params;
-    return request.get('/admin/list', {
+    return adminRequest.get('/admin/list', {
         params: { pageNum, pageSize, keyword }
     });
 };
@@ -98,44 +98,42 @@ export const getAdminList = (params: AdminListParams = {}): Promise<AdminCommonR
  * 获取指定用户信息
  */
 export const getAdminById = (id: number): Promise<AdminCommonResult<Admin>> => {
-    return request.get(`/admin/${id}`);
+    return adminRequest.get(`/admin/${id}`);
 };
 
 /**
  * 修改指定用户信息
  */
 export const updateAdmin = (id: number, params: AdminUpdateParams): Promise<AdminCommonResult<number>> => {
-    return request.post(`/admin/update/${id}`, params);
+    return adminRequest.post(`/admin/update/${id}`, params);
 };
 
 /**
  * 修改用户密码
  */
 export const updateAdminPassword = (params: AdminUpdatePasswordParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/admin/updatePassword', params);
+    return adminRequest.post('/admin/updatePassword', params);
 };
 
 /**
  * 删除用户
  */
 export const deleteAdmin = (id: number): Promise<AdminCommonResult<number>> => {
-    return request.post(`/admin/delete/${id}`);
+    return adminRequest.post(`/admin/delete/${id}`);
 };
 
 /**
- * 修改用户状态
- */
+ * 修改用户状�? */
 export const updateAdminStatus = (id: number, params: AdminStatusUpdateParams): Promise<AdminCommonResult<number>> => {
-    return request.post(`/admin/updateStatus/${id}`, null, {
+    return adminRequest.post(`/admin/updateStatus/${id}`, null, {
         params: { status: params.status }
     });
 };
 
 /**
- * 给用户分配角色
- */
+ * 给用户分配角�? */
 export const updateAdminRole = (params: AdminRoleUpdateParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/admin/role/update', null, {
+    return adminRequest.post('/admin/role/update', null, {
         params: { adminId: params.adminId, roleIds: params.roleIds.join(',') }
     });
 };
@@ -144,7 +142,7 @@ export const updateAdminRole = (params: AdminRoleUpdateParams): Promise<AdminCom
  * 获取用户角色列表
  */
 export const getAdminRoleList = (adminId: number): Promise<AdminCommonResult<AdminRole[]>> => {
-    return request.get(`/admin/role/${adminId}`);
+    return adminRequest.get(`/admin/role/${adminId}`);
 };
 
 // ==================== 商品管理接口 ====================
@@ -153,7 +151,7 @@ export const getAdminRoleList = (adminId: number): Promise<AdminCommonResult<Adm
  * 创建商品
  */
 export const createProduct = (params: ProductCreateParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/product/create', params);
+    return adminRequest.post('/product/create', params);
 };
 
 /**
@@ -161,7 +159,7 @@ export const createProduct = (params: ProductCreateParams): Promise<AdminCommonR
  */
 export const getProductList = (params: ProductListParams = {}): Promise<AdminCommonResult<AdminPageResult<AdminProduct>>> => {
     const { pageNum = 1, pageSize = 5, ...rest } = params;
-    return request.get('/product/list', {
+    return adminRequest.get('/product/list', {
         params: { pageNum, pageSize, ...rest }
     });
 };
@@ -170,30 +168,28 @@ export const getProductList = (params: ProductListParams = {}): Promise<AdminCom
  * 获取商品编辑信息
  */
 export const getProductUpdateInfo = (id: number): Promise<AdminCommonResult<ProductUpdateInfo>> => {
-    return request.get(`/product/updateInfo/${id}`);
+    return adminRequest.get(`/product/updateInfo/${id}`);
 };
 
 /**
  * 更新商品
  */
 export const updateProduct = (id: number, params: ProductCreateParams): Promise<AdminCommonResult<number>> => {
-    return request.post(`/product/update/${id}`, params);
+    return adminRequest.post(`/product/update/${id}`, params);
 };
 
 /**
- * 商品简单查询
- */
+ * 商品简单查�? */
 export const getProductSimpleList = (keyword?: string): Promise<AdminCommonResult<ProductSimple[]>> => {
-    return request.get('/product/simpleList', {
+    return adminRequest.get('/product/simpleList', {
         params: { keyword }
     });
 };
 
 /**
- * 批量修改审核状态
- */
+ * 批量修改审核状�? */
 export const updateProductVerifyStatus = (params: ProductBatchStatusParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/product/update/verifyStatus', null, {
+    return adminRequest.post('/product/update/verifyStatus', null, {
         params: {
             ids: params.ids.join(','),
             verifyStatus: params.verifyStatus,
@@ -203,10 +199,9 @@ export const updateProductVerifyStatus = (params: ProductBatchStatusParams): Pro
 };
 
 /**
- * 批量上下架商品
- */
+ * 批量上下架商�? */
 export const updateProductPublishStatus = (params: ProductBatchStatusParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/product/update/publishStatus', null, {
+    return adminRequest.post('/product/update/publishStatus', null, {
         params: {
             ids: params.ids.join(','),
             publishStatus: params.publishStatus
@@ -218,7 +213,7 @@ export const updateProductPublishStatus = (params: ProductBatchStatusParams): Pr
  * 批量推荐商品
  */
 export const updateProductRecommendStatus = (params: ProductBatchStatusParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/product/update/recommendStatus', null, {
+    return adminRequest.post('/product/update/recommendStatus', null, {
         params: {
             ids: params.ids.join(','),
             recommendStatus: params.recommendStatus
@@ -230,7 +225,7 @@ export const updateProductRecommendStatus = (params: ProductBatchStatusParams): 
  * 批量设为新品
  */
 export const updateProductNewStatus = (params: ProductBatchStatusParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/product/update/newStatus', null, {
+    return adminRequest.post('/product/update/newStatus', null, {
         params: {
             ids: params.ids.join(','),
             newStatus: params.newStatus
@@ -239,10 +234,9 @@ export const updateProductNewStatus = (params: ProductBatchStatusParams): Promis
 };
 
 /**
- * 批量修改删除状态
- */
+ * 批量修改删除状�? */
 export const updateProductDeleteStatus = (params: ProductBatchStatusParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/product/update/deleteStatus', null, {
+    return adminRequest.post('/product/update/deleteStatus', null, {
         params: {
             ids: params.ids.join(','),
             deleteStatus: params.deleteStatus
@@ -256,21 +250,21 @@ export const updateProductDeleteStatus = (params: ProductBatchStatusParams): Pro
  * 添加商品分类
  */
 export const createProductCategory = (params: ProductCategoryCreateParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/productCategory/create', params);
+    return adminRequest.post('/productCategory/create', params);
 };
 
 /**
  * 修改商品分类
  */
 export const updateProductCategory = (id: number, params: ProductCategoryCreateParams): Promise<AdminCommonResult<number>> => {
-    return request.post(`/productCategory/update/${id}`, params);
+    return adminRequest.post(`/productCategory/update/${id}`, params);
 };
 
 /**
  * 分页查询商品分类
  */
 export const getProductCategoryList = (parentId: number, pageNum: number = 1, pageSize: number = 5): Promise<AdminCommonResult<AdminPageResult<ProductCategory>>> => {
-    return request.get(`/productCategory/list/${parentId}`, {
+    return adminRequest.get(`/productCategory/list/${parentId}`, {
         params: { pageNum, pageSize }
     });
 };
@@ -279,14 +273,14 @@ export const getProductCategoryList = (parentId: number, pageNum: number = 1, pa
  * 删除商品分类
  */
 export const deleteProductCategory = (id: number): Promise<AdminCommonResult<number>> => {
-    return request.post(`/productCategory/delete/${id}`);
+    return adminRequest.post(`/productCategory/delete/${id}`);
 };
 
 /**
  * 根据ID获取商品分类
  */
 export const getProductCategoryById = (id: number): Promise<AdminCommonResult<ProductCategory>> => {
-    return request.get(`/productCategory/${id}`);
+    return adminRequest.get(`/productCategory/${id}`);
 };
 
 // ==================== 订单管理接口 ====================
@@ -296,7 +290,7 @@ export const getProductCategoryById = (id: number): Promise<AdminCommonResult<Pr
  */
 export const getOrderList = (params: AdminOrderListParams = {}): Promise<AdminCommonResult<AdminPageResult<AdminOrder>>> => {
     const { pageNum = 1, pageSize = 5, ...rest } = params;
-    return request.get('/order/list', {
+    return adminRequest.get('/order/list', {
         params: { pageNum, pageSize, ...rest }
     });
 };
@@ -305,14 +299,14 @@ export const getOrderList = (params: AdminOrderListParams = {}): Promise<AdminCo
  * 批量发货
  */
 export const batchDeliveryOrder = (params: OrderBatchDeliveryParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/order/update/delivery', params.deliveryParamList);
+    return adminRequest.post('/order/update/delivery', params.deliveryParamList);
 };
 
 /**
  * 批量关闭订单
  */
 export const batchCloseOrder = (params: OrderCloseParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/order/update/close', null, {
+    return adminRequest.post('/order/update/close', null, {
         params: {
             ids: params.ids.join(','),
             note: params.note
@@ -324,7 +318,7 @@ export const batchCloseOrder = (params: OrderCloseParams): Promise<AdminCommonRe
  * 批量删除订单
  */
 export const batchDeleteOrder = (ids: number[]): Promise<AdminCommonResult<number>> => {
-    return request.post('/order/delete', null, {
+    return adminRequest.post('/order/delete', null, {
         params: { ids: ids.join(',') }
     });
 };
@@ -333,28 +327,27 @@ export const batchDeleteOrder = (ids: number[]): Promise<AdminCommonResult<numbe
  * 获取订单详情
  */
 export const getOrderDetail = (id: number): Promise<AdminCommonResult<AdminOrderDetail>> => {
-    return request.get(`/order/${id}`);
+    return adminRequest.get(`/order/${id}`);
 };
 
 /**
- * 修改收货人信息
- */
+ * 修改收货人信�? */
 export const updateOrderReceiverInfo = (params: OrderReceiverInfoUpdateParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/order/update/receiverInfo', params);
+    return adminRequest.post('/order/update/receiverInfo', params);
 };
 
 /**
  * 修改订单费用信息
  */
 export const updateOrderMoneyInfo = (params: OrderMoneyInfoUpdateParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/order/update/moneyInfo', params);
+    return adminRequest.post('/order/update/moneyInfo', params);
 };
 
 /**
  * 备注订单
  */
 export const updateOrderNote = (params: OrderNoteUpdateParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/order/update/note', null, {
+    return adminRequest.post('/order/update/note', null, {
         params: {
             id: params.id,
             note: params.note,
@@ -369,55 +362,52 @@ export const updateOrderNote = (params: OrderNoteUpdateParams): Promise<AdminCom
  * 添加角色
  */
 export const createRole = (params: AdminRoleCreateParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/role/create', params);
+    return adminRequest.post('/role/create', params);
 };
 
 /**
  * 修改角色
  */
 export const updateRole = (id: number, params: AdminRoleCreateParams): Promise<AdminCommonResult<number>> => {
-    return request.post(`/role/update/${id}`, params);
+    return adminRequest.post(`/role/update/${id}`, params);
 };
 
 /**
  * 批量删除角色
  */
 export const batchDeleteRole = (ids: number[]): Promise<AdminCommonResult<number>> => {
-    return request.post('/role/delete', null, {
+    return adminRequest.post('/role/delete', null, {
         params: { ids: ids.join(',') }
     });
 };
 
 /**
- * 获取所有角色
- */
+ * 获取所有角�? */
 export const getAllRoleList = (): Promise<AdminCommonResult<AdminRole[]>> => {
-    return request.get('/role/listAll');
+    return adminRequest.get('/role/listAll');
 };
 
 /**
  * 分页获取角色列表
  */
 export const getRoleList = (pageNum: number = 1, pageSize: number = 5, keyword?: string): Promise<AdminCommonResult<AdminPageResult<AdminRole>>> => {
-    return request.get('/role/list', {
+    return adminRequest.get('/role/list', {
         params: { pageNum, pageSize, keyword }
     });
 };
 
 /**
- * 修改角色状态
- */
+ * 修改角色状�? */
 export const updateRoleStatus = (id: number, params: AdminRoleStatusParams): Promise<AdminCommonResult<number>> => {
-    return request.post(`/role/updateStatus/${id}`, null, {
+    return adminRequest.post(`/role/updateStatus/${id}`, null, {
         params: { status: params.status }
     });
 };
 
 /**
- * 给角色分配菜单
- */
+ * 给角色分配菜�? */
 export const allocRoleMenu = (params: AdminRoleMenuParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/role/allocMenu', null, {
+    return adminRequest.post('/role/allocMenu', null, {
         params: {
             roleId: params.roleId,
             menuIds: params.menuIds.join(',')
@@ -426,10 +416,9 @@ export const allocRoleMenu = (params: AdminRoleMenuParams): Promise<AdminCommonR
 };
 
 /**
- * 给角色分配资源
- */
+ * 给角色分配资�? */
 export const allocRoleResource = (params: AdminRoleResourceParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/role/allocResource', null, {
+    return adminRequest.post('/role/allocResource', null, {
         params: {
             roleId: params.roleId,
             resourceIds: params.resourceIds.join(',')
@@ -443,28 +432,28 @@ export const allocRoleResource = (params: AdminRoleResourceParams): Promise<Admi
  * 添加资源
  */
 export const createResource = (params: AdminResourceCreateParams): Promise<AdminCommonResult<number>> => {
-    return request.post('/resource/create', params);
+    return adminRequest.post('/resource/create', params);
 };
 
 /**
  * 修改资源
  */
 export const updateResource = (id: number, params: AdminResourceCreateParams): Promise<AdminCommonResult<number>> => {
-    return request.post(`/resource/update/${id}`, params);
+    return adminRequest.post(`/resource/update/${id}`, params);
 };
 
 /**
  * 根据ID获取资源详情
  */
 export const getResourceById = (id: number): Promise<AdminCommonResult<AdminResource>> => {
-    return request.get(`/resource/${id}`);
+    return adminRequest.get(`/resource/${id}`);
 };
 
 /**
  * 根据ID删除资源
  */
 export const deleteResource = (id: number): Promise<AdminCommonResult<number>> => {
-    return request.post(`/resource/delete/${id}`);
+    return adminRequest.post(`/resource/delete/${id}`);
 };
 
 /**
@@ -472,16 +461,15 @@ export const deleteResource = (id: number): Promise<AdminCommonResult<number>> =
  */
 export const getResourceList = (params: AdminResourceListParams = {}): Promise<AdminCommonResult<AdminPageResult<AdminResource>>> => {
     const { pageNum = 1, pageSize = 5, ...rest } = params;
-    return request.get('/resource/list', {
+    return adminRequest.get('/resource/list', {
         params: { pageNum, pageSize, ...rest }
     });
 };
 
 /**
- * 查询所有资源
- */
+ * 查询所有资�? */
 export const getAllResourceList = (): Promise<AdminCommonResult<AdminResource[]>> => {
-    return request.get('/resource/listAll');
+    return adminRequest.get('/resource/listAll');
 };
 
 // ==================== 文件上传接口 ====================
@@ -492,7 +480,7 @@ export const getAllResourceList = (): Promise<AdminCommonResult<AdminResource[]>
 export const uploadFileToMinio = (file: File): Promise<AdminCommonResult<FileUploadResponse>> => {
     const formData = new FormData();
     formData.append('file', file);
-    return request.post('/minio/upload', formData, {
+    return adminRequest.post('/minio/upload', formData, {
         headers: {
             'Content-Type': 'multipart/form-data'
         }
@@ -503,7 +491,7 @@ export const uploadFileToMinio = (file: File): Promise<AdminCommonResult<FileUpl
  * MinIO文件删除
  */
 export const deleteFileFromMinio = (params: MinioDeleteParams): Promise<AdminCommonResult<null>> => {
-    return request.post('/minio/delete', null, {
+    return adminRequest.post('/minio/delete', null, {
         params: { objectName: params.objectName }
     });
 };
@@ -514,7 +502,7 @@ export const deleteFileFromMinio = (params: MinioDeleteParams): Promise<AdminCom
 export const uploadFileToOss = (file: File): Promise<AdminCommonResult<FileUploadResponse>> => {
     const formData = new FormData();
     formData.append('file', file);
-    return request.post('/aliyun/oss/upload', formData, {
+    return adminRequest.post('/aliyun/oss/upload', formData, {
         headers: {
             'Content-Type': 'multipart/form-data'
         }
@@ -525,7 +513,7 @@ export const uploadFileToOss = (file: File): Promise<AdminCommonResult<FileUploa
  * OSS签名生成
  */
 export const getOssPolicy = (): Promise<AdminCommonResult<OssSignResponse>> => {
-    return request.get('/aliyun/oss/policy');
+    return adminRequest.get('/aliyun/oss/policy');
 };
 
 // 默认导出

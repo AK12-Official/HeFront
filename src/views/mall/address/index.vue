@@ -3,7 +3,9 @@
     <div class="address-header">
       <h2>收货地址</h2>
       <el-button type="primary" @click="showAddAddress">
-        <i class="el-icon-plus"></i>
+        <el-icon>
+          <Plus />
+        </el-icon>
         添加地址
       </el-button>
     </div>
@@ -26,7 +28,7 @@
                 <span class="name">{{ address.name }}</span>
                 <span class="phone">{{ address.phoneNumber }}</span>
               </div>
-              <div class="default-tag" v-if="address.defaultStatus">默认</div>
+              <div class="default-tag" v-if="address.defaultStatus === 1">默认</div>
             </div>
 
             <div class="address-detail">
@@ -39,7 +41,7 @@
             <el-button size="small" @click="editAddress(address)">
               编辑
             </el-button>
-            <el-button v-if="!address.defaultStatus" size="small" type="primary" @click="setDefault(address.id)">
+            <el-button v-if="address.defaultStatus !== 1" size="small" type="primary" @click="setDefault(address.id)">
               设为默认
             </el-button>
             <el-button size="small" type="danger" @click="deleteAddress(address.id)">
@@ -63,16 +65,19 @@
 
         <el-form-item label="所在地区" prop="region">
           <div class="region-selector">
-            <el-select v-model="addressForm.province" placeholder="省份" @change="onProvinceChange" title="选择省份">
+            <el-select v-model="addressForm.province" placeholder="省份" @change="onProvinceChange" title="选择省份" clearable
+              :key="`province-${selectKey}`" class="custom-width" style="width: 110px;">
               <el-option v-for="province in provinceList" :key="province.value" :label="province.label"
                 :value="province.value" />
             </el-select>
 
-            <el-select v-model="addressForm.city" placeholder="城市" @change="onCityChange" title="选择城市">
+            <el-select v-model="addressForm.city" placeholder="城市" @change="onCityChange" title="选择城市" clearable
+              :key="`city-${selectKey}`" class="custom-width" style="width: 110px;">
               <el-option v-for="city in cityList" :key="city.value" :label="city.label" :value="city.value" />
             </el-select>
 
-            <el-select v-model="addressForm.region" placeholder="区县" title="选择区县">
+            <el-select v-model="addressForm.region" placeholder="区县" title="选择区县" clearable :key="`region-${selectKey}`"
+              class="custom-width" style="width: 110px;">
               <el-option v-for="region in regionList" :key="region.value" :label="region.label" :value="region.value" />
             </el-select>
           </div>
@@ -84,7 +89,8 @@
         </el-form-item>
 
         <el-form-item>
-          <el-checkbox v-model="addressForm.defaultStatus" title="设置此地址为默认收货地址">
+          <el-checkbox :model-value="addressForm.defaultStatus === 1"
+            @update:model-value="addressForm.defaultStatus = $event ? 1 : 0" title="设置此地址为默认收货地址">
             设为默认地址
           </el-checkbox>
         </el-form-item>
@@ -99,8 +105,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { memberAddressList } from '@/api/mall'
+import { getProvinces, getCitiesByProvince, getDistrictsByCity, type DistrictItem } from '@/api/tencent'
 
 interface Address {
   id: number
@@ -110,12 +118,13 @@ interface Address {
   city: string
   region: string
   detailAddress: string
-  defaultStatus: boolean
+  defaultStatus: number  // Changed from boolean to number to match API response
 }
 
 interface RegionOption {
   value: string
   label: string
+  id?: string  // 行政区划ID（adcode）
   children?: RegionOption[]
 }
 
@@ -124,6 +133,7 @@ const loading = ref(false)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const addressList = ref<Address[]>([])
+const selectKey = ref(0)  // 用于强制重新渲染选择框
 
 // 表单数据
 const addressForm = reactive({
@@ -134,23 +144,39 @@ const addressForm = reactive({
   city: '',
   region: '',
   detailAddress: '',
-  defaultStatus: false
+  defaultStatus: 0  // Changed from false to 0 to match API
 })
 
 // 地区数据
-const provinceList = ref<RegionOption[]>([
-  { value: '北京市', label: '北京市' },
-  { value: '上海市', label: '上海市' },
-  { value: '广东省', label: '广东省' },
-  { value: '浙江省', label: '浙江省' },
-  { value: '江苏省', label: '江苏省' },
-  { value: '湖南省', label: '湖南省' }
-])
-
+const provinceList = ref<RegionOption[]>([])
 const cityList = ref<RegionOption[]>([])
 const regionList = ref<RegionOption[]>([])
 
-// 城市数据映射
+// 加载省份数据
+const loadProvinces = async () => {
+  try {
+    const provinces = await getProvinces()
+
+    provinceList.value = provinces.map(province => ({
+      value: province.name,
+      label: province.name,
+      id: province.id
+    }))
+  } catch (error) {
+    ElMessage.error('加载省份数据失败，使用备用数据')
+    // 如果API失败，使用备用数据
+    provinceList.value = [
+      { value: '北京市', label: '北京市', id: '110000' },
+      { value: '上海市', label: '上海市', id: '310000' },
+      { value: '广东省', label: '广东省', id: '440000' },
+      { value: '浙江省', label: '浙江省', id: '330000' },
+      { value: '江苏省', label: '江苏省', id: '320000' },
+      { value: '湖南省', label: '湖南省', id: '430000' }
+    ]
+  }
+}
+
+// 城市数据映射（备用数据，API失败时使用）
 const cityMap: Record<string, RegionOption[]> = {
   '北京市': [{ value: '北京市', label: '北京市' }],
   '上海市': [{ value: '上海市', label: '上海市' }],
@@ -229,68 +255,183 @@ const addressRules = {
 }
 
 // 加载地址列表
-const loadAddressList = () => {
+const loadAddressList = async () => {
   loading.value = true
 
-  // 模拟数据
-  setTimeout(() => {
-    addressList.value = [
-      {
-        id: 1,
-        name: '张三',
-        phoneNumber: '13800138000',
-        province: '湖南省',
-        city: '长沙市',
-        region: '岳麓区',
-        detailAddress: '中南大学新校区',
-        defaultStatus: true
-      },
-      {
-        id: 2,
-        name: '李四',
-        phoneNumber: '13900139000',
-        province: '广东省',
-        city: '深圳市',
-        region: '南山区',
-        detailAddress: '科技园南区',
-        defaultStatus: false
-      }
-    ]
+  try {
+    const response = await memberAddressList()
+    if (response.code === 200) {
+      addressList.value = response.data
+    } else {
+      ElMessage.error(response.message || '获取地址列表失败')
+      addressList.value = []
+    }
+  } catch (error) {
+    console.error('获取地址列表失败:', error)
+    ElMessage.error('获取地址列表失败')
+    addressList.value = []
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 // 省份变化
-const onProvinceChange = (province: string) => {
-  cityList.value = cityMap[province] || []
-  regionList.value = []
-  addressForm.city = ''
-  addressForm.region = ''
+const onProvinceChange = async (province: string) => {
+  try {
+    // 清空城市和区县列表
+    cityList.value = []
+    regionList.value = []
+
+    // 只有在添加模式下才清空城市和区县
+    if (!isEdit.value) {
+      addressForm.city = ''
+      addressForm.region = ''
+    }
+
+    // 根据省份名称查找对应的ID
+    const provinceItem = provinceList.value.find(p => p.value === province)
+
+    if (provinceItem && provinceItem.id) {
+      // 使用API获取城市数据
+      const cities = await getCitiesByProvince(provinceItem.id)
+      cityList.value = cities.map(city => ({
+        value: city.name,
+        label: city.name,
+        id: city.id
+      }))
+    } else {
+      // 如果找不到省份ID，使用备用数据
+      cityList.value = cityMap[province] || []
+    }
+  } catch (error) {
+    ElMessage.error('加载城市数据失败，使用备用数据')
+    // 使用备用数据
+    cityList.value = cityMap[province] || []
+  }
 }
 
 // 城市变化
-const onCityChange = (city: string) => {
-  regionList.value = regionMap[city] || []
-  addressForm.region = ''
+const onCityChange = async (city: string) => {
+  try {
+    // 清空区县列表
+    regionList.value = []
+
+    // 只有在添加模式下才清空区县
+    if (!isEdit.value) {
+      addressForm.region = ''
+    }
+
+    // 根据城市名称查找对应的ID
+    const cityItem = cityList.value.find(c => c.value === city)
+
+    if (cityItem && cityItem.id) {
+      // 对于直辖市（北京、上海、天津、重庆），区县数据在省级数据中
+      // 对于其他城市，区县数据在市级数据中
+      const isMunicipality = ['北京市', '上海市', '天津市', '重庆市'].includes(addressForm.province)
+
+      if (isMunicipality) {
+        // 直辖市：获取省级数据中的区县
+        const provinceItem = provinceList.value.find(p => p.value === addressForm.province)
+        if (provinceItem && provinceItem.id) {
+          const districts = await getDistrictsByCity(provinceItem.id)
+          regionList.value = districts.map(district => ({
+            value: district.name || district.fullname,
+            label: district.name || district.fullname,
+            id: district.id
+          }))
+        }
+      } else {
+        // 普通城市：获取市级数据中的区县
+        const districts = await getDistrictsByCity(cityItem.id)
+        regionList.value = districts.map(district => ({
+          value: district.name || district.fullname,
+          label: district.name || district.fullname,
+          id: district.id
+        }))
+      }
+    } else {
+      // 如果找不到城市ID，使用备用数据
+      regionList.value = regionMap[city] || []
+    }
+  } catch (error) {
+    ElMessage.error('加载区县数据失败，使用备用数据')
+    // 使用备用数据
+    regionList.value = regionMap[city] || []
+  }
 }
 
 // 显示添加地址对话框
 const showAddAddress = () => {
   isEdit.value = false
   resetForm()
+  selectKey.value++  // 强制重新渲染选择框
   dialogVisible.value = true
 }
 
 // 编辑地址
-const editAddress = (address: Address) => {
+const editAddress = async (address: Address) => {
   isEdit.value = true
+
+  // 先打开对话框
+  dialogVisible.value = true
+
+  // 等待DOM更新
+  await nextTick()
+
+  // 设置表单数据
   Object.assign(addressForm, address)
 
   // 加载对应的城市和区县数据
-  onProvinceChange(address.province)
-  onCityChange(address.city)
+  try {
+    // 根据省份名称查找对应的ID并加载城市数据
+    const provinceItem = provinceList.value.find(p => p.value === address.province)
+    if (provinceItem && provinceItem.id) {
+      const cities = await getCitiesByProvince(provinceItem.id)
+      cityList.value = cities.map(city => ({
+        value: city.name,
+        label: city.name,
+        id: city.id
+      }))
 
-  dialogVisible.value = true
+      // 等待城市数据加载完成后再加载区县数据
+      await nextTick()
+
+      // 根据城市名称查找对应的ID并加载区县数据
+      const cityItem = cityList.value.find(c => c.value === address.city)
+      if (cityItem && cityItem.id) {
+        const districts = await getDistrictsByCity(cityItem.id)
+        regionList.value = districts.map(district => ({
+          value: district.name,
+          label: district.name,
+          id: district.id
+        }))
+      } else {
+        regionList.value = regionMap[address.city] || []
+      }
+    } else {
+      // 使用备用数据
+      cityList.value = cityMap[address.province] || []
+      regionList.value = regionMap[address.city] || []
+    }
+  } catch (error) {
+    console.error('加载地区数据失败:', error)
+    // 使用备用数据
+    cityList.value = cityMap[address.province] || []
+    regionList.value = regionMap[address.city] || []
+  }
+
+  // 强制重新渲染选择框
+  selectKey.value++
+  await nextTick()
+
+  // 调试信息
+  console.log('编辑地址:', {
+    address,
+    cityList: cityList.value,
+    regionList: regionList.value,
+    addressForm: { ...addressForm },
+    selectKey: selectKey.value
+  })
 }
 
 // 重置表单
@@ -302,7 +443,7 @@ const resetForm = () => {
   addressForm.city = ''
   addressForm.region = ''
   addressForm.detailAddress = ''
-  addressForm.defaultStatus = false
+  addressForm.defaultStatus = 0  // Changed from false to 0
 
   cityList.value = []
   regionList.value = []
@@ -343,9 +484,9 @@ const saveAddress = () => {
       }
 
       // 如果设为默认地址，取消其他默认地址
-      if (newAddress.defaultStatus) {
+      if (newAddress.defaultStatus === 1) {
         addressList.value.forEach(item => {
-          item.defaultStatus = false
+          item.defaultStatus = 0
         })
       }
 
@@ -364,7 +505,7 @@ const saveAddress = () => {
 const setDefault = (addressId: number) => {
   try {
     addressList.value.forEach(item => {
-      item.defaultStatus = item.id === addressId
+      item.defaultStatus = item.id === addressId ? 1 : 0
     })
     ElMessage.success('设置默认地址成功')
   } catch (error) {
@@ -389,7 +530,22 @@ const deleteAddress = (addressId: number) => {
   }
 }
 
-onMounted(() => {
+// 监听对话框打开状态，确保数据正确加载
+watch(dialogVisible, (newVal) => {
+  if (newVal && isEdit.value) {
+    // 对话框打开时，确保数据正确加载
+    nextTick(() => {
+      console.log('对话框打开，当前表单数据:', { ...addressForm })
+      console.log('城市列表:', cityList.value)
+      console.log('区县列表:', regionList.value)
+    })
+  }
+})
+
+onMounted(async () => {
+  // 先加载省份数据
+  await loadProvinces()
+  // 然后加载地址列表
   loadAddressList()
 })
 </script>
@@ -507,9 +663,20 @@ onMounted(() => {
 .region-selector {
   display: flex;
   gap: 12px;
+  align-items: center;
 
   .el-select {
     flex: 1;
+    min-width: 0;
+    /* 确保flex项目可以收缩 */
+
+    /* 确保手动设置的宽度能够生效 */
+    &.custom-width {
+      flex: none !important;
+      width: 110px !important;
+      min-width: 110px !important;
+      max-width: 110px !important;
+    }
   }
 }
 
@@ -553,6 +720,12 @@ onMounted(() => {
   .region-selector {
     flex-direction: column;
     gap: 8px;
+
+    .el-select.custom-width {
+      width: 100% !important;
+      min-width: 100% !important;
+      max-width: 100% !important;
+    }
   }
 }
 </style>

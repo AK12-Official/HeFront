@@ -246,7 +246,7 @@ const fetchFiles = async () => {
             {
                 id: 1,
                 name: 'product-1.jpg',
-                url: 'https://picsum.photos/300/300?random=1',
+                url: '',
                 size: 245760,
                 type: 'image/jpeg',
                 createTime: '2025-08-10 10:30:00'
@@ -254,7 +254,7 @@ const fetchFiles = async () => {
             {
                 id: 2,
                 name: 'product-2.png',
-                url: 'https://picsum.photos/300/300?random=2',
+                url: '',
                 size: 156890,
                 type: 'image/png',
                 createTime: '2025-08-10 09:15:00'

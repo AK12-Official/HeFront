@@ -41,16 +41,21 @@
           <div class="price-section">
             <div class="current-price">
               <span class="currency">¥</span>
-              <span class="price">{{ product.price }}</span>
+              <span class="price">{{ product.promotionPrice || product.price }}</span>
             </div>
-            <div class="original-price" v-if="product.originalPrice && product.originalPrice > product.price">
-              <span>原价：¥{{ product.originalPrice }}</span>
+            <div class="original-price" v-if="product.promotionPrice && product.promotionPrice !== product.price">
+              <span>原价：¥{{ product.price }}</span>
+            </div>
+            <div class="promotion-tag" v-if="product.promotionType">
+              <span v-if="product.promotionType === 1">限时抢购</span>
+              <span v-else-if="product.promotionType === 2">新品首发</span>
+              <span v-else-if="product.promotionType === 3">热销</span>
+              <span v-else-if="product.promotionType === 4">推荐</span>
             </div>
           </div>
 
           <!-- 商品规格选择 -->
-          <div class="spec-section"
-            v-if="product.productAttributeValueList && product.productAttributeValueList.length > 0">
+          <div class="spec-section" v-if="groupedAttributes.length > 0">
             <div v-for="attr in groupedAttributes" :key="attr.attributeId" class="spec-group">
               <label class="spec-label">{{ attr.attributeName }}：</label>
               <div class="spec-options">
@@ -94,17 +99,17 @@
           <el-tab-pane label="商品详情" name="detail">
             <div class="detail-content">
               <div v-if="product.detailHtml" v-html="product.detailHtml"></div>
+              <div v-else-if="product.detailMobileHtml" v-html="product.detailMobileHtml"></div>
               <div v-else class="no-detail">
                 <p>暂无商品详情</p>
               </div>
             </div>
           </el-tab-pane>
-          <el-tab-pane label="规格参数" name="params"
-            v-if="product.productAttributeValueList && product.productAttributeValueList.length > 0">
+          <el-tab-pane label="规格参数" name="params" v-if="groupedAttributes.length > 0">
             <div class="params-content">
-              <div v-for="attr in product.productAttributeValueList" :key="attr.id" class="param-item">
-                <span class="param-name">{{ attr.productAttributeName }}：</span>
-                <span class="param-value">{{ attr.value }}</span>
+              <div v-for="attr in groupedAttributes" :key="attr.attributeId" class="param-item">
+                <span class="param-name">{{ attr.attributeName }}：</span>
+                <span class="param-value">{{attr.values.map(v => v.value).join(', ')}}</span>
               </div>
             </div>
           </el-tab-pane>
@@ -129,8 +134,42 @@ import { productDetail, cartAdd, cartList } from '@/api/mall'
 import type { CommonResult, Product, ProductAttributeValue } from '@/api/mall/types'
 
 // 扩展的商品信息（用于详情页显示）
-interface ProductDetailInfo extends Product {
+interface ProductDetailInfo {
+  id: number
+  name: string
+  price: number
+  stock: number
+  pic: string
+  subTitle?: string
+  sale?: number
+  promotionType?: number
   productAttributeValueList?: ProductAttributeValue[]
+  productAttributeList?: ProductAttribute[]
+  albumPics?: string[]
+  brandName?: string
+  productCategoryName?: string
+  detailHtml?: string
+  detailMobileHtml?: string
+  promotionStartTime?: string
+  promotionEndTime?: string
+  originalPrice?: number
+  promotionPrice?: number
+}
+
+// 商品属性接口
+interface ProductAttribute {
+  id: number
+  productAttributeCategoryId: number
+  name: string
+  selectType: number
+  inputType: number
+  inputList: string
+  sort: number
+  filterType: number
+  searchType: number
+  relatedStatus: number
+  handAddStatus: number
+  type: number
 }
 
 interface AttributeGroup {
@@ -161,27 +200,53 @@ const loading = ref(true)
 
 // 计算属性
 const groupedAttributes = computed<AttributeGroup[]>(() => {
-  if (!product.value.productAttributeValueList) return []
+  if (!product.value.productAttributeList) return []
 
   const groups: Record<number, AttributeGroup> = {}
 
-  product.value.productAttributeValueList.forEach(attr => {
-    if (!groups[attr.productAttributeId]) {
-      groups[attr.productAttributeId] = {
-        attributeId: attr.productAttributeId,
-        attributeName: attr.productAttributeName,
-        values: []
-      }
+  // 先创建属性组
+  product.value.productAttributeList.forEach(attr => {
+    groups[attr.id] = {
+      attributeId: attr.id,
+      attributeName: attr.name,
+      values: []
     }
-
-    groups[attr.productAttributeId].values.push({
-      id: attr.id,
-      value: attr.value,
-      available: true // 这里可以根据库存等信息判断是否可选
-    })
   })
 
-  return Object.values(groups)
+  // 添加属性值（优先使用productAttributeValueList中的值）
+  if (product.value.productAttributeValueList) {
+    product.value.productAttributeValueList.forEach(attrValue => {
+      if (groups[attrValue.productAttributeId]) {
+        // 处理多个值的情况（如"金色,银色"）
+        const values = attrValue.value.split(',').map(v => v.trim())
+        values.forEach(value => {
+          groups[attrValue.productAttributeId].values.push({
+            id: attrValue.id,
+            value: value,
+            available: true
+          })
+        })
+      }
+    })
+  }
+
+  // 对于没有值的属性，尝试使用inputList
+  product.value.productAttributeList.forEach(attr => {
+    if (groups[attr.id].values.length === 0 && attr.inputList) {
+      // 处理inputList中的值（如"16G,32G,64G,128G,256G,512G"）
+      const inputValues = attr.inputList.split(',').map(v => v.trim())
+      inputValues.forEach((value, index) => {
+        groups[attr.id].values.push({
+          id: attr.id * 1000 + index, // 生成唯一ID
+          value: value,
+          available: true
+        })
+      })
+    }
+  })
+
+  // 过滤掉没有值的属性组
+  return Object.values(groups).filter(group => group.values.length > 0)
 })
 
 // 加载商品详情
@@ -196,14 +261,40 @@ const loadProductDetail = async () => {
       return
     }
 
+    console.log('正在加载商品详情，商品ID:', productId)
     const response = await productDetail(Number(productId))
-    // Mock数据直接返回扩展的Product对象
-    product.value = response.data as unknown as ProductDetailInfo || {
-      id: 0,
-      name: '商品不存在',
-      price: 0,
-      stock: 0,
-      pic: ''
+    console.log('商品详情API响应:', response)
+
+    if (response && response.code === 200) {
+      // API返回的是ProductDetail对象，包含product、productAttributeList、productAttributeValueList等字段
+      const productDetailData = response.data as any
+      if (productDetailData && productDetailData.product) {
+        // 处理商品图片数组
+        let albumPics: string[] = []
+        if (productDetailData.product.albumPics) {
+          albumPics = productDetailData.product.albumPics.split(',').map((pic: string) => pic.trim())
+        }
+
+        // 合并商品基本信息和属性信息
+        product.value = {
+          ...productDetailData.product,
+          albumPics: albumPics,
+          productAttributeValueList: productDetailData.productAttributeValueList || [],
+          productAttributeList: productDetailData.productAttributeList || []
+        } as ProductDetailInfo
+
+        console.log('商品详情加载成功:', product.value)
+        console.log('商品图片数组:', albumPics)
+        console.log('商品属性值列表:', productDetailData.productAttributeValueList)
+      } else {
+        console.error('API返回数据格式错误:', productDetailData)
+        ElMessage.error('商品信息格式错误')
+        return
+      }
+    } else {
+      console.error('API返回错误:', response?.message)
+      ElMessage.error(response?.message || '商品不存在或已下架')
+      return
     }
 
     // 设置默认图片
@@ -462,6 +553,18 @@ onMounted(() => {
         font-size: 14px;
         color: #999;
         text-decoration: line-through;
+      }
+
+      .promotion-tag {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 4px 8px;
+        background: linear-gradient(45deg, #ff6b35, #ff8e53);
+        color: white;
+        font-size: 12px;
+        font-weight: 500;
+        border-radius: 4px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
       }
     }
 

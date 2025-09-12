@@ -6,7 +6,7 @@ function createVideoList(count: number = 20) {
     videoId: `video_${i + 1}`,
     title: `这是一个非常有趣的短视频标题 ${i + 1}`,
     description: `这是视频${i + 1}的详细描述，包含了丰富的内容和有趣的故事情节。`,
-    coverUrl: `https://picsum.photos/300/400?random=${i}`,
+    coverUrl: '',
     playUrl: '/src/assets/videos/demo.mp4',
     duration: Math.floor(Math.random() * 300) + 60, // 60-360秒
     uploadTime: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(), // 最近30天内
@@ -19,7 +19,7 @@ function createVideoList(count: number = 20) {
     author: {
       id: i + 1,
       name: `用户${i + 1}`,
-      avatar: `https://picsum.photos/40/40?random=${i}`,
+      avatar: '',
     }
   }));
 }
@@ -41,9 +41,9 @@ export default [
     method: 'get',
     response: (req) => {
       const { pageIndex = 1, pageSize = 20, userPhone, title, status } = req.query || {};
-      
+
       let filteredVideos = [...videoDatabase];
-      
+
       // 根据查询条件过滤
       if (userPhone) {
         filteredVideos = filteredVideos.filter(video => video.userPhone.includes(userPhone));
@@ -54,12 +54,12 @@ export default [
       if (status) {
         filteredVideos = filteredVideos.filter(video => video.status === status);
       }
-      
+
       // 分页处理
       const startIndex = (pageIndex - 1) * pageSize;
       const endIndex = startIndex + parseInt(pageSize);
       const paginatedVideos = filteredVideos.slice(startIndex, endIndex);
-      
+
       // 格式化返回数据，添加格式化的时长
       const formattedVideos = paginatedVideos.map(video => ({
         ...video,
@@ -69,7 +69,7 @@ export default [
         comments: video.commentCount,
         cover: video.coverUrl
       }));
-      
+
       return {
         code: 10000,
         message: '获取视频列表成功',
@@ -83,14 +83,14 @@ export default [
       };
     }
   },
-  
+
   // 获取视频详情
   {
     url: '/api/videos/get-video-info',
     method: 'get',
     response: (req) => {
       const { videoId } = req.query || {};
-      
+
       if (!videoId) {
         return {
           code: 40001,
@@ -98,9 +98,9 @@ export default [
           data: null
         };
       }
-      
+
       const video = videoDatabase.find(v => v.videoId === videoId);
-      
+
       if (!video) {
         return {
           code: 40404,
@@ -108,7 +108,7 @@ export default [
           data: null
         };
       }
-      
+
       // 格式化返回数据
       const formattedVideo = {
         ...video,
@@ -118,7 +118,7 @@ export default [
         comments: video.commentCount,
         cover: video.coverUrl
       };
-      
+
       return {
         code: 10000,
         message: '获取视频详情成功',
@@ -126,14 +126,14 @@ export default [
       };
     }
   },
-  
+
   // 更新视频信息
   {
     url: '/api/videos/update-video-info',
     method: 'put',
     response: (req) => {
       const { videoId, title, description } = req.query || {};
-      
+
       if (!videoId) {
         return {
           code: 40001,
@@ -141,9 +141,9 @@ export default [
           data: null
         };
       }
-      
+
       const videoIndex = videoDatabase.findIndex(v => v.videoId === videoId);
-      
+
       if (videoIndex === -1) {
         return {
           code: 40404,
@@ -151,7 +151,7 @@ export default [
           data: null
         };
       }
-      
+
       // 更新视频信息
       if (title) {
         videoDatabase[videoIndex].title = title;
@@ -159,7 +159,7 @@ export default [
       if (description) {
         videoDatabase[videoIndex].description = description;
       }
-      
+
       return {
         code: 10000,
         message: '更新视频信息成功',
@@ -178,7 +178,7 @@ export default [
     method: 'get',
     response: (req) => {
       const { videoId } = req.query || {};
-      
+
       if (!videoId) {
         return {
           code: 40001,
@@ -186,9 +186,9 @@ export default [
           data: null
         };
       }
-      
+
       const video = videoDatabase.find(v => v.videoId === videoId);
-      
+
       if (!video) {
         return {
           code: 40404,
@@ -196,7 +196,7 @@ export default [
           data: null
         };
       }
-      
+
       return {
         code: 10000,
         message: '获取播放信息成功',
@@ -222,7 +222,7 @@ export default [
     method: 'get',
     response: (req) => {
       const { currentVideoId, recommendCount = 10, excludeVideoIds } = req.query || {};
-      
+
       if (!currentVideoId) {
         return {
           code: 40001,
@@ -230,23 +230,23 @@ export default [
           data: null
         };
       }
-      
+
       let recommendVideos = [...videoDatabase];
-      
+
       // 排除当前视频
       recommendVideos = recommendVideos.filter(v => v.videoId !== currentVideoId);
-      
+
       // 排除指定的视频ID
       if (excludeVideoIds) {
         const excludeIds = Array.isArray(excludeVideoIds) ? excludeVideoIds : [excludeVideoIds];
         recommendVideos = recommendVideos.filter(v => !excludeIds.includes(v.videoId));
       }
-      
+
       // 随机排序并取指定数量
       recommendVideos = recommendVideos
         .sort(() => Math.random() - 0.5)
         .slice(0, parseInt(recommendCount));
-      
+
       // 格式化返回数据
       const formattedVideos = recommendVideos.map(video => ({
         ...video,
@@ -256,7 +256,7 @@ export default [
         comments: video.commentCount,
         cover: video.coverUrl
       }));
-      
+
       return {
         code: 10000,
         message: '获取推荐列表成功',
@@ -271,7 +271,7 @@ export default [
     method: 'post',
     response: (req) => {
       const { videoId, playDuration, playProgress } = req.query || {};
-      
+
       if (!videoId) {
         return {
           code: 40001,
@@ -279,9 +279,9 @@ export default [
           data: null
         };
       }
-      
+
       const videoIndex = videoDatabase.findIndex(v => v.videoId === videoId);
-      
+
       if (videoIndex === -1) {
         return {
           code: 40404,
@@ -289,10 +289,10 @@ export default [
           data: null
         };
       }
-      
+
       // 更新播放次数
       videoDatabase[videoIndex].viewCount += 1;
-      
+
       return {
         code: 10000,
         message: '播放记录成功',
@@ -312,7 +312,7 @@ export default [
     method: 'get',
     response: (req) => {
       const { videoId } = req.query || {};
-      
+
       if (!videoId) {
         return {
           code: 40001,
@@ -320,9 +320,9 @@ export default [
           data: null
         };
       }
-      
+
       const video = videoDatabase.find(v => v.videoId === videoId);
-      
+
       if (!video) {
         return {
           code: 40404,
@@ -330,7 +330,7 @@ export default [
           data: null
         };
       }
-      
+
       return {
         code: 10000,
         message: '获取统计信息成功',
@@ -355,7 +355,7 @@ export default [
     method: 'post',
     response: (req) => {
       const { videoId, actionType, actionValue = 1 } = req.query || {};
-      
+
       if (!videoId || !actionType) {
         return {
           code: 40001,
@@ -363,9 +363,9 @@ export default [
           data: null
         };
       }
-      
+
       const videoIndex = videoDatabase.findIndex(v => v.videoId === videoId);
-      
+
       if (videoIndex === -1) {
         return {
           code: 40404,
@@ -373,7 +373,7 @@ export default [
           data: null
         };
       }
-      
+
       // 根据操作类型更新统计数据
       switch (actionType) {
         case 'like':
@@ -395,7 +395,7 @@ export default [
             data: null
           };
       }
-      
+
       return {
         code: 10000,
         message: '更新统计数据成功',
@@ -403,9 +403,9 @@ export default [
           videoId: videoId,
           actionType: actionType,
           actionValue: parseInt(actionValue),
-          newCount: videoDatabase[videoIndex][actionType === 'like' ? 'likeCount' : 
-                                            actionType === 'comment' ? 'commentCount' : 
-                                            actionType === 'share' ? 'shareCount' : 'viewCount']
+          newCount: videoDatabase[videoIndex][actionType === 'like' ? 'likeCount' :
+            actionType === 'comment' ? 'commentCount' :
+              actionType === 'share' ? 'shareCount' : 'viewCount']
         }
       };
     }
@@ -417,7 +417,7 @@ export default [
     method: 'post',
     response: (req) => {
       const { sha256, fileSize, deviceType } = req.body || {};
-      
+
       if (!sha256 || !fileSize) {
         return {
           code: 40000,
@@ -428,7 +428,7 @@ export default [
 
       // 模拟10%的概率文件已存在（秒传成功）
       const isDuplicate = Math.random() < 0.1;
-      
+
       if (isDuplicate) {
         return {
           code: 10000,
@@ -461,7 +461,7 @@ export default [
     method: 'post',
     response: (req) => {
       const { title, description, sha256, deviceType } = req.body || {};
-      
+
       if (!title || !sha256) {
         return {
           code: 40000,
@@ -471,14 +471,14 @@ export default [
       }
 
       // 模拟上传处理时间
-      setTimeout(() => {}, 1000);
+      setTimeout(() => { }, 1000);
 
       const newVideoId = `video_${Date.now()}`;
       const newVideo = {
         videoId: newVideoId,
         title: title,
         description: description || '',
-        coverUrl: `https://picsum.photos/300/400?random=${Date.now()}`,
+        coverUrl: `${Date.now()}`,
         playUrl: '/src/assets/videos/demo.mp4',
         duration: Math.floor(Math.random() * 300) + 60,
         uploadTime: new Date().toISOString(),
@@ -491,7 +491,7 @@ export default [
         author: {
           id: 999,
           name: '当前用户',
-          avatar: 'https://picsum.photos/40/40?random=999',
+          avatar: '999',
         }
       };
 
@@ -517,7 +517,7 @@ export default [
     method: 'post',
     response: (req) => {
       const { sha256, fileSize, fileName, chunkSize } = req.body || {};
-      
+
       if (!sha256 || !fileSize || !fileName) {
         return {
           code: 40000,
@@ -536,7 +536,7 @@ export default [
           uploadId: uploadId,
           chunkSize: chunkSize || 1024 * 1024 * 5,
           totalChunks: totalChunks,
-          uploadUrls: Array.from({ length: totalChunks }, (_, i) => 
+          uploadUrls: Array.from({ length: totalChunks }, (_, i) =>
             `http://localhost:8090/upload/chunk/${uploadId}/${i + 1}`
           )
         }
@@ -550,7 +550,7 @@ export default [
     method: 'post',
     response: (req) => {
       const { uploadId, chunkNumber, chunkSize } = req.body || {};
-      
+
       if (!uploadId || !chunkNumber) {
         return {
           code: 40000,
@@ -560,7 +560,7 @@ export default [
       }
 
       // 模拟上传处理时间
-      setTimeout(() => {}, 500);
+      setTimeout(() => { }, 500);
 
       return {
         code: 10000,
@@ -581,7 +581,7 @@ export default [
     method: 'post',
     response: (req) => {
       const { uploadId, sha256, title, description } = req.body || {};
-      
+
       if (!uploadId || !sha256) {
         return {
           code: 40000,
@@ -591,14 +591,14 @@ export default [
       }
 
       // 模拟合并处理时间
-      setTimeout(() => {}, 2000);
+      setTimeout(() => { }, 2000);
 
       const newVideoId = `video_${Date.now()}`;
       const newVideo = {
         videoId: newVideoId,
         title: title || '未命名视频',
         description: description || '',
-        coverUrl: `https://picsum.photos/300/400?random=${Date.now()}`,
+        coverUrl: `${Date.now()}`,
         playUrl: '/src/assets/videos/demo.mp4',
         duration: Math.floor(Math.random() * 300) + 60,
         uploadTime: new Date().toISOString(),
@@ -611,7 +611,7 @@ export default [
         author: {
           id: 999,
           name: '当前用户',
-          avatar: 'https://picsum.photos/40/40?random=999',
+          avatar: '999',
         }
       };
 
@@ -637,7 +637,7 @@ export default [
     method: 'delete',
     response: (req) => {
       const { videoId } = req.query || {};
-      
+
       if (!videoId) {
         return {
           code: 40000,
@@ -647,7 +647,7 @@ export default [
       }
 
       const videoIndex = videoDatabase.findIndex(video => video.videoId === videoId);
-      
+
       if (videoIndex === -1) {
         return {
           code: 40400,
@@ -676,7 +676,7 @@ export default [
     method: 'get',
     response: (req) => {
       const { uploadId } = req.query || {};
-      
+
       if (!uploadId) {
         return {
           code: 40000,
@@ -711,7 +711,7 @@ export default [
     method: 'post',
     response: (req) => {
       const { uploadId } = req.body || {};
-      
+
       if (!uploadId) {
         return {
           code: 40000,
@@ -729,6 +729,6 @@ export default [
           cancelTime: new Date().toISOString()
         }
       };
-     }
-   }
- ];
+    }
+  }
+];

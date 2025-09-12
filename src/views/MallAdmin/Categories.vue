@@ -235,7 +235,7 @@ const fetchCategories = async () => {
         navStatus: 1,
         showStatus: 1,
         sort: 100,
-        icon: 'https://picsum.photos/64/64?random=1',
+        icon: '',
         children: [
           {
             id: 101,
@@ -271,7 +271,7 @@ const fetchCategories = async () => {
         navStatus: 1,
         showStatus: 1,
         sort: 95,
-        icon: 'https://picsum.photos/64/64?random=2',
+        icon: '',
         children: [
           {
             id: 201,

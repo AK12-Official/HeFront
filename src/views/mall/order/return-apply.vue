@@ -101,6 +101,16 @@
           </el-form-item>
         </div>
 
+        <!-- 重复提交提示 -->
+        <div class="duplicate-warning">
+          <el-alert title="重要提示" type="warning" :closable="false" show-icon>
+            <template #default>
+              <p>请勿对同一商品重复提交退货申请，每个商品只能申请一次退货。</p>
+              <p>如果您已经提交过退货申请，请耐心等待处理结果。</p>
+            </template>
+          </el-alert>
+        </div>
+
         <!-- 提交按钮 -->
         <div class="form-actions">
           <el-button @click="goBack">取消</el-button>
@@ -463,6 +473,19 @@ onMounted(() => {
       font-size: 12px;
       color: #999;
       margin: 0;
+    }
+  }
+}
+
+.duplicate-warning {
+  margin: 20px 0;
+
+  .el-alert {
+    border-radius: 8px;
+
+    p {
+      margin: 5px 0;
+      line-height: 1.5;
     }
   }
 }

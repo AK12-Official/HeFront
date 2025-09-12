@@ -5,6 +5,16 @@
  */
 import { MockMethod } from 'vite-plugin-mock'
 
+// 刷新Token Mock数据
+const mockRefreshTokenResponse = {
+    code: 200,
+    message: 'Token刷新成功',
+    data: {
+        token: 'new-refreshed-token-12345',
+        tokenHead: 'Bearer '
+    }
+};
+
 // 前台商城用户数据（与后台管理员完全分离）
 const mockMallUsers = [
     {
@@ -317,51 +327,25 @@ export const userSeparationMockApi: MockMethod[] = [
     // 刷新Token
     {
         url: '/api/sso/refreshToken',
-        method: 'get',
-        response: ({ headers }) => {
-            const token = headers.authorization?.replace('Bearer ', '')
+        method: 'post',
+        response: ({ body }) => {
+            const { refreshToken } = body
 
-            if (!token || !token.startsWith('mall.')) {
+            if (!refreshToken || !refreshToken.includes('refresh')) {
                 return {
                     code: 401,
-                    message: '无效的Token',
+                    message: 'RefreshToken无效或已过期',
                     data: null
                 }
             }
 
-            // 模拟Token解析
-            try {
-                const payload = JSON.parse(atob(token.split('.')[1]))
-                if (payload.type !== 'mall_user') {
-                    return {
-                        code: 401,
-                        message: 'Token类型错误',
-                        data: null
-                    }
-                }
-
-                const user = mockMallUsers.find(u => u.id === payload.userId)
-                if (!user) {
-                    return {
-                        code: 401,
-                        message: '用户不存在',
-                        data: null
-                    }
-                }
-
-                return {
-                    code: 200,
-                    message: '刷新成功',
-                    data: {
-                        token: generateMallToken(user.username, user.id),
-                        tokenHead: 'Bearer '
-                    }
-                }
-            } catch {
-                return {
-                    code: 401,
-                    message: 'Token解析失败',
-                    data: null
+            // 模拟验证refreshToken并生成新的accessToken
+            return {
+                code: 200,
+                message: 'Token刷新成功',
+                data: {
+                    token: 'new-refreshed-token-' + Date.now(),
+                    tokenHead: 'Bearer '
                 }
             }
         }

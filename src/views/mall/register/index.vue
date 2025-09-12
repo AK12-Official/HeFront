@@ -16,7 +16,7 @@
                 <div class="logo-section">
                     <img src="/img/vx_gzh.jpg" alt="Logo" class="logo">
                     <h1 class="title">创建账号</h1>
-                    <p class="subtitle">加入MallLite电商平台</p>
+                    <p class="subtitle">加入体验爱心电商</p>
                 </div>
 
                 <!-- 表单区域 -->

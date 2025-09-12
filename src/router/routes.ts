@@ -96,11 +96,6 @@ export const Routes = [
         name: 'mall-address',
       },
       {
-        path: 'address/edit',
-        component: () => import('@/views/mall/address/edit.vue'),
-        name: 'mall-address-edit',
-      },
-      {
         path: 'user',
         component: () => import('@/views/mall/user/index.vue'),
         name: 'mall-user',
@@ -109,11 +104,6 @@ export const Routes = [
         path: 'coupon',
         component: () => import('@/views/mall/coupon/index.vue'),
         name: 'mall-coupon',
-      },
-      {
-        path: 'test',
-        component: () => import('@/views/mall/test.vue'),
-        name: 'mall-test',
       },
     ]
   },

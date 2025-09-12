@@ -1,5 +1,5 @@
 import { mall } from '@/api'
-import type { CommonResult, AlipayParams, PaymentQueryParams } from '@/api/mall/types'
+import type { CommonResult, AlipayParams, PaymentQueryParams, PaymentStatus } from '@/api/mall/types'
 
 // 定义订单详情类型
 interface OrderDetail {
@@ -48,7 +48,8 @@ export class PaymentUtils {
       }
 
       // 调用网页支付接口，后端返回HTML页面
-      const paymentResponse = await mall.alipayWebPay(paymentParam) as unknown as string
+      const response = await mall.alipayWebPay(paymentParam)
+      const paymentResponse = response.data || response
 
       if (paymentResponse && typeof paymentResponse === 'string') {
         // 创建临时form并提交到支付宝
@@ -130,21 +131,21 @@ export class PaymentUtils {
    * 判断支付是否成功
    */
   static isPaymentSuccess(status: string): boolean {
-    return status === 'TRADE_SUCCESS' || status === 'TRADE_FINISHED'
+    return status === PaymentStatus.TRADE_SUCCESS || status === PaymentStatus.TRADE_FINISHED
   }
 
   /**
    * 判断支付是否失败
    */
   static isPaymentFailed(status: string): boolean {
-    return status === 'TRADE_CLOSED'
+    return status === PaymentStatus.TRADE_CLOSED
   }
 
   /**
    * 判断支付是否等待中
    */
   static isPaymentPending(status: string): boolean {
-    return status === 'WAIT_BUYER_PAY' || status === 'TRADE_CREATED'
+    return status === PaymentStatus.WAIT_BUYER_PAY || status === PaymentStatus.TRADE_CREATED
   }
 
   /**
@@ -152,11 +153,11 @@ export class PaymentUtils {
    */
   static getPaymentStatusText(status: string): string {
     const statusMap: Record<string, string> = {
-      'TRADE_SUCCESS': '支付成功',
-      'TRADE_FINISHED': '交易完成',
-      'TRADE_CLOSED': '支付失败',
-      'WAIT_BUYER_PAY': '等待支付',
-      'TRADE_CREATED': '交易创建'
+      [PaymentStatus.TRADE_SUCCESS]: '支付成功',
+      [PaymentStatus.TRADE_FINISHED]: '交易完成',
+      [PaymentStatus.TRADE_CLOSED]: '支付失败',
+      [PaymentStatus.WAIT_BUYER_PAY]: '等待支付',
+      [PaymentStatus.TRADE_CREATED]: '交易创建'
     }
     return statusMap[status] || '未知状态'
   }

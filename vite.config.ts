@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
         minify: true,
         inject: {
           data: {
-            VITE_APP_TITLE: env.VITE_APP_TITLE
+            VITE_APP_TITLE: env.VITE_APP_TITLE || '越分享，越丰盈'
           }
         }
       }),
@@ -39,9 +39,11 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       proxy: {
+        // 默认API代理
         [env.VITE_APP_API_URL]: {
           target: env.VITE_SERVE,
           changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
           configure: (proxy, options) => {
             // 记录代理请求
             proxy.on('proxyReq', (proxyReq, req, res) => {
@@ -85,7 +87,61 @@ export default defineConfig(({ mode }) => {
               }
             });
           }
-        }
+        },
+        // 电商管理后台API代理
+        '/api/admin': {
+          target: env.VITE_MALL_ADMIN_URL,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/admin/, '/admin'),
+        },
+        // 电商搜索功能API代理
+        '/api/esProduct': {
+          target: env.VITE_MALL_SEARCH_URL,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+        // 电商前台门户API代理
+        '/api/cart': {
+          target: env.VITE_MALL_PORTAL_URL,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+        '/api/order': {
+          target: env.VITE_MALL_PORTAL_URL,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+        '/api/member': {
+          target: env.VITE_MALL_PORTAL_URL,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+        '/api/alipay': {
+          target: env.VITE_MALL_PORTAL_URL,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+        '/api/product': {
+          target: env.VITE_MALL_PORTAL_URL,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+        '/api/home': {
+          target: env.VITE_MALL_PORTAL_URL,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+        '/api/returnApply': {
+          target: env.VITE_MALL_PORTAL_URL,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+        // 腾讯位置服务API代理
+        '/tx-api': {
+          target: 'https://apis.map.qq.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/tx-api/, '/ws/district/v1'),
+        },
       }
     },
     define: {

@@ -4,7 +4,7 @@
  * 配置电商平台的模拟接口
  */
 import { MockMethod } from 'vite-plugin-mock'
-import { mallMockApi } from './mall'
+import mallMockApi from './mall'
 import { adminMockApi } from './admin'
 import { userSeparationMockApi } from './user-separation'
 
@@ -57,81 +57,8 @@ const userMocks: MockMethod[] = [
   }
 ]
 
-// 为每个电商API创建GET和POST两个版本的mock
-const mallMocks: MockMethod[] = []
-
-Object.entries(mallMockApi).forEach(([url, handler]) => {
-  // 处理带参数的URL路径，将 :id 转换为正则表达式格式
-  const viteUrl = url.replace(/:(\w+)/g, ':$1')
-
-  // 创建POST版本
-  mallMocks.push({
-    url: `/api${viteUrl}`,
-    method: 'post',
-    response: (opts: { query: Record<string, any>; body: Record<string, any>; url: string }) => {
-      try {
-        const { query, body, url: requestUrl } = opts
-        const params = { ...query, ...body }
-
-        // 处理路径参数
-        const urlPattern = url.replace(/:(\w+)/g, '([^/]+)')
-        const regex = new RegExp(`^${urlPattern}$`)
-        const actualPath = requestUrl.replace('/api', '')
-        const matches = actualPath.match(regex)
-
-        if (matches && url.includes(':')) {
-          const paramNames = url.match(/:(\w+)/g)?.map(param => param.slice(1)) || []
-          paramNames.forEach((paramName, index) => {
-            params[paramName] = matches[index + 1]
-          })
-        }
-
-        return handler(params as any)
-      } catch (error) {
-        console.error('Mock API Error:', error)
-        return {
-          code: 500,
-          message: '服务器内部错误',
-          data: null
-        }
-      }
-    }
-  })
-
-  // 创建GET版本
-  mallMocks.push({
-    url: `/api${viteUrl}`,
-    method: 'get',
-    response: (opts: { query: Record<string, any>; url: string }) => {
-      try {
-        const { query, url: requestUrl } = opts
-        const params = { ...query }
-
-        // 处理路径参数
-        const urlPattern = url.replace(/:(\w+)/g, '([^/]+)')
-        const regex = new RegExp(`^${urlPattern}$`)
-        const actualPath = requestUrl.replace('/api', '')
-        const matches = actualPath.match(regex)
-
-        if (matches && url.includes(':')) {
-          const paramNames = url.match(/:(\w+)/g)?.map(param => param.slice(1)) || []
-          paramNames.forEach((paramName, index) => {
-            params[paramName] = matches[index + 1]
-          })
-        }
-
-        return handler(params as any)
-      } catch (error) {
-        console.error('Mock API Error:', error)
-        return {
-          code: 500,
-          message: '服务器内部错误',
-          data: null
-        }
-      }
-    }
-  })
-})
+// 直接使用 mallMockApi 数组
+const mallMocks: MockMethod[] = mallMockApi
 
 export default [
   ...userMocks,

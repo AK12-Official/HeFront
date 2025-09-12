@@ -70,6 +70,8 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Loading, CircleCheck, CircleClose, Warning } from '@element-plus/icons-vue'
 import { PaymentUtils } from '@/utils/payment'
+import { orderDetail } from '@/api/mall'
+import type { OrderDetail } from '@/api/mall/types'
 
 interface OrderInfo {
     id: number
@@ -136,16 +138,36 @@ const checkPaymentResult = async () => {
 // 加载订单信息
 const loadOrderInfo = async (orderSn: string) => {
     try {
-        // 这里需要根据订单号查询订单，暂时模拟
-        // 实际实现中可能需要新的API接口根据订单号查询
-        orderInfo.value = {
-            id: 1,
-            orderSn: orderSn,
-            payAmount: 199.99,
-            status: paymentResult.value === 'success' ? 1 : 0
+        // 从订单号中提取订单ID（假设订单号格式为：ORDER_123456）
+        const orderIdMatch = orderSn.match(/(\d+)$/)
+        const orderId = orderIdMatch ? parseInt(orderIdMatch[1]) : parseInt(orderSn)
+
+        const response = await orderDetail(orderId)
+        if (response.code === 200 && response.data) {
+            orderInfo.value = {
+                id: response.data.id,
+                orderSn: response.data.orderSn,
+                payAmount: response.data.payAmount,
+                status: response.data.status
+            }
+        } else {
+            // 如果查询失败，使用模拟数据
+            orderInfo.value = {
+                id: orderId,
+                orderSn: orderSn,
+                payAmount: 0,
+                status: paymentResult.value === 'success' ? 1 : 0
+            }
         }
     } catch (error) {
         console.error('加载订单信息失败:', error)
+        // 使用模拟数据作为后备
+        orderInfo.value = {
+            id: 1,
+            orderSn: orderSn,
+            payAmount: 0,
+            status: paymentResult.value === 'success' ? 1 : 0
+        }
     }
 }
 

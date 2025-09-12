@@ -171,10 +171,11 @@ import { Location, ArrowRight } from '@element-plus/icons-vue'
 import {
   orderGenerateConfirmOrder,
   orderGenerateOrder,
-  memberCouponListCart
+  memberCouponList
 } from '@/api/mall'
 import AddressSelectDialog from '@/components/AddressSelectDialog.vue'
 import CouponSelectDialog from '@/components/CouponSelectDialog.vue'
+import useMallUserStore from '@/store/modules/mallUser'
 import type {
   ConfirmOrderResult,
   MemberReceiveAddress,
@@ -271,8 +272,12 @@ const loadConfirmOrder = async () => {
         selectedAddress.value = response.data.memberReceiveAddressList[0]
       }
 
-      // 加载可用优惠券
-      loadAvailableCoupons()
+      // 加载可用优惠券（只有在有商品时才加载）
+      if (response.data.cartPromotionItemList && response.data.cartPromotionItemList.length > 0) {
+        loadAvailableCoupons()
+      } else {
+        console.log('购物车为空，跳过优惠券加载')
+      }
     } else {
       ElMessage.error(response.message)
       router.back()
@@ -288,12 +293,31 @@ const loadConfirmOrder = async () => {
 
 const loadAvailableCoupons = async () => {
   try {
-    const response = await memberCouponListCart(1) // 1表示可用的优惠券
+    // 检查用户是否已登录
+    const mallUserStore = useMallUserStore()
+    console.log('用户登录状态:', mallUserStore.isLoggedIn)
+    console.log('用户信息:', mallUserStore.state)
+
+    if (!mallUserStore.isLoggedIn) {
+      console.log('用户未登录，跳过优惠券加载')
+      return
+    }
+
+    console.log('开始加载优惠券...')
+    const response = await memberCouponList({ useStatus: 0 }) // 0表示未使用的优惠券
+    console.log('优惠券响应:', response)
     if (response.code === 200) {
-      availableCoupons.value = response.data
+      // memberCouponList 返回的是 MemberCoupon[] 数组
+      availableCoupons.value = response.data || []
     }
   } catch (error) {
     console.error('加载优惠券失败:', error)
+    console.error('错误状态码:', error.response?.status)
+    console.error('错误响应数据:', error.response?.data)
+    // 如果是认证错误，不显示错误信息，因为用户可能未登录
+    if (error.response?.status !== 401) {
+      ElMessage.warning('优惠券加载失败')
+    }
   }
 }
 

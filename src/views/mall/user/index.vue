@@ -5,12 +5,12 @@
     <div class="user-header">
       <div class="user-info">
         <div class="avatar-section">
-          <img :src="userInfo.avatar || '/static/default-avatar.png'" :alt="userInfo.nickname" class="user-avatar" />
+          <img :src="userInfo.icon || '/default-avatar.png'" :alt="userInfo.nickname" class="user-avatar" />
           <el-button size="small" class="change-avatar-btn">更换头像</el-button>
         </div>
         <div class="info-section">
           <h2 class="username">{{ userInfo.nickname || userInfo.username || '用户' }}</h2>
-          <p class="user-desc">{{ userInfo.note || '这个人很懒，什么都没留下' }}</p>
+          <p class="user-desc">{{ userInfo.personalizedSignature || '这个人很懒，什么都没留下' }}</p>
           <div class="user-stats">
             <div class="stat-item">
               <span class="stat-value">{{ userInfo.integration || 0 }}</span>
@@ -20,19 +20,28 @@
               <span class="stat-value">{{ userInfo.growth || 0 }}</span>
               <span class="stat-label">成长值</span>
             </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ userInfo.memberLevelId || 0 }}</span>
+              <span class="stat-label">会员等级</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
+
     <div class="menu-section">
       <div class="menu-grid">
         <div v-for="item in menuItems" :key="item.path" class="menu-item" @click="navigateTo(item.path)">
           <div class="menu-icon">
-            <i :class="item.icon"></i>
+            <el-icon>
+              <component :is="item.icon" />
+            </el-icon>
           </div>
           <span class="menu-title">{{ item.title }}</span>
-          <i class="el-icon-arrow-right menu-arrow"></i>
+          <el-icon class="menu-arrow">
+            <ArrowRight />
+          </el-icon>
         </div>
       </div>
     </div>
@@ -53,11 +62,15 @@
     <div class="settings-section">
       <div class="setting-item" @click="showEditProfile">
         <span class="setting-label">编辑个人资料</span>
-        <i class="el-icon-arrow-right"></i>
+        <el-icon>
+          <ArrowRight />
+        </el-icon>
       </div>
       <div class="setting-item" @click="showChangePassword">
         <span class="setting-label">修改密码</span>
-        <i class="el-icon-arrow-right"></i>
+        <el-icon>
+          <ArrowRight />
+        </el-icon>
       </div>
       <div class="setting-item" @click="logout">
         <span class="setting-label logout-text">退出登录</span>
@@ -73,15 +86,23 @@
         <el-form-item label="性别">
           <el-select v-model="profileForm.gender" placeholder="请选择性别" title="选择性别">
             <el-option label="男" :value="1" />
-            <el-option label="女" :value="0" />
+            <el-option label="女" :value="2" />
+            <el-option label="未知" :value="0" />
           </el-select>
         </el-form-item>
         <el-form-item label="生日">
           <el-date-picker v-model="profileForm.birthday" type="date" placeholder="请选择生日" format="YYYY-MM-DD"
             value-format="YYYY-MM-DD" title="选择出生日期" />
         </el-form-item>
-        <el-form-item label="个人简介">
-          <el-input v-model="profileForm.note" type="textarea" :rows="3" placeholder="请输入个人简介" title="个人简介" />
+        <el-form-item label="城市">
+          <el-input v-model="profileForm.city" placeholder="请输入所在城市" title="所在城市" />
+        </el-form-item>
+        <el-form-item label="职业">
+          <el-input v-model="profileForm.job" placeholder="请输入职业" title="职业" />
+        </el-form-item>
+        <el-form-item label="个性签名">
+          <el-input v-model="profileForm.personalizedSignature" type="textarea" :rows="3" placeholder="请输入个性签名"
+            title="个性签名" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -117,24 +138,18 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { ssoInfo } from '@/api/sso'
+import type { MemberInfo } from '@/api/sso/types'
+import useMallUserStore from '@/store/modules/mallUser'
 
-interface UserInfo {
-  id?: number
-  username?: string
-  nickname?: string
-  avatar?: string
-  gender?: number
-  birthday?: string
-  note?: string
-  integration?: number
-  growth?: number
-}
 
 interface ProfileForm {
   nickname: string
   gender: number | undefined
   birthday: string
-  note: string
+  city: string
+  job: string
+  personalizedSignature: string
 }
 
 interface PasswordForm {
@@ -146,14 +161,32 @@ interface PasswordForm {
 const router = useRouter()
 
 // 数据
-const userInfo = ref<UserInfo>({})
+const userInfo = ref<MemberInfo>({
+  id: 0,
+  memberLevelId: 0,
+  username: '',
+  nickname: '',
+  phone: '',
+  status: 1,
+  createTime: '',
+  icon: '',
+  gender: 0,
+  birthday: '',
+  city: '',
+  job: '',
+  personalizedSignature: '',
+  integration: 0,
+  growth: 0
+})
 const editProfileVisible = ref(false)
 const changePasswordVisible = ref(false)
 const profileForm = ref<ProfileForm>({
   nickname: '',
   gender: undefined,
   birthday: '',
-  note: ''
+  city: '',
+  job: '',
+  personalizedSignature: ''
 })
 const passwordForm = ref<PasswordForm>({
   oldPassword: '',
@@ -187,43 +220,60 @@ const passwordRules = {
 
 // 菜单项
 const menuItems = [
-  { title: '我的订单', path: '/mall/order', icon: 'el-icon-s-order' },
-  { title: '收货地址', path: '/mall/address', icon: 'el-icon-location' },
-  { title: '我的优惠券', path: '/mall/coupon', icon: 'el-icon-ticket' },
-  { title: '联系客服', path: '/mall/service', icon: 'el-icon-service' }
+  { title: '我的订单', path: '/mall/order', icon: 'ShoppingBag' },
+  { title: '收货地址', path: '/mall/address', icon: 'Location' },
+  { title: '我的优惠券', path: '/mall/coupon', icon: 'Ticket' },
+  { title: '联系客服', path: '/mall/service', icon: 'Service' }
 ]
 
 // 快捷操作
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const quickActions = [
-  { key: 'scan', title: '扫一扫', icon: 'el-icon-camera' },
-  { key: 'share', title: '分享好友', icon: 'el-icon-share' },
-  { key: 'feedback', title: '意见反馈', icon: 'el-icon-chat-dot-round' },
-  { key: 'about', title: '关于我们', icon: 'el-icon-info' }
+  { key: 'scan', title: '扫一扫', icon: 'Camera' },
+  { key: 'share', title: '分享好友', icon: 'Share' },
+  { key: 'feedback', title: '意见反馈', icon: 'ChatDotRound' },
+  { key: 'about', title: '关于我们', icon: 'InfoFilled' }
 ]
 
 // 加载用户信息
 const loadUserInfo = async () => {
   try {
-    // 模拟用户数据
-    userInfo.value = {
-      id: 1,
-      username: 'test_user',
-      nickname: '测试用户',
-      avatar: '',
-      gender: 1,
-      birthday: '1990-01-01',
-      note: '这是一个测试用户',
-      integration: 1000,
-      growth: 500
+    // 检查用户是否已登录
+    const mallUserStore = useMallUserStore()
+    if (!mallUserStore.isLoggedIn) {
+      ElMessage.warning('请先登录')
+      router.push('/mall/login')
+      return
     }
-  } catch (error) {
+
+    const response = await ssoInfo()
+    if (response.code === 200) {
+      userInfo.value = response.data
+    } else {
+      ElMessage.error('获取用户信息失败')
+    }
+  } catch (error: any) {
     console.error('加载用户信息失败:', error)
+    console.error('错误详情:', error.response?.data)
+
+    // 如果是401错误，说明token过期，跳转到登录页
+    if (error.response?.status === 401) {
+      ElMessage.warning('登录已过期，请重新登录')
+      router.push('/mall/login')
+    } else {
+      ElMessage.error('加载用户信息失败')
+    }
   }
 }
 
+
 // 导航到指定页面
 const navigateTo = (path: string) => {
+  // 特殊处理联系客服功能
+  if (path === '/mall/service') {
+    ElMessage.info('功能开发中')
+    return
+  }
   router.push(path)
 }
 
@@ -252,7 +302,9 @@ const showEditProfile = () => {
     nickname: userInfo.value.nickname || '',
     gender: userInfo.value.gender,
     birthday: userInfo.value.birthday || '',
-    note: userInfo.value.note || ''
+    city: userInfo.value.city || '',
+    job: userInfo.value.job || '',
+    personalizedSignature: userInfo.value.personalizedSignature || ''
   }
   editProfileVisible.value = true
 }
@@ -385,6 +437,7 @@ onMounted(() => {
     }
   }
 }
+
 
 .menu-section {
   background: white;

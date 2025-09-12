@@ -14,6 +14,8 @@ export interface CommonResult<T = unknown> {
 export interface SsoRegisterParams {
   username: string;
   password: string;
+  telephone: string;
+  authCode: string;
   icon?: string;
 }
 
@@ -37,27 +39,31 @@ export interface LoginResponse {
 // 会员信息响应数据
 export interface MemberInfo {
   id: number;
+  memberLevelId: number;  // 会员等级ID
   username: string;
-  nickname?: string;
+  password?: string;      // 密码（通常不返回，但API中有）
+  nickname: string;
   phone: string;
-  integration?: number;  // 积分
-  growth?: number;       // 成长值
-  status?: number;       // 状态
-  createTime?: string;   // 创建时间
+  status: number;         // 状态
+  createTime: string;     // 创建时间
+  icon: string;           // 头像
+  gender: number;         // 性别
+  birthday: string;       // 生日
+  city: string;           // 城市
+  job: string;            // 职业
+  personalizedSignature: string;  // 个性签名
+  integration: number;    // 积分
+  growth: number;         // 成长值
 }
 
 // 修改密码参数
 export interface UpdatePasswordParams {
   telephone: string;
+  password: string;
   authCode: string;
-  newPassword: string;
 }
 
 // 刷新Token响应
-export interface RefreshTokenResponse {
-  token: string;
-  tokenHead: string;
-}
 export interface RefreshTokenResponse {
   token: string;
   tokenHead: string;

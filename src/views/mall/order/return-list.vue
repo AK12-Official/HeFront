@@ -89,11 +89,11 @@ const mockReturnList = [
     orderSn: '202403010001',
     createTime: '2024-03-05 10:30:00',
     returnAmount: 299.00,
-    returnName: '张三',
+    returnName: '',
     returnPhone: '13888888888',
     status: 0,
-    productPic: '/images/product/demo.jpg',
-    productName: '测试商品',
+    productPic: '',
+    productName: '',
     reason: '质量问题'
   }
 ]

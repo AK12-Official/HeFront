@@ -4,12 +4,11 @@
  *
  * 注意：认证相关接口已分离至 /api/sso 模块
  */
-import request from "@/utils/request";
+import { mallRequest } from "@/utils/mallRequest";
 import type {
   ProductSearchParams,
   CartAddParams,
   CartUpdateQuantityParams,
-  CartDeleteParams,
   OrderParam,
   OrderListParams,
   AddressAddParams,
@@ -36,130 +35,142 @@ import type {
 // ==================== 1. 首页内容 ====================
 
 export const homeContent = (): Promise<CommonResult<HomeContent>> => {
-  return request.get('/home/content');
+  return mallRequest.get('/home/content');
 };
+// correct
 
-export const homeRecommendProductList = (pageNum: number = 1, pageSize: number = 24): Promise<CommonResult<PageResult<Product>>> => {
-  return request.get('/home/recommendProductList', {
+export const homeRecommendProductList = (pageNum: number = 1, pageSize: number = 24): Promise<CommonResult<Product[]>> => {
+  return mallRequest.get('/home/recommendProductList', {
     params: { pageNum, pageSize }
   });
 };
+// correct
 
 export const homeHotProductList = (pageNum: number = 1, pageSize: number = 6): Promise<CommonResult<PageResult<Product>>> => {
-  return request.get('/home/hotProductList', {
+  return mallRequest.get('/home/hotProductList', {
     params: { pageNum, pageSize }
   });
 };
+// correct
 
 export const homeNewProductList = (pageNum: number = 1, pageSize: number = 6): Promise<CommonResult<PageResult<Product>>> => {
-  return request.get('/home/newProductList', {
+  return mallRequest.get('/home/newProductList', {
     params: { pageNum, pageSize }
   });
 };
+// correct
 
 export const homeProductCateList = (parentId: number = 0): Promise<CommonResult<ProductCategoryTree[]>> => {
-  return request.get(`/home/productCateList/${parentId}`);
+  return mallRequest.get(`/home/productCateList/${parentId}`);
 };
+//不明白这个接口在干嘛
 
 export const homeSubjectList = (cateId?: number, pageNum: number = 1, pageSize: number = 4): Promise<CommonResult<PageResult<CmsSubject>>> => {
-  return request.get('/home/subjectList', {
+  return mallRequest.get('/home/subjectList', {
     params: { cateId, pageNum, pageSize }
   });
 };
+//不明白这个接口在干嘛
 
 // ==================== 2. 商品管理 ====================
 
 export const productSearch = (params: ProductSearchParams): Promise<CommonResult<PageResult<Product>>> => {
-  return request.get('/product/search', { params });
+  return mallRequest.get('/product/search', { params });
 };
 
 export const productDetail = (id: number): Promise<CommonResult<ProductDetail>> => {
-  return request.get(`/product/detail/${id}`);
+  return mallRequest.get(`/product/detail/${id}`);
 };
 
 export const productCategoryTreeList = (): Promise<CommonResult<ProductCategoryTree[]>> => {
-  return request.get('/product/categoryTreeList');
+  return mallRequest.get('/product/categoryTreeList');
 };
 
 // ==================== 3. 购物车 ====================
 
 export const cartAdd = (data: CartAddParams): Promise<CommonResult<null>> => {
-  return request.post('/cart/add', data);
+  return mallRequest.post('/cart/add', data);
 };
 
 export const cartList = (): Promise<CommonResult<CartItem[]>> => {
-  return request.get('/cart/list');
+  return mallRequest.get('/cart/list');
 };
 
 // 兼容不同的命名方式
 export const cartListGet = (): Promise<CommonResult<CartItem[]>> => {
-  return request.get('/cart/list');
+  return mallRequest.get('/cart/list');
 };
 
-export const cartListPromotion = (cartIds?: number[]): Promise<CommonResult<CartListPromotionResponse>> => {
-  return request.get('/cart/list/promotion', {
+export const cartListPromotion = (cartIds?: number[]): Promise<CommonResult<CartPromotionItem[]>> => {
+  return mallRequest.get('/cart/list/promotion', {
     params: cartIds ? { cartIds: cartIds.join(',') } : {}
   });
 };
 
 export const cartUpdateQuantity = (params: CartUpdateQuantityParams): Promise<CommonResult<null>> => {
-  return request.get('/cart/update/quantity', { params });
+  return mallRequest.get('/cart/update/quantity', { params });
 };
 
 export const cartGetProduct = (productId: number): Promise<CommonResult<Product>> => {
-  return request.get(`/cart/getProduct/${productId}`);
+  return mallRequest.get(`/cart/getProduct/${productId}`);
 };
 
 export const cartUpdateAttr = (data: CartItem): Promise<CommonResult<null>> => {
-  return request.post('/cart/update/attr', data);
+  return mallRequest.post('/cart/update/attr', data);
 };
 
-export const cartDelete = (params: CartDeleteParams): Promise<CommonResult<null>> => {
-  return request.post('/cart/delete', params);
+export const cartDelete = (ids: number[]): Promise<CommonResult<null>> => {
+  // 根据后端代码，使用POST方法，参数作为查询参数
+  // 后端期望: @RequestParam("ids") List<Long> ids
+  // 需要手动构建查询字符串，避免Axios的数组序列化问题
+  const params = new URLSearchParams();
+  ids.forEach(id => params.append('ids', id.toString()));
+
+  return mallRequest.post(`/cart/delete?${params.toString()}`);
 };
 
 export const cartClear = (): Promise<CommonResult<null>> => {
-  return request.post('/cart/clear');
+  return mallRequest.post('/cart/clear');
 };
 
 // ==================== 4. 订单管理 ====================
 
 export const orderGenerateConfirmOrder = (cartIds: number[]): Promise<CommonResult<ConfirmOrderResult>> => {
-  return request.post('/order/generateConfirmOrder', cartIds);
+  return mallRequest.post('/order/generateConfirmOrder', cartIds);
 };
 
-export const orderGenerateOrder = (data: OrderParam): Promise<CommonResult<Order>> => {
-  return request.post('/order/generateOrder', data);
+export const orderGenerateOrder = (data: OrderParam): Promise<CommonResult<{ order: Order; orderItemList: OrderItem[] }>> => {
+  return mallRequest.post('/order/generateOrder', data);
 };
 
 export const orderPaySuccess = (orderId: number, payType: number): Promise<CommonResult<null>> => {
-  return request.post('/order/paySuccess', null, {
+  return mallRequest.post('/order/paySuccess', null, {
     params: { orderId, payType }
   });
 };
 
-export const orderList = (params: OrderListParams): Promise<CommonResult<PageResult<Order>>> => {
-  return request.get('/order/list', { params });
+export const orderList = (params: OrderListParams): Promise<CommonResult<PageResult<OrderDetail>>> => {
+  return mallRequest.get('/order/list', { params });
 };
 
-export const orderDetail = (orderId: number): Promise<CommonResult<Order>> => {
-  return request.get(`/order/detail/${orderId}`);
+export const orderDetail = (orderId: number): Promise<CommonResult<OrderDetail>> => {
+  return mallRequest.get(`/order/detail/${orderId}`);
 };
 
 export const orderCancelUserOrder = (orderId: number): Promise<CommonResult<null>> => {
-  return request.post('/order/cancelUserOrder', null, {
+  return mallRequest.post('/order/cancelUserOrder', null, {
     params: { orderId }
   });
 };
 
 export const orderConfirmReceiveOrder = (orderId: number): Promise<CommonResult<null>> => {
-  return request.post('/order/confirmReceiveOrder', null, {
+  return mallRequest.post('/order/confirmReceiveOrder', null, {
     params: { orderId }
   });
 };
 
 export const orderDeleteOrder = (orderId: number): Promise<CommonResult<null>> => {
-  return request.post('/order/deleteOrder', null, {
+  return mallRequest.post('/order/deleteOrder', null, {
     params: { orderId }
   });
 };
@@ -167,85 +178,75 @@ export const orderDeleteOrder = (orderId: number): Promise<CommonResult<null>> =
 // ==================== 5. 支付接口 ====================
 
 export const alipayPay = (params: AlipayParams) => {
-  return request.get('/alipay/pay', { params });
+  return mallRequest.get('/alipay/pay', { params });
 };
 
 export const alipayWebPay = (params: AlipayParams) => {
-  return request.get('/alipay/webPay', { params });
+  return mallRequest.get('/alipay/webPay', { params });
 };
 
 export const alipayQuery = (params: PaymentQueryParams) => {
-  return request.get('/alipay/query', { params });
+  return mallRequest.get('/alipay/query', { params });
 };
 
 export const alipayNotify = (data: Record<string, unknown>) => {
-  return request.post('/alipay/notify', data);
+  return mallRequest.post('/alipay/notify', data);
 };
 
 // ==================== 6. 会员地址 ====================
 
 export const memberAddressAdd = (data: AddressAddParams): Promise<CommonResult<null>> => {
-  return request.post('/member/address/add', data);
+  return mallRequest.post('/member/address/add', data);
 };
 
 export const memberAddressDelete = (id: number): Promise<CommonResult<null>> => {
-  return request.post(`/member/address/delete/${id}`);
+  return mallRequest.post(`/member/address/delete/${id}`);
 };
 
 export const memberAddressUpdate = (id: number, data: AddressAddParams): Promise<CommonResult<null>> => {
-  return request.post(`/member/address/update/${id}`, data);
+  return mallRequest.post(`/member/address/update/${id}`, data);
 };
 
 export const memberAddressList = (): Promise<CommonResult<MemberReceiveAddress[]>> => {
-  return request.get('/member/address/list');
+  return mallRequest.get('/member/address/list');
 };
 
 export const memberAddressDetail = (id: number): Promise<CommonResult<MemberReceiveAddress>> => {
-  return request.get(`/member/address/${id}`);
+  return mallRequest.get(`/member/address/${id}`);
 };
 
 // ==================== 7. 会员优惠券 ====================
 
 export const memberCouponAdd = (couponId: number): Promise<CommonResult<null>> => {
-  return request.post(`/member/coupon/add/${couponId}`);
+  return mallRequest.post(`/member/coupon/add/${couponId}`);
 };
 
 export const memberCouponListHistory = (params?: CouponListParams): Promise<CommonResult<PageResult<MemberCoupon>>> => {
-  return request.get('/member/coupon/listHistory', { params });
+  return mallRequest.get('/member/coupon/listHistory', { params });
 };
 
-export const memberCouponList = (params?: CouponListParams): Promise<CommonResult<PageResult<MemberCoupon>>> => {
-  return request.get('/member/coupon/list', { params });
+export const memberCouponList = (params?: CouponListParams): Promise<CommonResult<MemberCoupon[]>> => {
+  return mallRequest.get('/member/coupon/list', { params });
 };
 
 export const memberCouponListCart = (type: number): Promise<CommonResult<MemberCoupon[]>> => {
-  return request.get(`/member/coupon/list/cart/${type}`);
+  return mallRequest.get(`/member/coupon/list/cart/${type}`);
 };
 
 export const memberCouponListByProduct = (productId: number): Promise<CommonResult<MemberCoupon[]>> => {
-  return request.get(`/member/coupon/listByProduct/${productId}`);
+  return mallRequest.get(`/member/coupon/listByProduct/${productId}`);
 };
 
 // ==================== 8. 高级搜索 ====================
-
-export const esProductSearchSimple = (keyword: string) => {
-  return request.get('/esProduct/search/simple', {
-    params: { keyword }
-  });
-};
-
-export const esProductSearch = (params: ProductSearchParams) => {
-  return request.get('/esProduct/search', { params });
-};
-
-export const esProductRecommend = (id: number) => {
-  return request.get(`/esProduct/recommend/${id}`);
-};
+// 搜索功能已移至 search.ts 文件，使用专用搜索服务
+// 导入搜索API，保持原有导出结构不变
+import searchAPI from './search';
+export const { esProductSearchSimple, esProductSearch, esProductRecommend } = searchAPI;
 
 // ==================== 9. 售后服务 ====================
 
 export const returnApplyCreate = (data: ReturnApplyCreateParams): Promise<CommonResult<ReturnApplyResult>> => {
-  return request.post('/returnApply/create', data);
+  return mallRequest.post('/returnApply/create', data);
 };
 
 // 导出所有API

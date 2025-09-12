@@ -54,10 +54,7 @@ request.interceptors.response.use((response) => {
       message = 'NetWork Error'; break;
   }
 
-  ElMessage({
-    type: 'error',
-    message //key: value简写
-  });
+  ElMessage.error(message);
 
   return Promise.reject(error)
 });

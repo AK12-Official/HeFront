@@ -24,7 +24,8 @@
         <div v-for="coupon in couponList" :key="coupon.id" class="coupon-item" :class="{
           expired: coupon.useStatus === 2,
           used: coupon.useStatus === 1,
-          disabled: !coupon.available
+          disabled: !coupon.available,
+          [`coupon-type-${coupon.type}`]: true
         }">
           <div class="coupon-left">
             <div class="coupon-amount">
@@ -45,7 +46,7 @@
                   {{ formatTime(coupon.startTime) }} ~ {{ formatTime(coupon.endTime) }}
                 </span>
                 <span v-else-if="coupon.enableTime">
-                  领取后{{ coupon.enableTime }}天内有效
+                  领取后{{ getEnableDays(coupon.enableTime) }}天内有效
                 </span>
               </div>
             </div>
@@ -85,16 +86,10 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { memberCouponList } from '@/api/mall'
+import type { MemberCoupon, CouponListParams } from '@/api/mall/types'
 
-interface Coupon {
-  id: number
-  name: string
-  amount: number
-  minPoint?: number
-  note?: string
-  startTime?: string
-  endTime?: string
-  enableTime?: number
+interface Coupon extends MemberCoupon {
   useStatus: number // 0-未使用 1-已使用 2-已过期
   available: boolean
 }
@@ -118,66 +113,68 @@ const pageSize = ref(10)
 const total = ref(0)
 
 // 加载优惠券列表
-const loadCouponList = () => {
+const loadCouponList = async () => {
   loading.value = true
 
-  // 模拟数据
-  setTimeout(() => {
-    const mockData: Coupon[] = [
-      {
-        id: 1,
-        name: '新用户专享券',
-        amount: 20,
-        minPoint: 100,
-        note: '仅限首次购买使用',
-        startTime: '2024-01-01',
-        endTime: '2024-12-31',
-        useStatus: 0,
-        available: true
-      },
-      {
-        id: 2,
-        name: '满减优惠券',
-        amount: 50,
-        minPoint: 300,
-        note: '适用于全场商品',
-        startTime: '2024-01-01',
-        endTime: '2024-06-30',
-        useStatus: 1,
-        available: false
-      },
-      {
-        id: 3,
-        name: '生日特惠券',
-        amount: 30,
-        minPoint: 200,
-        note: '生日月专享',
-        startTime: '2024-01-01',
-        endTime: '2024-01-31',
-        useStatus: 2,
-        available: false
-      },
-      {
-        id: 4,
-        name: '无门槛券',
-        amount: 10,
-        note: '无最低消费限制',
-        enableTime: 30,
-        useStatus: 0,
-        available: true
-      }
-    ]
-
-    // 根据activeTab过滤数据
-    let filteredData = mockData
-    if (activeTab.value !== -1) {
-      filteredData = mockData.filter(item => item.useStatus === activeTab.value)
+  try {
+    const params: CouponListParams = {
+      useStatus: activeTab.value === -1 ? undefined : activeTab.value,
+      pageNum: currentPage.value,
+      pageSize: pageSize.value
     }
 
-    couponList.value = filteredData
-    total.value = filteredData.length
+    const response = await memberCouponList(params)
+
+    if (response.code === 200) {
+      // 将API返回的数据转换为页面需要的格式
+      couponList.value = response.data.map((item: MemberCoupon) => ({
+        ...item,
+        available: isCouponAvailable(item), // 判断优惠券是否可用
+        useStatus: getUseStatus(item) // 根据时间和使用情况判断使用状态
+      }))
+      total.value = response.data.length
+    } else {
+      ElMessage.error(response.message || '获取优惠券列表失败')
+      couponList.value = []
+      total.value = 0
+    }
+  } catch (error: any) {
+    console.error('加载优惠券列表失败:', error)
+    ElMessage.error('加载优惠券列表失败')
+    couponList.value = []
+    total.value = 0
+  } finally {
     loading.value = false
-  }, 500)
+  }
+}
+
+// 根据时间和使用情况判断优惠券使用状态
+const getUseStatus = (coupon: MemberCoupon): number => {
+  const now = new Date()
+  const endTime = new Date(coupon.endTime)
+
+  // 如果已过期
+  if (now > endTime) {
+    return 2 // 已过期
+  }
+
+  // 如果已使用（useCount > 0 表示已使用）
+  if (coupon.useCount && coupon.useCount > 0) {
+    return 1 // 已使用
+  }
+
+  // 默认未使用
+  return 0 // 未使用
+}
+
+// 判断优惠券是否可用
+const isCouponAvailable = (coupon: MemberCoupon): boolean => {
+  const now = new Date()
+  const startTime = new Date(coupon.startTime)
+  const endTime = new Date(coupon.endTime)
+
+  // 如果当前时间在有效期内且未使用
+  return now >= startTime && now <= endTime && (!coupon.useCount || coupon.useCount === 0)
 }
 
 // 格式化时间
@@ -185,6 +182,16 @@ const formatTime = (time: string): string => {
   if (!time) return ''
   const date = new Date(time)
   return date.toLocaleDateString('zh-CN')
+}
+
+// 获取启用天数
+const getEnableDays = (enableTime: string): number => {
+  if (!enableTime) return 0
+  const enableDate = new Date(enableTime)
+  const now = new Date()
+  const diffTime = enableDate.getTime() - now.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return Math.max(0, diffDays)
 }
 
 // 切换标签
@@ -304,14 +311,33 @@ onMounted(() => {
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
       }
 
-      &.expired,
+      &.expired {
+        .coupon-left {
+          background: linear-gradient(135deg, #909399 0%, #b1b3b8 100%);
+        }
+      }
+
       &.used {
-        opacity: 0.6;
+        .coupon-left {
+          background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
+        }
       }
 
       &.disabled {
         .coupon-left {
-          background: #f5f5f5;
+          background: linear-gradient(135deg, #f5f5f5 0%, #e4e7ed 100%);
+
+          .coupon-amount {
+
+            .currency,
+            .amount {
+              color: #c0c4cc !important;
+            }
+          }
+
+          .coupon-condition {
+            color: #c0c4cc !important;
+          }
         }
       }
 
@@ -345,18 +371,24 @@ onMounted(() => {
           .currency {
             font-size: 14px;
             margin-right: 2px;
+            color: white !important;
+            font-weight: 600;
           }
 
           .amount {
             font-size: 24px;
-            font-weight: 600;
+            font-weight: 700;
+            color: white !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
           }
         }
 
         .coupon-condition {
           font-size: 12px;
-          opacity: 0.9;
+          opacity: 0.95;
           text-align: center;
+          color: white !important;
+          font-weight: 500;
         }
       }
 
@@ -397,18 +429,26 @@ onMounted(() => {
 
           .coupon-status {
             font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
 
             .status-unused {
               color: #67c23a;
-              font-weight: 600;
+              background-color: rgba(103, 194, 58, 0.1);
+              border: 1px solid rgba(103, 194, 58, 0.3);
             }
 
             .status-used {
-              color: #909399;
+              color: #67c23a;
+              background-color: rgba(103, 194, 58, 0.1);
+              border: 1px solid rgba(103, 194, 58, 0.3);
             }
 
             .status-expired {
               color: #f56c6c;
+              background-color: rgba(245, 108, 108, 0.1);
+              border: 1px solid rgba(245, 108, 108, 0.3);
             }
           }
         }
@@ -420,6 +460,27 @@ onMounted(() => {
     display: flex;
     justify-content: center;
     margin-top: 30px;
+  }
+}
+
+/* 不同类型优惠券的颜色主题 */
+.coupon-item {
+  &.coupon-type-0 {
+    .coupon-left {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+    }
+  }
+
+  &.coupon-type-1 {
+    .coupon-left {
+      background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
+    }
+  }
+
+  &.coupon-type-2 {
+    .coupon-left {
+      background: linear-gradient(135deg, #e6a23c 0%, #f0c78a 100%);
+    }
   }
 }
 

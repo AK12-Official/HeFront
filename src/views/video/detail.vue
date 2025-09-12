@@ -99,13 +99,18 @@
     </div>
 
     <!-- 右键菜单 -->
-    <div v-if="contextMenuVisible" class="context-menu" :style="{ left: contextMenuPosition.x + 'px', top: contextMenuPosition.y + 'px' }">
+    <div v-if="contextMenuVisible" class="context-menu"
+      :style="{ left: contextMenuPosition.x + 'px', top: contextMenuPosition.y + 'px' }">
       <div class="menu-item" @click="copyVideoUrl">
-        <el-icon><DocumentCopy /></el-icon>
+        <el-icon>
+          <DocumentCopy />
+        </el-icon>
         复制视频地址
       </div>
       <div class="menu-item" @click="showDetailDialog">
-        <el-icon><InfoFilled /></el-icon>
+        <el-icon>
+          <InfoFilled />
+        </el-icon>
         查看详情
       </div>
     </div>
@@ -128,7 +133,7 @@
             <span class="value">{{ new Date(videoData.createTime).toLocaleString() }}</span>
           </div>
         </div>
-        
+
         <div v-if="playInfo" class="detail-section">
           <h4>播放信息</h4>
           <div class="detail-item">
@@ -144,7 +149,7 @@
             <span class="value url">{{ playInfo.playUrl }}</span>
           </div>
         </div>
-        
+
         <div v-if="statsInfo" class="detail-section">
           <h4>统计信息</h4>
           <div class="detail-item">
@@ -397,7 +402,7 @@ const recordVideoPlay = async () => {
 const showContextMenu = (event: MouseEvent) => {
   event.preventDefault()
   event.stopPropagation()
-  
+
   contextMenuPosition.value = {
     x: event.clientX,
     y: event.clientY
@@ -446,14 +451,14 @@ const changeVideoQuality = async (quality: string) => {
     ElMessage.warning('暂无其他画质选项')
     return
   }
-  
+
   const qualityOption = playInfo.value.qualities.find((q: any) => q.quality === quality)
   if (qualityOption) {
     const currentTime = videoRef.value?.currentTime || 0
     const wasPlaying = !videoRef.value?.paused
-    
+
     videoData.value.videoUrl = qualityOption.url
-    
+
     // 等待视频加载后恢复播放位置
     await nextTick()
     if (videoRef.value) {
@@ -462,7 +467,7 @@ const changeVideoQuality = async (quality: string) => {
         videoRef.value.play()
       }
     }
-    
+
     ElMessage.success(`已切换到${quality}画质`)
   } else {
     ElMessage.error('切换画质失败')
@@ -474,10 +479,10 @@ onMounted(async () => {
   nextTick(() => {
     isEntering.value = true
   })
-  
+
   // 添加全局点击事件监听
   document.addEventListener('click', handleGlobalClick)
-  
+
   // 获取视频相关数据
   await Promise.all([
     fetchPlayInfo(),
@@ -494,7 +499,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@import '@/assets/styles/variables.scss';
+@use '@/assets/styles/variables' as *;
 
 .video-detail {
   min-height: 100vh;
@@ -618,7 +623,7 @@ onUnmounted(() => {
       height: 100%;
       object-fit: cover;
     }
-    
+
 
   }
 }
@@ -684,9 +689,10 @@ onUnmounted(() => {
       padding: 0 24px;
 
       &:hover {
+        @use 'sass:color';
         background: linear-gradient(135deg,
-            lighten($primary-color, 5%),
-            lighten($tertiary-color, 5%));
+            color.adjust($primary-color, $lightness: 5%),
+            color.adjust($tertiary-color, $lightness: 5%));
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba($primary-color, 0.2);
       }
@@ -764,10 +770,10 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    
+
     .el-textarea {
       border-radius: 8px;
-      
+
       :deep(.el-textarea__inner) {
         min-height: 80px;
         padding: 12px;
@@ -775,13 +781,13 @@ onUnmounted(() => {
         border-radius: 8px;
         resize: none;
         transition: all 0.3s;
-        
+
         &:focus {
           box-shadow: 0 0 0 2px rgba($primary-color, 0.2);
         }
       }
     }
-    
+
     .el-button {
       align-self: flex-end;
       padding: 10px 24px;
@@ -790,12 +796,12 @@ onUnmounted(() => {
       background: linear-gradient(135deg, $primary-color, $tertiary-color);
       border: none;
       transition: all 0.3s;
-      
+
       &:hover:not(:disabled) {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba($primary-color, 0.2);
       }
-      
+
       &:disabled {
         background: #f0f0f0;
         color: #aaa;

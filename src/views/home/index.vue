@@ -59,8 +59,8 @@ import { ElMessage } from 'element-plus';
 const router = useRouter();
 const userStore = useUserStore();
 const dialogVisible = ref(false);
-const userPoints = ref<number | null>(null);
-const loading = ref(false);
+// const userPoints = ref<number | null>(null);
+// const loading = ref(false);
 
 // 监听登录状态变化，自动获取积分
 import { watch } from 'vue';

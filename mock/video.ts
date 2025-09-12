@@ -416,7 +416,7 @@ export default [
     url: '/api/videos/check-duplicate',
     method: 'post',
     response: (req) => {
-      const { sha256, fileSize, deviceType } = req.body || {};
+      const { sha256, fileSize } = req.body || {};
 
       if (!sha256 || !fileSize) {
         return {
@@ -460,7 +460,7 @@ export default [
     url: '/api/videos/upload-person-video',
     method: 'post',
     response: (req) => {
-      const { title, description, sha256, deviceType } = req.body || {};
+      const { title, description, sha256 } = req.body || {};
 
       if (!title || !sha256) {
         return {
@@ -549,7 +549,7 @@ export default [
     url: '/api/videos/upload-chunk',
     method: 'post',
     response: (req) => {
-      const { uploadId, chunkNumber, chunkSize } = req.body || {};
+      const { uploadId, chunkNumber } = req.body || {};
 
       if (!uploadId || !chunkNumber) {
         return {

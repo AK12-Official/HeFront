@@ -654,6 +654,7 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 @use '@/assets/styles/variables' as *;
+@use 'sass:color';
 
 .video-detail {
   min-height: 100vh;
@@ -843,7 +844,6 @@ onUnmounted(() => {
       padding: 0 24px;
 
       &:hover {
-        @use 'sass:color';
         background: linear-gradient(135deg,
             color.adjust($primary-color, $lightness: 5%),
             color.adjust($tertiary-color, $lightness: 5%));

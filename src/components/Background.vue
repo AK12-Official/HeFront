@@ -23,7 +23,7 @@ const createAurora = () => {
 	}
 
 	let direction = Math.random() * Math.PI * 2
-	const speed = 1000 // 加快速度
+	// const speed = 1000 // 加快速度
 
 	// 定义新的颜色
 	const colors = {

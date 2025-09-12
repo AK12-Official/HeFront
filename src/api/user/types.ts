@@ -1,5 +1,5 @@
 // 用户API响应通用接口
-export interface UserResponse<T = any> {
+export interface UserResponse<T = unknown> {
   code: number;
   message: string;
   data: T;

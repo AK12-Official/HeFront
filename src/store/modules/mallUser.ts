@@ -6,7 +6,7 @@ import { defineStore } from "pinia";
 import { ref, watch, computed } from "vue";
 import { setMallToken, getMallToken, removeMallToken, clearAllMallTokens } from "@/utils/mallAuth";
 import { ssoRefreshToken } from "@/api/sso";
-import { ElMessage } from "element-plus";
+// import { ElMessage } from "element-plus";
 
 // 电商用户状态接口
 export interface MallUserState {

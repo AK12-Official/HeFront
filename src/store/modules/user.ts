@@ -4,7 +4,7 @@ import { defineStore } from "pinia";
 import { ref, watch, computed } from "vue";
 import type { UserState } from "./types/types";
 import { setToken, getToken, removeToken, clearAllTokens } from "@/utils/auth";
-import type { LoginCodeParams, LoginPasswordParams, RefreshTokenParams, ResponseData } from "@/api/auth/types";
+import type { LoginCodeParams, LoginPasswordParams } from "@/api/auth/types";
 
 const useUserStore = defineStore('User', () => {
   // state
@@ -340,15 +340,15 @@ const useUserStore = defineStore('User', () => {
     }
 
     isRefreshing = true;
-    
+
     try {
       // 动态导入 refreshToken API
       const { refreshToken } = await import('@/api/auth');
-      
+
       refreshPromise = (async () => {
         try {
           const response = await refreshToken({ refreshToken: state.value.refreshToken! });
-          
+
           if (response.code === 10000 && response.data) {
             // 更新 token 信息
             state.value.accessToken = response.data.accessToken;
@@ -358,7 +358,7 @@ const useUserStore = defineStore('User', () => {
             if (response.data.expiresIn) {
               state.value.expiresIn = Math.floor(Date.now() / 1000) + response.data.expiresIn;
             }
-            
+
             console.log('Token 刷新成功');
             return true;
           } else {
@@ -372,7 +372,7 @@ const useUserStore = defineStore('User', () => {
           return false;
         }
       })();
-      
+
       return await refreshPromise;
     } finally {
       isRefreshing = false;

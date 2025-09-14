@@ -239,6 +239,7 @@ interface ProductForm {
     productCategoryId: number | null
     brandId: number | null
     description: string
+    productSn: string
     pic: string
     albumPics: string
     price: number
@@ -297,6 +298,7 @@ const formData = reactive<ProductForm>({
     productCategoryId: null,
     brandId: null,
     description: '',
+    productSn: '',
     pic: '',
     albumPics: '',
     price: 0,
@@ -381,7 +383,7 @@ const fetchProductDetail = async () => {
 
                 // 处理相册图片
                 if (result.data.albumPics) {
-                    galleryFileList.value = result.data.albumPics.split(',').map(url => ({ url }))
+                    galleryFileList.value = result.data.albumPics.split(',').map((url: string) => ({ url }))
                 }
             } else {
                 console.error('API返回数据结构异常:', result)
@@ -509,8 +511,8 @@ const handleSave = async () => {
         const params: ProductCreateParams = {
             name: formData.name,
             productSn: formData.productSn || '',
-            productCategoryId: formData.productCategoryId,
-            brandId: formData.brandId,
+            productCategoryId: formData.productCategoryId || undefined,
+            brandId: formData.brandId || undefined,
             subTitle: formData.subTitle,
             description: formData.description,
             pic: formData.pic,

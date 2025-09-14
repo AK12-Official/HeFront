@@ -232,6 +232,7 @@ export interface MemberCoupon {
   publishCount: number; // 发行数量
   useCount: number;    // 已使用数量
   receiveCount: number; // 已领取数量
+  useStatus: number;   // 使用状态：0-未使用 1-已使用 2-已过期
   enableTime: string;  // 领取后几天内有效
   note?: string;
   code?: string;
@@ -301,10 +302,10 @@ export interface CartUpdateQuantityParams {
   quantity: number;
 }
 
-// 删除购物车商品参数（已废弃，现在直接使用number[]数组）
-// export interface CartDeleteParams {
-//   ids: string; // 逗号分隔的ID字符串
-// }
+// 删除购物车商品参数
+export interface CartDeleteParams {
+  ids: number[];
+}
 
 // ==================== 订单相关 ====================
 
@@ -380,6 +381,9 @@ export interface Order {
   modifyTime?: string;
   orderItemList: OrderItem[];
 }
+
+// 订单详情（与Order相同）
+export type OrderDetail = Order;
 
 // 确认订单信息
 export interface ConfirmOrderResult {

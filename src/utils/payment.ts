@@ -1,5 +1,6 @@
 import { mall } from '@/api'
-import type { CommonResult, AlipayParams, PaymentQueryParams, PaymentStatus } from '@/api/mall/types'
+import type { CommonResult, AlipayParams, PaymentQueryParams } from '@/api/mall/types'
+import { PaymentStatus } from '@/api/mall/types'
 
 // 定义订单详情类型
 interface OrderDetail {

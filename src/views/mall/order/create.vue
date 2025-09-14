@@ -310,7 +310,7 @@ const loadAvailableCoupons = async () => {
       // memberCouponList 返回的是 MemberCoupon[] 数组
       availableCoupons.value = response.data || []
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('加载优惠券失败:', error)
     console.error('错误状态码:', error.response?.status)
     console.error('错误响应数据:', error.response?.data)

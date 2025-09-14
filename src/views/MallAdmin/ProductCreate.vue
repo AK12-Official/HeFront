@@ -372,8 +372,8 @@ const handleSubmit = async () => {
         const params: ProductCreateParams = {
             name: form.name,
             productSn: form.productSn,
-            productCategoryId: form.productCategoryId,
-            brandId: form.brandId,
+            productCategoryId: form.productCategoryId || undefined,
+            brandId: form.brandId || undefined,
             subTitle: form.subTitle,
             description: form.description,
             pic: form.pic,

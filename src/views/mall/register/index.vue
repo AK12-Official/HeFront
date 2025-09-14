@@ -74,6 +74,8 @@ const registerForm = reactive({
     username: '',
     password: '',
     confirmPassword: '',
+    telephone: '',
+    authCode: '',
     icon: ''
 })
 
@@ -114,6 +116,8 @@ const handleRegister = async () => {
                 const registerParams: SsoRegisterParams = {
                     username: registerForm.username,
                     password: registerForm.password,
+                    telephone: registerForm.telephone,
+                    authCode: registerForm.authCode,
                     icon: registerForm.icon
                 }
 

@@ -125,7 +125,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Loading, Clock, CircleCheck, CircleClose } from '@element-plus/icons-vue'
 import { orderDetail, orderPaySuccess } from '@/api/mall'
-import type { CommonResult, PayType } from '@/api/mall/types'
+import type { CommonResult } from '@/api/mall/types'
+import { PayType } from '@/api/mall/types'
 import { PaymentUtils } from '@/utils/payment'
 
 interface OrderInfo {

@@ -65,7 +65,8 @@ export interface AdminInfo {
 // 管理员菜单
 export interface AdminMenu {
   id: number;
-  parentId: number;
+  parentId?: number;
+  createTime: string;
   title: string;
   level: number;
   sort: number;
@@ -173,6 +174,7 @@ export interface ProductUpdateInfo {
   subjectProductRelationList: unknown[];
   prefrenceAreaProductRelationList: unknown[];
   productAttributeValueList: unknown[];
+  albumPics?: string;
 }
 
 // 后台商品信息
@@ -361,10 +363,10 @@ export interface AdminRole {
   id: number;
   name: string;
   description?: string;
-  adminCount?: number;
+  adminCount: number;
   createTime: string;
   status: number; // 0->禁用；1->启用
-  sort?: number;
+  sort: number;
 }
 
 // 角色创建/更新参数
@@ -401,6 +403,7 @@ export interface AdminResource {
   url: string;
   description?: string;
   categoryId: number;
+  icon?: string;
 }
 
 // 资源创建/更新参数
@@ -432,18 +435,7 @@ export interface AdminResourceCategoryParams {
   sort?: number;
 }
 
-// 菜单
-export interface AdminMenu {
-  id: number;
-  parentId?: number;
-  createTime: string;
-  title: string;
-  level: number;
-  sort: number;
-  name: string;
-  icon?: string;
-  hidden: number; // 0->显示；1->隐藏
-}
+// 菜单（已在上方定义，此处删除重复定义）
 
 // 菜单节点（带子菜单）
 export interface AdminMenuNode extends AdminMenu {
@@ -642,16 +634,7 @@ export interface OrderNoteUpdateParams {
 
 // ==================== 角色管理相关 ====================
 
-// 角色信息
-export interface AdminRole {
-  id: number;
-  name: string;
-  description?: string;
-  adminCount: number;
-  createTime?: string;
-  status: number;
-  sort: number;
-}
+// 角色信息（已在上方定义，此处删除重复定义）
 
 // 角色创建/更新参数
 export interface AdminRoleCreateParams {

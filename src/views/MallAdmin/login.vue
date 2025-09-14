@@ -6,7 +6,7 @@
                     <el-icon class="logo-icon" size="32">
                         <ShoppingCart />
                     </el-icon>
-                    <h1 class="title">MallLite 后台管理</h1>
+                    <h1 class="title">爱心商城 后台管理</h1>
                 </div>
                 <p class="subtitle">管理员登录</p>
             </div>
@@ -90,8 +90,13 @@ import { ElMessage } from 'element-plus';
 import { ShoppingCart } from '@element-plus/icons-vue';
 import { malladmin } from '@/api';
 import type { AdminLoginParams, AdminRegisterParams } from '@/api/malladmin/types';
+import useMallUserStore from '@/store/modules/mallUser';
+import useUserStore from '@/store/modules/user';
+import { clearAllUserData } from '@/utils/logout';
 
 const router = useRouter();
+const mallUserStore = useMallUserStore();
+const userStore = useUserStore();
 
 // 响应式数据
 const loginLoading = ref(false);
@@ -157,14 +162,20 @@ const handleLogin = async () => {
         await loginFormRef.value.validate();
         loginLoading.value = true;
 
+        // 在登录前清除前台用户信息
+        mallUserStore.mallLogout();
+        userStore.userLogout();
+        clearAllUserData();
+
         const result = await malladmin.login(loginForm);
 
         if (result.code === 200) {
-            // 保存token
+            // 保存管理员token
             localStorage.setItem('admin_token', result.data.token);
 
             ElMessage.success('登录成功');
-            router.push('/mall/admin');
+            // 使用replace避免返回登录页
+            router.replace('/mall/admin');
         } else {
             ElMessage.error(result.message || '登录失败');
         }
@@ -206,16 +217,9 @@ const handleRegister = async () => {
     }
 };
 
-// 检查是否已登录
-const checkLogin = () => {
-    const token = localStorage.getItem('admin_token');
-    if (token) {
-        router.push('/mall/admin');
-    }
-};
-
+// 登录页面不需要检查登录状态，路由守卫已经处理了
 onMounted(() => {
-    checkLogin();
+    // 页面加载完成
 });
 </script>
 

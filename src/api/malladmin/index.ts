@@ -24,6 +24,9 @@ import type {
     ProductBatchStatusParams,
     ProductCategory,
     ProductCategoryCreateParams,
+    ProductCategoryWithChildren,
+    ProductAttributeCategory,
+    ProductAttributeCategoryItem,
     AdminOrderListParams,
     AdminOrder,
     OrderBatchDeliveryParams,
@@ -38,11 +41,21 @@ import type {
     AdminRoleMenuParams,
     AdminRoleResourceParams,
     AdminResource,
-    AdminResourceCreateParams,
     AdminResourceListParams,
     FileUploadResponse,
     MinioDeleteParams,
     OssSignResponse,
+    ReturnApplyListParams,
+    AdminReturnApply,
+    ReturnApplyHandleParams,
+    ReturnApplyBatchHandleParams,
+    // 用户管理相关类型
+    AdminUser,
+    AdminUserCreateParams,
+    AdminUserUpdateParams,
+    AdminPasswordUpdateParams,
+    AdminUserRoleParams,
+    AdminRoleParams,
 } from "./types";
 
 // ==================== 认证授权接口 ====================
@@ -144,6 +157,97 @@ export const updateAdminRole = (params: AdminRoleUpdateParams): Promise<AdminCom
 export const getAdminRoleList = (adminId: number): Promise<AdminCommonResult<AdminRole[]>> => {
     return adminRequest.get(`/admin/role/${adminId}`);
 };
+
+// ==================== 角色管理接口 ====================
+
+/**
+ * 创建角色
+ */
+export const createRole = (params: AdminRoleParams): Promise<AdminCommonResult<number>> => {
+    return adminRequest.post('/role/create', params);
+};
+
+/**
+ * 批量删除角色
+ */
+export const batchDeleteRole = (ids: number[]): Promise<AdminCommonResult<number>> => {
+    return adminRequest.post('/role/delete', null, {
+        params: { ids: ids.join(',') }
+    });
+};
+
+/**
+ * 更新角色
+ */
+export const updateRole = (id: number, params: AdminRoleParams): Promise<AdminCommonResult<number>> => {
+    return adminRequest.post(`/role/update/${id}`, params);
+};
+
+/**
+ * 批量删除角色
+ */
+
+/**
+ * 获取所有角色
+ */
+export const getAllRoles = (): Promise<AdminCommonResult<AdminRole[]>> => {
+    return adminRequest.get('/role/listAll');
+};
+
+/**
+ * 分页查询角色列表
+ */
+export const getRoleList = (params: { keyword?: string; pageNum?: number; pageSize?: number } = {}): Promise<AdminCommonResult<AdminPageResult<AdminRole>>> => {
+    const { pageNum = 1, pageSize = 5, keyword } = params;
+    return adminRequest.get('/role/list', {
+        params: { pageNum, pageSize, keyword }
+    });
+};
+
+/**
+ * 修改角色状态
+ */
+export const updateRoleStatus = (id: number, status: number): Promise<AdminCommonResult<number>> => {
+    return adminRequest.post(`/role/updateStatus/${id}`, null, {
+        params: { status }
+    });
+};
+
+/**
+ * 获取角色相关菜单
+ */
+export const getRoleMenus = (roleId: number): Promise<AdminCommonResult<any[]>> => {
+    return adminRequest.get(`/role/listMenu/${roleId}`);
+};
+
+/**
+ * 获取角色相关资源
+ */
+export const getRoleResources = (roleId: number): Promise<AdminCommonResult<AdminResource[]>> => {
+    return adminRequest.get(`/role/listResource/${roleId}`);
+};
+
+/**
+ * 给角色分配菜单
+ */
+export const allocRoleMenus = (roleId: number, menuIds: number[]): Promise<AdminCommonResult<number>> => {
+    return adminRequest.post('/role/allocMenu', null, {
+        params: { roleId, menuIds: menuIds.join(',') }
+    });
+};
+
+/**
+ * 给角色分配资源
+ */
+export const allocRoleResources = (roleId: number, resourceIds: number[]): Promise<AdminCommonResult<number>> => {
+    return adminRequest.post('/role/allocResource', null, {
+        params: { roleId, resourceIds: resourceIds.join(',') }
+    });
+};
+
+
+
+
 
 // ==================== 商品管理接口 ====================
 
@@ -283,6 +387,90 @@ export const getProductCategoryById = (id: number): Promise<AdminCommonResult<Pr
     return adminRequest.get(`/productCategory/${id}`);
 };
 
+/**
+ * 批量修改导航栏显示状态
+ */
+export const updateProductCategoryNavStatus = (ids: number[], navStatus: number): Promise<AdminCommonResult<number>> => {
+    return adminRequest.post('/productCategory/update/navStatus', null, {
+        params: {
+            ids: ids.join(','),
+            navStatus
+        }
+    });
+};
+
+/**
+ * 批量修改显示状态
+ */
+export const updateProductCategoryShowStatus = (ids: number[], showStatus: number): Promise<AdminCommonResult<number>> => {
+    return adminRequest.post('/productCategory/update/showStatus', null, {
+        params: {
+            ids: ids.join(','),
+            showStatus
+        }
+    });
+};
+
+/**
+ * 查询所有一级分类及子分类
+ */
+export const getProductCategoryListWithChildren = (): Promise<AdminCommonResult<ProductCategoryWithChildren[]>> => {
+    return adminRequest.get('/productCategory/list/withChildren');
+};
+
+// ==================== 商品属性管理接口 ====================
+
+
+// ==================== 商品属性分类管理接口 ====================
+
+/**
+ * 获取商品属性分类列表
+ */
+export const getProductAttributeCategoryList = (pageNum: number = 1, pageSize: number = 5): Promise<AdminCommonResult<AdminPageResult<ProductAttributeCategory>>> => {
+    return adminRequest.get('/productAttribute/category/list', {
+        params: { pageNum, pageSize }
+    });
+};
+
+/**
+ * 创建商品属性分类
+ */
+export const createProductAttributeCategory = (name: string): Promise<AdminCommonResult<number>> => {
+    return adminRequest.post('/productAttribute/category/create', null, {
+        params: { name }
+    });
+};
+
+/**
+ * 更新商品属性分类
+ */
+export const updateProductAttributeCategory = (id: number, name: string): Promise<AdminCommonResult<number>> => {
+    return adminRequest.post(`/productAttribute/category/update/${id}`, null, {
+        params: { name }
+    });
+};
+
+/**
+ * 删除商品属性分类
+ */
+export const deleteProductAttributeCategory = (id: number): Promise<AdminCommonResult<number>> => {
+    return adminRequest.get(`/productAttribute/category/delete/${id}`);
+};
+
+/**
+ * 获取商品属性分类详情
+ */
+export const getProductAttributeCategoryById = (id: number): Promise<AdminCommonResult<ProductAttributeCategory>> => {
+    return adminRequest.get(`/productAttribute/category/${id}`);
+};
+
+/**
+ * 获取所有商品属性分类及其下属性
+ */
+export const getProductAttributeCategoryListWithAttr = (): Promise<AdminCommonResult<ProductAttributeCategoryItem[]>> => {
+    return adminRequest.get('/productAttribute/category/list/withAttr');
+};
+
 // ==================== 订单管理接口 ====================
 
 /**
@@ -361,48 +549,24 @@ export const updateOrderNote = (params: OrderNoteUpdateParams): Promise<AdminCom
 /**
  * 添加角色
  */
-export const createRole = (params: AdminRoleCreateParams): Promise<AdminCommonResult<number>> => {
-    return adminRequest.post('/role/create', params);
-};
 
 /**
  * 修改角色
  */
-export const updateRole = (id: number, params: AdminRoleCreateParams): Promise<AdminCommonResult<number>> => {
-    return adminRequest.post(`/role/update/${id}`, params);
-};
 
 /**
  * 批量删除角色
  */
-export const batchDeleteRole = (ids: number[]): Promise<AdminCommonResult<number>> => {
-    return adminRequest.post('/role/delete', null, {
-        params: { ids: ids.join(',') }
-    });
-};
 
 /**
  * 获取所有角�? */
-export const getAllRoleList = (): Promise<AdminCommonResult<AdminRole[]>> => {
-    return adminRequest.get('/role/listAll');
-};
 
 /**
  * 分页获取角色列表
  */
-export const getRoleList = (pageNum: number = 1, pageSize: number = 5, keyword?: string): Promise<AdminCommonResult<AdminPageResult<AdminRole>>> => {
-    return adminRequest.get('/role/list', {
-        params: { pageNum, pageSize, keyword }
-    });
-};
 
 /**
  * 修改角色状�? */
-export const updateRoleStatus = (id: number, params: AdminRoleStatusParams): Promise<AdminCommonResult<number>> => {
-    return adminRequest.post(`/role/updateStatus/${id}`, null, {
-        params: { status: params.status }
-    });
-};
 
 /**
  * 给角色分配菜�? */
@@ -431,46 +595,31 @@ export const allocRoleResource = (params: AdminRoleResourceParams): Promise<Admi
 /**
  * 添加资源
  */
-export const createResource = (params: AdminResourceCreateParams): Promise<AdminCommonResult<number>> => {
-    return adminRequest.post('/resource/create', params);
-};
 
 /**
  * 修改资源
  */
-export const updateResource = (id: number, params: AdminResourceCreateParams): Promise<AdminCommonResult<number>> => {
-    return adminRequest.post(`/resource/update/${id}`, params);
-};
 
 /**
  * 根据ID获取资源详情
  */
-export const getResourceById = (id: number): Promise<AdminCommonResult<AdminResource>> => {
-    return adminRequest.get(`/resource/${id}`);
-};
 
 /**
  * 根据ID删除资源
  */
-export const deleteResource = (id: number): Promise<AdminCommonResult<number>> => {
-    return adminRequest.post(`/resource/delete/${id}`);
-};
 
 /**
  * 分页查询资源
  */
-export const getResourceList = (params: AdminResourceListParams = {}): Promise<AdminCommonResult<AdminPageResult<AdminResource>>> => {
-    const { pageNum = 1, pageSize = 5, ...rest } = params;
-    return adminRequest.get('/resource/list', {
-        params: { pageNum, pageSize, ...rest }
-    });
-};
 
 /**
  * 查询所有资�? */
 export const getAllResourceList = (): Promise<AdminCommonResult<AdminResource[]>> => {
     return adminRequest.get('/resource/listAll');
 };
+
+// ==================== Dashboard接口 ====================
+// 注意：后端暂未提供Dashboard统计接口，以下接口保留用于未来扩展
 
 // ==================== 文件上传接口 ====================
 
@@ -516,6 +665,81 @@ export const getOssPolicy = (): Promise<AdminCommonResult<OssSignResponse>> => {
     return adminRequest.get('/aliyun/oss/policy');
 };
 
+// ==================== 退货申请管理相关 ====================
+
+/**
+ * 获取退货申请列表
+ */
+export const getReturnApplyList = (params: ReturnApplyListParams): Promise<AdminCommonResult<AdminPageResult<AdminReturnApply>>> => {
+    return adminRequest.get('/returnApply/list', {
+        params
+    });
+};
+
+/**
+ * 获取退货申请详情
+ */
+export const getReturnApplyDetail = (id: number): Promise<AdminCommonResult<AdminReturnApply>> => {
+    return adminRequest.get(`/returnApply/${id}`);
+};
+
+/**
+ * 处理退货申请
+ */
+export const handleReturnApply = (params: ReturnApplyHandleParams): Promise<AdminCommonResult<unknown>> => {
+    const { id, ...bodyParams } = params;
+    return adminRequest.post(`/returnApply/update/status/${id}`, bodyParams);
+};
+
+/**
+ * 批量处理退货申请
+ * 由于后端没有批量处理接口，循环调用单个处理接口
+ */
+export const batchHandleReturnApply = async (params: ReturnApplyBatchHandleParams): Promise<AdminCommonResult<unknown>> => {
+    const { ids, status, handleNote } = params;
+    const results = [];
+
+    for (const id of ids) {
+        try {
+            const result = await handleReturnApply({
+                id,
+                status,
+                handleNote
+            });
+            results.push(result);
+        } catch (error) {
+            console.error(`处理退货申请 ${id} 失败:`, error);
+            results.push({ code: 500, message: `处理退货申请 ${id} 失败` });
+        }
+    }
+
+    // 检查是否所有请求都成功
+    const successCount = results.filter(r => r.code === 200).length;
+    const totalCount = results.length;
+
+    if (successCount === totalCount) {
+        return { code: 200, message: `成功处理 ${successCount} 个退货申请`, data: null };
+    } else {
+        return { code: 500, message: `处理完成，成功 ${successCount}/${totalCount} 个`, data: null };
+    }
+};
+
+/**
+ * 删除退货申请
+ */
+export const deleteReturnApply = (id: number): Promise<AdminCommonResult<unknown>> => {
+    return adminRequest.post(`/returnApply/delete/${id}`);
+};
+
+/**
+ * 批量删除退货申请
+ */
+export const batchDeleteReturnApply = (ids: number[]): Promise<AdminCommonResult<unknown>> => {
+    return adminRequest.post('/returnApply/delete', null, {
+        params: { ids: ids.join(',') }
+    });
+};
+
 // 默认导出
 export default {
     // 认证授权
@@ -553,6 +777,18 @@ export default {
     getProductCategoryList,
     deleteProductCategory,
     getProductCategoryById,
+    updateProductCategoryNavStatus,
+    updateProductCategoryShowStatus,
+    getProductCategoryListWithChildren,
+
+    // 商品属性管理
+    // 商品属性分类管理
+    getProductAttributeCategoryList,
+    createProductAttributeCategory,
+    updateProductAttributeCategory,
+    deleteProductAttributeCategory,
+    getProductAttributeCategoryById,
+    getProductAttributeCategoryListWithAttr,
 
     // 订单管理
     getOrderList,
@@ -568,23 +804,28 @@ export default {
     createRole,
     updateRole,
     batchDeleteRole,
-    getAllRoleList,
+    getAllRoles,
     getRoleList,
     updateRoleStatus,
-    allocRoleMenu,
-    allocRoleResource,
+    getRoleMenus,
+    getRoleResources,
+    allocRoleMenus,
+    allocRoleResources,
 
-    // 资源管理
-    createResource,
-    updateResource,
-    getResourceById,
-    deleteResource,
-    getResourceList,
-    getAllResourceList,
+
+    // Dashboard - 后端暂未提供相关接口
 
     // 文件上传
     uploadFileToMinio,
     deleteFileFromMinio,
     uploadFileToOss,
     getOssPolicy,
+
+    // 退货申请管理
+    getReturnApplyList,
+    getReturnApplyDetail,
+    handleReturnApply,
+    batchHandleReturnApply,
+    deleteReturnApply,
+    batchDeleteReturnApply,
 };

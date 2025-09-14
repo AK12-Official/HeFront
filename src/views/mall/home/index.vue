@@ -38,9 +38,17 @@
             </div>
           </div>
         </div>
-        <span v-else class="not-logged-in">
-          未登录
-        </span>
+        <div v-else class="not-logged-in">
+          <div class="login-prompt">
+            <el-icon class="login-icon">
+              <User />
+            </el-icon>
+            <span class="login-text">请先登录</span>
+            <el-button type="primary" size="small" @click="goToLogin">
+              立即登录
+            </el-button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -223,7 +231,8 @@ import {
   TrendCharts,
   MagicStick,
   ArrowRight,
-  Loading
+  Loading,
+  User
 } from '@element-plus/icons-vue'
 import {
   homeContent,
@@ -462,6 +471,11 @@ const goToHotProducts = () => {
   router.push('/mall/product/list?type=hot')
 }
 
+// 跳转到登录页
+const goToLogin = () => {
+  router.push('/mall/login')
+}
+
 // 图片加载错误处理
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement
@@ -585,7 +599,49 @@ onUnmounted(() => {
     }
 
     .not-logged-in {
-      color: #f56c6c;
+      .login-prompt {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #f56c6c, #f78989);
+        border-radius: 20px;
+        color: white;
+        box-shadow: 0 2px 8px rgba(245, 108, 108, 0.3);
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(245, 108, 108, 0.4);
+        }
+
+        .login-icon {
+          font-size: 16px;
+        }
+
+        .login-text {
+          font-size: 14px;
+          font-weight: 500;
+        }
+
+        .el-button {
+          background: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: white;
+          font-size: 12px;
+          padding: 4px 12px;
+          height: 28px;
+          border-radius: 14px;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+          }
+        }
+      }
     }
   }
 }

@@ -44,7 +44,8 @@
                         <img :src="item.productPic" :alt="item.productName" class="product-image" />
                         <div class="product-info">
                             <h4 class="product-name">{{ item.productName }}</h4>
-                            <p class="product-attr" v-if="item.productAttr">{{ item.productAttr }}</p>
+                            <p class="product-attr" v-if="item.productAttr">{{ formatProductAttr(item.productAttr) }}
+                            </p>
                             <div class="product-price-quantity">
                                 <span class="price">¥{{ item.productPrice }}</span>
                                 <span class="quantity">x{{ item.productQuantity }}</span>
@@ -242,6 +243,24 @@ const formatTime = (time: string): string => {
     if (!time) return ''
     const date = new Date(time)
     return date.toLocaleString('zh-CN')
+}
+
+// 格式化商品属性
+const formatProductAttr = (attr: string): string => {
+    if (!attr) return ''
+
+    try {
+        // 尝试解析JSON格式的属性
+        const attrs = JSON.parse(attr)
+        if (Array.isArray(attrs)) {
+            return attrs.map(item => `${item.key}: ${item.value}`).join(', ')
+        }
+    } catch (error) {
+        // 如果不是JSON格式，直接返回原字符串
+        console.warn('商品属性不是有效的JSON格式:', attr)
+    }
+
+    return attr
 }
 
 // 加载订单详情

@@ -37,6 +37,16 @@
 
                 <el-table-column prop="id" label="ID" width="80" />
 
+                <el-table-column label="头像" width="80">
+                    <template #default="{ row }">
+                        <el-avatar :src="row.icon" :size="40">
+                            <el-icon>
+                                <User />
+                            </el-icon>
+                        </el-avatar>
+                    </template>
+                </el-table-column>
+
                 <el-table-column prop="username" label="用户名" min-width="120">
                     <template #default="{ row }">
                         <el-tag>{{ row.username }}</el-tag>
@@ -46,6 +56,12 @@
                 <el-table-column prop="nickName" label="昵称" min-width="120" />
 
                 <el-table-column prop="email" label="邮箱" min-width="180" />
+
+                <el-table-column prop="note" label="备注" min-width="150">
+                    <template #default="{ row }">
+                        <span class="note-text" :title="row.note">{{ row.note || '无' }}</span>
+                    </template>
+                </el-table-column>
 
                 <el-table-column prop="status" label="状态" width="100">
                     <template #default="{ row }">
@@ -67,10 +83,13 @@
                     </template>
                 </el-table-column>
 
-                <el-table-column label="操作" width="200" fixed="right">
+                <el-table-column label="操作" width="280" fixed="right">
                     <template #default="{ row }">
                         <el-button type="primary" size="small" @click="handleEdit(row)">
                             编辑
+                        </el-button>
+                        <el-button type="info" size="small" @click="handleRoleAssign(row)">
+                            分配角色
                         </el-button>
                         <el-button :type="row.status === 1 ? 'warning' : 'success'" size="small"
                             @click="handleStatusChange(row)">
@@ -111,6 +130,10 @@
                     <el-input v-model="editForm.nickName" placeholder="请输入昵称" />
                 </el-form-item>
 
+                <el-form-item label="头像" prop="icon">
+                    <el-input v-model="editForm.icon" placeholder="请输入头像URL" />
+                </el-form-item>
+
                 <el-form-item label="备注" prop="note">
                     <el-input v-model="editForm.note" type="textarea" placeholder="请输入备注" :rows="3" />
                 </el-form-item>
@@ -119,6 +142,45 @@
             <template #footer>
                 <el-button @click="handleEditCancel">取消</el-button>
                 <el-button type="primary" @click="handleEditConfirm" :loading="editLoading">
+                    确定
+                </el-button>
+            </template>
+        </el-dialog>
+
+        <!-- 角色分配对话框 -->
+        <el-dialog v-model="showRoleDialog" title="分配角色" width="500px" :close-on-click-modal="false">
+            <div class="role-assign-content">
+                <div class="user-info">
+                    <el-avatar :src="currentUser.icon" :size="50">
+                        <el-icon>
+                            <User />
+                        </el-icon>
+                    </el-avatar>
+                    <div class="user-details">
+                        <h4>{{ currentUser.username }}</h4>
+                        <p>{{ currentUser.nickName }}</p>
+                    </div>
+                </div>
+
+                <el-divider />
+
+                <div class="role-selection">
+                    <h4>选择角色：</h4>
+                    <el-checkbox-group v-model="selectedRoleIds" @change="handleRoleChange">
+                        <el-checkbox v-for="role in allRoles" :key="role.id" :label="role.id"
+                            :disabled="role.status === 0">
+                            {{ role.name }}
+                            <el-tag v-if="role.status === 0" type="info" size="small" style="margin-left: 8px;">
+                                已禁用
+                            </el-tag>
+                        </el-checkbox>
+                    </el-checkbox-group>
+                </div>
+            </div>
+
+            <template #footer>
+                <el-button @click="showRoleDialog = false">取消</el-button>
+                <el-button type="primary" @click="handleRoleConfirm" :loading="roleLoading">
                     确定
                 </el-button>
             </template>
@@ -140,17 +202,22 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search, Plus } from '@element-plus/icons-vue';
 import { malladmin } from '@/api';
-import type { Admin, AdminListParams, AdminUpdateParams, AdminRegisterParams } from '@/api/malladmin/types';
+import type { Admin, AdminListParams, AdminUpdateParams, AdminRegisterParams, AdminRole, AdminUserRoleParams } from '@/api/malladmin/types';
 
 // 响应式数据
 const loading = ref(false);
 const editLoading = ref(false);
 const showEditDialog = ref(false);
+const showRoleDialog = ref(false);
+const roleLoading = ref(false);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
 const tableData = ref<Admin[]>([]);
 const selectedRows = ref<Admin[]>([]);
+const allRoles = ref<AdminRole[]>([]);
+const selectedRoleIds = ref<number[]>([]);
+const currentUser = ref<Admin>({} as Admin);
 
 // 表单引用
 const editFormRef = ref();
@@ -167,6 +234,7 @@ const editForm = reactive<Partial<Admin & AdminRegisterParams>>({
     password: '',
     email: '',
     nickName: '',
+    icon: '',
     note: ''
 });
 
@@ -256,6 +324,7 @@ const resetEditForm = () => {
     editForm.password = '';
     editForm.email = '';
     editForm.nickName = '';
+    editForm.icon = '';
     editForm.note = '';
 };
 
@@ -264,6 +333,7 @@ const handleEdit = (row: Admin) => {
     editForm.username = row.username;
     editForm.email = row.email;
     editForm.nickName = row.nickName;
+    editForm.icon = row.icon || '';
     editForm.note = row.note || '';
     showEditDialog.value = true;
 };
@@ -288,6 +358,7 @@ const handleEditConfirm = async () => {
                 username: editForm.username!,
                 email: editForm.email!,
                 nickName: editForm.nickName!,
+                icon: editForm.icon,
                 note: editForm.note
             };
 
@@ -407,8 +478,69 @@ const formatTime = (time: string) => {
     return new Date(time).toLocaleString('zh-CN');
 };
 
+// 角色分配相关方法
+const loadAllRoles = async () => {
+    try {
+        const result = await malladmin.getAllRoles();
+        if (result.code === 200) {
+            allRoles.value = result.data;
+        }
+    } catch (error) {
+        console.error('加载角色列表失败:', error);
+    }
+};
+
+const handleRoleAssign = async (row: Admin) => {
+    currentUser.value = row;
+    selectedRoleIds.value = [];
+
+    try {
+        // 获取用户当前角色
+        const result = await malladmin.getAdminRoleList(row.id);
+        if (result.code === 200) {
+            selectedRoleIds.value = result.data.map(role => role.id);
+        }
+    } catch (error) {
+        console.error('获取用户角色失败:', error);
+    }
+
+    showRoleDialog.value = true;
+};
+
+const handleRoleChange = (value: number[]) => {
+    selectedRoleIds.value = value;
+};
+
+const handleRoleConfirm = async () => {
+    if (!currentUser.value.id) return;
+
+    try {
+        roleLoading.value = true;
+
+        const params: AdminUserRoleParams = {
+            adminId: currentUser.value.id,
+            roleIds: selectedRoleIds.value
+        };
+
+        const result = await malladmin.updateAdminRole(params);
+
+        if (result.code === 200) {
+            ElMessage.success('角色分配成功');
+            showRoleDialog.value = false;
+        } else {
+            ElMessage.error(result.message || '角色分配失败');
+        }
+    } catch (error) {
+        console.error('角色分配失败:', error);
+        ElMessage.error('角色分配失败');
+    } finally {
+        roleLoading.value = false;
+    }
+};
+
 onMounted(() => {
     loadData();
+    loadAllRoles();
 });
 </script>
 
@@ -458,6 +590,58 @@ onMounted(() => {
         border-radius: 8px;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         z-index: 1000;
+    }
+
+    .note-text {
+        color: #606266;
+        font-size: 12px;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+    }
+
+    .role-assign-content {
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+
+            .user-details {
+                h4 {
+                    margin: 0 0 4px 0;
+                    font-size: 16px;
+                    font-weight: 600;
+                }
+
+                p {
+                    margin: 0;
+                    color: #666;
+                    font-size: 14px;
+                }
+            }
+        }
+
+        .role-selection {
+            h4 {
+                margin: 0 0 16px 0;
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+            .el-checkbox-group {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+
+                .el-checkbox {
+                    display: flex;
+                    align-items: center;
+                }
+            }
+        }
     }
 }
 

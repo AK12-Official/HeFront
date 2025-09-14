@@ -241,7 +241,7 @@ const loadUserInfo = async () => {
     // 检查用户是否已登录
     const mallUserStore = useMallUserStore()
     if (!mallUserStore.isLoggedIn) {
-      ElMessage.warning('请先登录')
+      // 未登录时直接跳转到登录页，不显示提示
       router.push('/mall/login')
       return
     }

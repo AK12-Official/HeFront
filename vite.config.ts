@@ -39,102 +39,67 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       proxy: {
-        // 默认API代理
-        [env.VITE_APP_API_URL]: {
-          target: env.VITE_SERVE,
+        // 后台管理API代理 - 使用/ht前缀
+        '/ht': {
+          target: env.VITE_MALL_ADMIN_URL,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
+          rewrite: (path) => path.replace(/^\/ht/, ''),
           configure: (proxy, options) => {
             // 记录代理请求
             proxy.on('proxyReq', (proxyReq, req, res) => {
               const fullTargetUrl = `${options.target}${req.url}`;
-              console.log('\x1b[34m%s\x1b[0m', '------- 代理请求信息 -------');
+              console.log('\x1b[34m%s\x1b[0m', '------- 后台管理代理请求 -------');
               console.log('\x1b[36m%s\x1b[0m', `原始请求: ${req.method} ${req.url}`);
               console.log('\x1b[32m%s\x1b[0m', `转发到: ${fullTargetUrl}`);
-
-              // 记录请求头信息
-              console.log('\x1b[33m%s\x1b[0m', '请求头:');
-              Object.keys(proxyReq.getHeaders()).forEach(key => {
-                console.log(`  ${key}: ${proxyReq.getHeader(key)}`);
-              });
+              console.log('\x1b[33m%s\x1b[0m', `目标服务器: ${options.target}`);
             });
 
             // 记录代理响应
             proxy.on('proxyRes', (proxyRes, req, res) => {
-              console.log('\x1b[34m%s\x1b[0m', '------- 代理响应信息 -------');
+              console.log('\x1b[34m%s\x1b[0m', '------- 后台管理代理响应 -------');
               console.log('\x1b[36m%s\x1b[0m', `请求: ${req.method} ${req.url}`);
               console.log('\x1b[35m%s\x1b[0m', `状态码: ${proxyRes.statusCode}`);
-              console.log('\x1b[33m%s\x1b[0m', `内容类型: ${proxyRes.headers['content-type'] || '未知'}`);
             });
 
             // 记录代理错误
             proxy.on('error', (err, req, res) => {
-              console.log('\x1b[31m%s\x1b[0m', '------- 代理错误 -------');
+              console.log('\x1b[31m%s\x1b[0m', '------- 后台管理代理错误 -------');
               console.log('\x1b[31m%s\x1b[0m', `请求失败: ${req.method} ${req.url}`);
               console.log('\x1b[31m%s\x1b[0m', `错误: ${err.message}`);
-
-              // 尝试创建目标URL
-              try {
-                if (typeof options.target === 'string') {
-                  //@ts-expect-error：类型限定 不管他先
-                  const targetUrl = new URL(req.url, options.target);
-                  console.log('\x1b[31m%s\x1b[0m', `尝试访问: ${targetUrl.toString()}`);
-                } else {
-                  console.log('\x1b[31m%s\x1b[0m', `无法构建目标URL: options.target 未定义`);
-                }
-              } catch (e) {
-                console.log('\x1b[31m%s\x1b[0m', `无法构建目标URL`);
-              }
+              console.log('\x1b[31m%s\x1b[0m', `目标服务器: ${options.target}`);
             });
           }
         },
-        // 电商管理后台API代理
-        '/api/admin': {
-          target: env.VITE_MALL_ADMIN_URL,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api\/admin/, '/admin'),
-        },
-        // 电商搜索功能API代理
-        '/api/esProduct': {
-          target: env.VITE_MALL_SEARCH_URL,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
-        },
-        // 电商前台门户API代理
-        '/api/cart': {
+        // 前台门户API代理 - 使用/qt前缀
+        '/qt': {
           target: env.VITE_MALL_PORTAL_URL,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
-        },
-        '/api/order': {
-          target: env.VITE_MALL_PORTAL_URL,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
-        },
-        '/api/member': {
-          target: env.VITE_MALL_PORTAL_URL,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
-        },
-        '/api/alipay': {
-          target: env.VITE_MALL_PORTAL_URL,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
-        },
-        '/api/product': {
-          target: env.VITE_MALL_PORTAL_URL,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
-        },
-        '/api/home': {
-          target: env.VITE_MALL_PORTAL_URL,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
-        },
-        '/api/returnApply': {
-          target: env.VITE_MALL_PORTAL_URL,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
+          rewrite: (path) => path.replace(/^\/qt/, ''),
+          configure: (proxy, options) => {
+            // 记录代理请求
+            proxy.on('proxyReq', (proxyReq, req, res) => {
+              const fullTargetUrl = `${options.target}${req.url}`;
+              console.log('\x1b[34m%s\x1b[0m', '------- 前台门户代理请求 -------');
+              console.log('\x1b[36m%s\x1b[0m', `原始请求: ${req.method} ${req.url}`);
+              console.log('\x1b[32m%s\x1b[0m', `转发到: ${fullTargetUrl}`);
+              console.log('\x1b[33m%s\x1b[0m', `目标服务器: ${options.target}`);
+            });
+
+            // 记录代理响应
+            proxy.on('proxyRes', (proxyRes, req, res) => {
+              console.log('\x1b[34m%s\x1b[0m', '------- 前台门户代理响应 -------');
+              console.log('\x1b[36m%s\x1b[0m', `请求: ${req.method} ${req.url}`);
+              console.log('\x1b[35m%s\x1b[0m', `状态码: ${proxyRes.statusCode}`);
+            });
+
+            // 记录代理错误
+            proxy.on('error', (err, req, res) => {
+              console.log('\x1b[31m%s\x1b[0m', '------- 前台门户代理错误 -------');
+              console.log('\x1b[31m%s\x1b[0m', `请求失败: ${req.method} ${req.url}`);
+              console.log('\x1b[31m%s\x1b[0m', `错误: ${err.message}`);
+              console.log('\x1b[31m%s\x1b[0m', `目标服务器: ${options.target}`);
+            });
+          }
         },
         // 腾讯位置服务API代理
         '/tx-api': {

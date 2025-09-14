@@ -5,6 +5,7 @@
 import { defineStore } from "pinia";
 import { ref, watch, computed } from "vue";
 import { setMallToken, getMallToken, removeMallToken, clearAllMallTokens } from "@/utils/mallAuth";
+import { clearAllUserData } from "@/utils/logout";
 import { ssoRefreshToken } from "@/api/sso";
 // import { ElMessage } from "element-plus";
 
@@ -150,9 +151,6 @@ const useMallUserStore = defineStore('MallUser', () => {
     };
 
     const mallLogout = () => {
-        // 清除所有电商系统token
-        clearAllMallTokens();
-
         // 重置状态
         state.value.accessToken = null;
         state.value.refreshToken = null;
@@ -160,6 +158,9 @@ const useMallUserStore = defineStore('MallUser', () => {
         state.value.username = null;
         state.value.memberId = null;
         state.value.userInfo = null;
+
+        // 使用统一的清理函数清除所有用户数据
+        clearAllUserData();
     };
 
     // 刷新token

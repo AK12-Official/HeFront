@@ -149,6 +149,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
+import { malladmin } from '@/api'
+import type { ProductCategory } from '@/api/malladmin/types'
 
 interface Category {
   id: number
@@ -223,86 +225,14 @@ const parentOptions = ref<Category[]>([])
 const fetchCategories = async () => {
   loading.value = true
   try {
-    // 这里应该调用实际的API
-    const mockData: Category[] = [
-      {
-        id: 1,
-        parentId: 0,
-        name: '手机通讯',
-        level: 0,
-        productCount: 150,
-        productUnit: '部',
-        navStatus: 1,
-        showStatus: 1,
-        sort: 100,
-        icon: '',
-        children: [
-          {
-            id: 101,
-            parentId: 1,
-            name: '智能手机',
-            level: 1,
-            productCount: 120,
-            productUnit: '部',
-            navStatus: 1,
-            showStatus: 1,
-            sort: 100
-          },
-          {
-            id: 102,
-            parentId: 1,
-            name: '手机配件',
-            level: 1,
-            productCount: 30,
-            productUnit: '个',
-            navStatus: 1,
-            showStatus: 1,
-            sort: 90
-          }
-        ]
-      },
-      {
-        id: 2,
-        parentId: 0,
-        name: '电脑办公',
-        level: 0,
-        productCount: 80,
-        productUnit: '台',
-        navStatus: 1,
-        showStatus: 1,
-        sort: 95,
-        icon: '',
-        children: [
-          {
-            id: 201,
-            parentId: 2,
-            name: '笔记本电脑',
-            level: 1,
-            productCount: 50,
-            productUnit: '台',
-            navStatus: 1,
-            showStatus: 1,
-            sort: 100
-          },
-          {
-            id: 202,
-            parentId: 2,
-            name: '台式机',
-            level: 1,
-            productCount: 30,
-            productUnit: '台',
-            navStatus: 1,
-            showStatus: 1,
-            sort: 90
-          }
-        ]
-      }
-    ]
-
-    categoryList.value = mockData
-
-    // 获取父级分类选项（只包含一级分类）
-    parentOptions.value = mockData.filter(item => item.level === 0)
+    // 调用真实API获取分类列表
+    const result = await malladmin.getProductCategoryList(0, 1, 100)
+    if (result.code === 200) {
+      categoryList.value = result.data.list
+      parentOptions.value = result.data.list.filter(item => item.level === 0)
+    } else {
+      ElMessage.error(result.message || '获取分类列表失败')
+    }
   } catch (error) {
     console.error('获取分类列表失败:', error)
     ElMessage.error('获取分类列表失败')
@@ -448,12 +378,21 @@ const handleSubmit = async () => {
       console.log('创建分类:', form)
     }
 
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 调用真实API
+    let result
+    if (form.id) {
+      result = await malladmin.updateProductCategory(form.id, form)
+    } else {
+      result = await malladmin.createProductCategory(form)
+    }
 
-    ElMessage.success(form.id ? '更新成功' : '创建成功')
-    dialogVisible.value = false
-    fetchCategories()
+    if (result.code === 200) {
+      ElMessage.success(form.id ? '更新成功' : '创建成功')
+      dialogVisible.value = false
+      fetchCategories()
+    } else {
+      ElMessage.error(result.message || '操作失败')
+    }
   } catch (error) {
     console.error('操作失败:', error)
   } finally {

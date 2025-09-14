@@ -101,6 +101,7 @@ export interface AdminUpdateParams {
   username: string;
   email: string;
   nickName: string;
+  icon?: string;
   note?: string;
 }
 
@@ -158,6 +159,8 @@ export interface ProductListParams extends AdminPageParams {
   productSn?: string;
   productCategoryId?: number;
   brandId?: number;
+  brandName?: string;
+  categoryName?: string;
 }
 
 // 商品详细信息（用于编辑）
@@ -204,6 +207,12 @@ export interface AdminProduct {
   serviceIds?: string;
   keywords?: string;
   note?: string;
+  sale?: number;
+  brandName?: string;
+  productCategoryName?: string;
+  albumPics?: string;
+  detailHtml?: string;
+  detailMobileHtml?: string;
   createTime?: string;
   updateTime?: string;
 }
@@ -261,6 +270,228 @@ export interface ProductCategoryCreateParams {
   icon?: string;
   keywords?: string;
   description?: string;
+}
+
+// 商品分类（带子分类）
+export interface ProductCategoryWithChildren {
+  id: number;
+  parentId: number;
+  name: string;
+  level: number;
+  productCount: number;
+  productUnit: string;
+  navStatus: number;
+  showStatus: number;
+  sort: number;
+  icon?: string;
+  keywords?: string;
+  description?: string;
+  children?: ProductCategoryWithChildren[];
+}
+
+// ==================== 商品属性分类管理相关 ====================
+
+// 商品属性分类
+export interface ProductAttributeCategory {
+  id: number;
+  name: string;
+  attributeCount: number;
+  paramCount: number;
+}
+
+// 商品属性分类项（带属性）
+export interface ProductAttributeCategoryItem {
+  id: number;
+  name: string;
+  attributeCount: number;
+  paramCount: number;
+  attributeList: unknown[];
+}
+
+// ==================== 用户管理相关 ====================
+
+// 管理员用户
+export interface AdminUser {
+  id: number;
+  username: string;
+  password?: string;
+  icon?: string;
+  email?: string;
+  nickName?: string;
+  note?: string;
+  createTime: string;
+  loginTime?: string;
+  status: number; // 0->禁用；1->启用
+}
+
+// 管理员用户创建参数
+export interface AdminUserCreateParams {
+  username: string;
+  password: string;
+  icon?: string;
+  email?: string;
+  nickName?: string;
+  note?: string;
+}
+
+// 管理员用户更新参数
+export interface AdminUserUpdateParams {
+  icon?: string;
+  email?: string;
+  nickName?: string;
+  note?: string;
+  status?: number;
+}
+
+// 修改密码参数
+export interface AdminPasswordUpdateParams {
+  username: string;
+  oldPassword: string;
+  newPassword: string;
+}
+
+// 用户角色分配参数
+export interface AdminUserRoleParams {
+  adminId: number;
+  roleIds: number[];
+}
+
+// 角色
+export interface AdminRole {
+  id: number;
+  name: string;
+  description?: string;
+  adminCount?: number;
+  createTime: string;
+  status: number; // 0->禁用；1->启用
+  sort?: number;
+}
+
+// 角色创建/更新参数
+export interface AdminRoleParams {
+  name: string;
+  description?: string;
+  status?: number;
+  sort?: number;
+}
+
+// 角色状态更新参数
+export interface AdminRoleStatusParams {
+  id: number;
+  status: number;
+}
+
+// 角色菜单分配参数
+export interface AdminRoleMenuParams {
+  roleId: number;
+  menuIds: number[];
+}
+
+// 角色资源分配参数
+export interface AdminRoleResourceParams {
+  roleId: number;
+  resourceIds: number[];
+}
+
+// 资源
+export interface AdminResource {
+  id: number;
+  createTime: string;
+  name: string;
+  url: string;
+  description?: string;
+  categoryId: number;
+}
+
+// 资源创建/更新参数
+export interface AdminResourceParams {
+  name: string;
+  url: string;
+  description?: string;
+  categoryId: number;
+}
+
+// 资源查询参数
+export interface AdminResourceListParams extends AdminPageParams {
+  categoryId?: number;
+  nameKeyword?: string;
+  urlKeyword?: string;
+}
+
+// 资源分类
+export interface AdminResourceCategory {
+  id: number;
+  createTime: string;
+  name: string;
+  sort?: number;
+}
+
+// 资源分类创建/更新参数
+export interface AdminResourceCategoryParams {
+  name: string;
+  sort?: number;
+}
+
+// 菜单
+export interface AdminMenu {
+  id: number;
+  parentId?: number;
+  createTime: string;
+  title: string;
+  level: number;
+  sort: number;
+  name: string;
+  icon?: string;
+  hidden: number; // 0->显示；1->隐藏
+}
+
+// 菜单节点（带子菜单）
+export interface AdminMenuNode extends AdminMenu {
+  children?: AdminMenuNode[];
+}
+
+// 菜单创建/更新参数
+export interface AdminMenuParams {
+  parentId?: number;
+  title: string;
+  level: number;
+  sort: number;
+  name: string;
+  icon?: string;
+  hidden?: number;
+}
+
+// 菜单查询参数
+export interface AdminMenuListParams extends AdminPageParams {
+  parentId: number;
+}
+
+// 菜单状态更新参数
+export interface AdminMenuStatusParams {
+  id: number;
+  hidden: number;
+}
+
+// 会员等级
+export interface AdminMemberLevel {
+  id: number;
+  name: string;
+  growthPoint?: number;
+  defaultStatus?: number;
+  freeFreightPoint?: number;
+  commentGrowthPoint?: number;
+  privilegeFreeFreight?: number;
+  privilegeSignIn?: number;
+  privilegeComment?: number;
+  privilegePromotion?: number;
+  privilegeMemberPrice?: number;
+  privilegeBirthday?: number;
+  note?: string;
+}
+
+// 会员等级查询参数
+export interface AdminMemberLevelListParams {
+  defaultStatus: number;
 }
 
 // ==================== 订单管理相关 ====================
@@ -448,32 +679,6 @@ export interface AdminRoleResourceParams {
   resourceIds: number[];
 }
 
-// ==================== 资源管理相关 ====================
-
-// 资源信息
-export interface AdminResource {
-  id: number;
-  createTime?: string;
-  name: string;
-  url: string;
-  description?: string;
-  categoryId?: number;
-}
-
-// 资源创建/更新参数
-export interface AdminResourceCreateParams {
-  name: string;
-  url: string;
-  description?: string;
-  categoryId?: number;
-}
-
-// 资源查询参数
-export interface AdminResourceListParams extends AdminPageParams {
-  categoryId?: number;
-  nameKeyword?: string;
-  urlKeyword?: string;
-}
 
 // ==================== 文件上传相关 ====================
 
@@ -482,6 +687,101 @@ export interface FileUploadResponse {
   url: string;
   name: string;
 }
+
+// ==================== 菜单相关 ====================
+
+// 菜单项
+export interface MenuItem {
+  id: number;
+  parentId: number;
+  createTime: string;
+  title: string;
+  level: number;
+  sort: number;
+  name: string;
+  icon: string;
+  hidden: number;
+  children?: MenuItem[];
+}
+
+// 菜单节点（用于树形结构）
+export interface MenuNode extends MenuItem {
+  children?: MenuNode[];
+}
+
+// 用户信息（包含菜单）
+export interface AdminInfoWithMenus {
+  username: string;
+  menus: MenuItem[];
+  icon: string;
+  roles: string[];
+}
+
+// ==================== 退货申请管理相关 ====================
+
+// 退货申请查询参数
+export interface ReturnApplyListParams extends AdminPageParams {
+  id?: number;
+  orderSn?: string;
+  status?: number;
+  handleMan?: string;
+  createTime?: string;
+  handleTime?: string;
+}
+
+// 后台退货申请信息
+export interface AdminReturnApply {
+  id: number;
+  orderId: number;
+  orderSn: string;
+  memberId: number;
+  memberUsername: string;
+  productId: number;
+  productName: string;
+  productPic?: string;
+  productBrand?: string;
+  productAttr?: string;
+  productCount: number;
+  productPrice: number;
+  productRealPrice: number;
+  returnAmount: number;
+  returnName: string;
+  returnPhone: string;
+  status: number;
+  reason: string;
+  description?: string;
+  proofPics?: string;
+  handleNote?: string;
+  handleMan?: string;
+  handleTime?: string;
+  receiveMan?: string;
+  receiveTime?: string;
+  receiveNote?: string;
+  createTime: string;
+  modifyTime?: string;
+}
+
+// 退货申请处理参数
+export interface ReturnApplyHandleParams {
+  id: number;
+  status: number;
+  companyAddressId?: number;
+  returnAmount?: number;
+  handleNote?: string;
+  handleMan?: string;
+  receiveMan?: string;
+  receiveNote?: string;
+}
+
+// 批量处理退货申请参数
+export interface ReturnApplyBatchHandleParams {
+  ids: number[];
+  status: number;
+  handleNote?: string;
+}
+
+// ==================== Dashboard相关 ====================
+// 注意：后端暂未提供Dashboard统计接口，以下类型定义保留用于未来扩展
 
 // MinIO删除参数
 export interface MinioDeleteParams {

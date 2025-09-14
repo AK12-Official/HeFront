@@ -140,75 +140,121 @@ export const Routes = [
   },
   // 后台管理系统路由
   {
+    path: '/mall/admin/test',
+    component: () => import('@/views/MallAdmin/test-login.vue'),
+    name: 'admin-test',
+  },
+  {
     path: '/mall/admin/login',
     component: () => import('@/views/MallAdmin/login.vue'),
     name: 'admin-login',
   },
   {
     path: '/mall/admin',
+    name: 'admin',
     component: () => import('@/views/MallAdmin/layout.vue'),
     redirect: '/mall/admin/dashboard',
     children: [
       {
         path: 'dashboard',
+        name: 'AdminDashboard',
         component: () => import('@/views/MallAdmin/index.vue'),
-        name: 'admin-dashboard',
-        meta: { title: '仪表盘' }
+        meta: {
+          title: '仪表盘',
+          requiresAuth: true
+        }
       },
       {
-        path: 'users',
-        component: () => import('@/views/MallAdmin/users.vue'),
-        name: 'admin-users',
-        meta: { title: '管理员列表' }
-      },
-      {
-        path: 'products',
+        path: 'pms',
+        name: 'pms',
         component: () => import('@/views/MallAdmin/products.vue'),
-        name: 'admin-products',
-        meta: { title: '商品列表' }
-      },
-      {
-        path: 'orders',
-        component: () => import('@/views/MallAdmin/orders.vue'),
-        name: 'admin-orders',
-        meta: { title: '订单列表' }
+        meta: {
+          title: '商品列表',
+          requiresAuth: true
+        }
       },
       {
         path: 'products/create',
+        name: 'product-create',
         component: () => import('@/views/MallAdmin/ProductCreate.vue'),
-        name: 'admin-product-create',
-        meta: { title: '添加商品' }
+        meta: {
+          title: '添加商品',
+          requiresAuth: true
+        }
       },
       {
         path: 'products/edit/:id',
+        name: 'product-edit',
         component: () => import('@/views/MallAdmin/ProductEdit.vue'),
-        name: 'admin-product-edit',
-        meta: { title: '编辑商品' }
+        meta: {
+          title: '编辑商品',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'product-attribute-categories',
+        name: 'product-attribute-categories',
+        component: () => import('@/views/MallAdmin/product-attribute-categories.vue'),
+        meta: {
+          title: '商品属性分类管理',
+          requiresAuth: true
+        }
       },
       {
         path: 'categories',
+        name: 'categories',
         component: () => import('@/views/MallAdmin/Categories.vue'),
-        name: 'admin-categories',
-        meta: { title: '商品分类' }
+        meta: {
+          title: '商品分类',
+          requiresAuth: true
+        }
       },
       {
-        path: 'upload',
-        component: () => import('@/views/MallAdmin/Upload.vue'),
-        name: 'admin-upload',
-        meta: { title: '文件管理' }
+        path: 'oms',
+        name: 'oms',
+        component: () => import('@/views/MallAdmin/orders.vue'),
+        meta: {
+          title: '订单列表',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'return-applies',
+        name: 'return-applies',
+        component: () => import('@/views/MallAdmin/return-applies.vue'),
+        meta: {
+          title: '退货申请管理',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'ums',
+        name: 'ums',
+        component: () => import('@/views/MallAdmin/users.vue'),
+        meta: {
+          title: '管理员列表',
+          requiresAuth: true
+        }
       },
       {
         path: 'roles',
+        name: 'roles',
         component: () => import('@/views/MallAdmin/Roles.vue'),
-        name: 'admin-roles',
-        meta: { title: '角色管理' }
+        meta: {
+          title: '角色管理',
+          requiresAuth: true
+        }
       },
       {
-        path: 'resources',
-        component: () => import('@/views/MallAdmin/Resources.vue'),
-        name: 'admin-resources',
-        meta: { title: '资源管理' }
+        path: 'upload',
+        name: 'upload',
+        component: () => import('@/views/MallAdmin/Upload.vue'),
+        meta: {
+          title: '文件上传',
+          requiresAuth: true
+        }
       }
+      // 动态路由将在这里添加
     ]
   }
 ]

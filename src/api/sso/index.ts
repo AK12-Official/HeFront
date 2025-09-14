@@ -16,13 +16,13 @@ import type {
 
 // 创建SSO专用的axios实例
 const ssoRequest = axios.create({
-  baseURL: import.meta.env.VITE_APP_API_URL,
+  baseURL: '/qt',
   timeout: 10000
 });
 
 // 创建需要认证的SSO请求实例
 const ssoAuthRequest = axios.create({
-  baseURL: import.meta.env.VITE_APP_API_URL,
+  baseURL: '/qt',
   timeout: 10000
 });
 

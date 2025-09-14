@@ -6,24 +6,75 @@ import router from "@/router";
 
 // 创建电商管理后台请求实例
 export const adminRequest = axios.create({
-    baseURL: import.meta.env.VITE_APP_API_URL + '/admin', // 使用/api/admin前缀
+    baseURL: '/ht', // 使用/ht前缀，通过代理转发到VITE_MALL_ADMIN_URL
     timeout: 5000
 });
 
 // 创建电商搜索功能请求实例
 export const searchRequest = axios.create({
-    baseURL: import.meta.env.VITE_APP_API_URL, // 使用/api前缀
+    baseURL: '/qt/esProduct', // 使用/qt/esProduct前缀，通过代理转发到VITE_MALL_SEARCH_URL
     timeout: 5000
 });
 
 // 创建电商前台门户请求实例
 export const mallRequest = axios.create({
-    baseURL: import.meta.env.VITE_APP_API_URL, // 使用/api前缀
+    baseURL: '/qt', // 使用/qt前缀，通过代理转发到VITE_MALL_PORTAL_URL
     timeout: 10000 // 增加超时时间
 });
 
-// 为所有实例添加请求拦截器
-const requestInstances = [adminRequest, searchRequest, mallRequest];
+// 为管理员请求添加专门的拦截器
+adminRequest.interceptors.request.use((config) => {
+    // 添加管理员token
+    const adminToken = localStorage.getItem('admin_token');
+    if (adminToken) {
+        config.headers.Authorization = `Bearer ${adminToken}`;
+    }
+    return config;
+});
+
+adminRequest.interceptors.response.use((response) => {
+    // 成功回调
+    return response.data;
+}, async (error) => {
+    // 失败回调:处理http网络错误
+    const status = error.response?.status;
+
+    // 处理401错误（管理员token过期）
+    if (status === 401) {
+        // 清除管理员token
+        localStorage.removeItem('admin_token');
+        ElMessage.warning('登录已过期，请重新登录');
+        router.push('/mall/admin/login');
+        return Promise.reject(error);
+    }
+
+    // 处理其他错误
+    let message = '';
+    switch (status) {
+        case 400:
+            message = 'Request Param Wrong'; break;
+        case 401:
+            message = 'Token Expired'; break;
+        case 403:
+            message = 'Permission Denied'; break;
+        case 404:
+            message = 'RequestUrl Error'; break;
+        case 500:
+            message = 'Server Error'; break;
+        case 503:
+            message = 'Service Unavailable'; break;
+        default:
+            message = 'Network Error';
+    }
+
+    // 提示错误信息
+    ElMessage.error(message);
+
+    return Promise.reject(error);
+});
+
+// 为其他实例添加请求拦截器
+const requestInstances = [searchRequest, mallRequest];
 
 requestInstances.forEach(instance => {
     instance.interceptors.request.use((config) => {

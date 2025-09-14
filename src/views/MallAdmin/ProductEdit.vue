@@ -224,6 +224,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
+import { malladmin } from '@/api'
+import type { ProductCreateParams, ProductCategory } from '@/api/malladmin/types'
 
 interface ProductAttributeValue {
     productAttributeId: string
@@ -240,6 +242,7 @@ interface ProductForm {
     pic: string
     albumPics: string
     price: number
+    promotionPrice?: number
     originalPrice: number
     stock: number
     lowStock: number
@@ -251,6 +254,10 @@ interface ProductForm {
     sort: number
     serviceIds: string
     detailDesc: string
+    keywords?: string
+    note?: string
+    verifyStatus?: number
+    previewStatus?: number
     productAttributeValueList: ProductAttributeValue[]
 }
 
@@ -293,6 +300,7 @@ const formData = reactive<ProductForm>({
     pic: '',
     albumPics: '',
     price: 0,
+    promotionPrice: 0,
     originalPrice: 0,
     stock: 0,
     lowStock: 0,
@@ -304,6 +312,10 @@ const formData = reactive<ProductForm>({
     sort: 0,
     serviceIds: '',
     detailDesc: '',
+    keywords: '',
+    note: '',
+    verifyStatus: 0,
+    previewStatus: 1,
     productAttributeValueList: []
 })
 
@@ -345,45 +357,46 @@ const fetchProductDetail = async () => {
     }
 
     try {
-        // 模拟数据
-        const mockProduct = {
-            id: 1,
-            name: 'iPhone 14 Pro',
-            subTitle: '灵动岛，是个好创意',
-            productCategoryId: 19,
-            brandId: 1,
-            description: 'Apple iPhone 14 Pro，搭载A16仿生芯片',
-            pic: '',
-            albumPics: '',
-            price: 7999.00,
-            originalPrice: 8999.00,
-            stock: 100,
-            lowStock: 10,
-            unit: '台',
-            weight: 0.5,
-            publishStatus: 1,
-            newStatus: 1,
-            recommendStatus: 1,
-            sort: 1,
-            serviceIds: '1,2,3',
-            detailDesc: '详细的商品描述信息...',
-            productAttributeValueList: [
-                { productAttributeId: '颜色', value: '深空黑色' },
-                { productAttributeId: '容量', value: '128GB' }
-            ]
+        // 调用真实API获取商品详情
+        const result = await malladmin.getProductUpdateInfo(Number(productId))
+        console.log('API返回结果:', result)
+
+        if (result.code === 200) {
+            // 检查数据结构
+            if (result.data && result.data.product) {
+                const productData = result.data.product
+                console.log('商品数据:', productData)
+
+                // 填充表单数据
+                Object.assign(formData, productData)
+
+                // 处理相册图片
+                if (productData.albumPics) {
+                    galleryFileList.value = productData.albumPics.split(',').map(url => ({ url }))
+                }
+            } else if (result.data) {
+                // 如果直接返回商品数据，而不是包装在product字段中
+                console.log('直接商品数据:', result.data)
+                Object.assign(formData, result.data)
+
+                // 处理相册图片
+                if (result.data.albumPics) {
+                    galleryFileList.value = result.data.albumPics.split(',').map(url => ({ url }))
+                }
+            } else {
+                console.error('API返回数据结构异常:', result)
+                ElMessage.error('API返回数据结构异常')
+                goBack()
+            }
+        } else {
+            ElMessage.error(result.message || '获取商品详情失败')
+            goBack()
         }
 
-        // 填充表单数据
-        Object.assign(formData, mockProduct)
-
-        // 处理相册图片
-        if (mockProduct.albumPics) {
-            galleryFileList.value = mockProduct.albumPics.split(',').map(url => ({ url }))
-        }
-
-    } catch (error) {
+    } catch (error: any) {
         console.error('获取商品详情失败:', error)
-        ElMessage.error('获取商品详情失败')
+        console.error('错误详情:', error.response?.data || error.message)
+        ElMessage.error(`获取商品详情失败: ${error.response?.data?.message || error.message || '未知错误'}`)
     } finally {
         loading.value = false
     }
@@ -392,45 +405,35 @@ const fetchProductDetail = async () => {
 // 获取分类列表
 const fetchCategories = async () => {
     try {
-        // 模拟数据
-        const mockCategories = [
-            {
-                id: 1,
-                name: '服装',
-                children: [
-                    { id: 19, name: '外套' },
-                    { id: 20, name: 'T恤' }
-                ]
-            },
-            {
-                id: 2,
-                name: '手机数码',
-                children: [
-                    { id: 7, name: '手机通讯' },
-                    { id: 8, name: '数码配件' }
-                ]
-            }
-        ]
-        categoryOptions.value = mockCategories
+        // 调用真实API获取分类列表 - 获取所有一级分类及子分类
+        const result = await malladmin.getProductCategoryListWithChildren()
+        console.log('分类数据:', result)
+        if (result.code === 200) {
+            categoryOptions.value = result.data
+        } else {
+            ElMessage.error(result.message || '获取分类列表失败')
+        }
     } catch (error) {
         console.error('获取分类列表失败:', error)
+        ElMessage.error('获取分类列表失败')
     }
 }
 
 // 获取品牌列表
 const fetchBrands = async () => {
     try {
-        // 模拟数据
-        const mockBrands = [
+        // 后端暂未提供品牌列表接口，使用静态数据
+        brandOptions.value = [
             { id: 1, name: '苹果' },
             { id: 2, name: '华为' },
             { id: 3, name: '小米' },
-            { id: 49, name: '优衣库' },
-            { id: 50, name: 'ZARA' }
+            { id: 4, name: '三星' },
+            { id: 5, name: 'OPPO' },
+            { id: 6, name: 'vivo' }
         ]
-        brandOptions.value = mockBrands
     } catch (error) {
         console.error('获取品牌列表失败:', error)
+        ElMessage.error('获取品牌列表失败')
     }
 }
 
@@ -502,14 +505,44 @@ const handleSave = async () => {
 
         saving.value = true
 
-        // 这里应该调用实际的保存API
-        console.log('保存商品数据:', formData)
+        // 准备更新商品的参数
+        const params: ProductCreateParams = {
+            name: formData.name,
+            productSn: formData.productSn || '',
+            productCategoryId: formData.productCategoryId,
+            brandId: formData.brandId,
+            subTitle: formData.subTitle,
+            description: formData.description,
+            pic: formData.pic,
+            price: formData.price,
+            promotionPrice: formData.promotionPrice || 0,
+            originalPrice: formData.originalPrice,
+            stock: formData.stock,
+            lowStock: formData.lowStock,
+            unit: formData.unit,
+            weight: formData.weight,
+            sort: formData.sort,
+            publishStatus: formData.publishStatus,
+            newStatus: formData.newStatus,
+            recommandStatus: formData.recommendStatus,
+            previewStatus: formData.previewStatus || 1,
+            keywords: formData.keywords || '',
+            note: formData.note || '',
+            deleteStatus: 0,
+            verifyStatus: formData.verifyStatus || 0
+        }
 
-        // 模拟请求
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        const productId = route.params.id
+        console.log('更新商品参数:', params)
+        console.log('商品ID:', productId)
+        const result = await malladmin.updateProduct(Number(productId), params)
 
-        ElMessage.success('保存成功')
-        goBack()
+        if (result.code === 200) {
+            ElMessage.success('保存成功')
+            goBack()
+        } else {
+            ElMessage.error(result.message || '保存失败')
+        }
 
     } catch (error) {
         console.error('保存失败:', error)
@@ -521,7 +554,7 @@ const handleSave = async () => {
 
 // 返回
 const goBack = () => {
-    router.push('/mall/admin/products')
+    router.push('/mall/admin/pms')
 }
 
 onMounted(async () => {

@@ -47,47 +47,96 @@
           </el-icon>
         </div>
 
-        <el-menu :default-active="$route.path" :collapse="isCollapsed" :unique-opened="true" router class="admin-menu">
-          <el-sub-menu index="/mall/admin">
-            <template #title>
-              <el-icon>
-                <User />
-              </el-icon>
-              <span>用户管理</span>
-            </template>
-            <el-menu-item index="/mall/admin/users">管理员列表</el-menu-item>
-            <el-menu-item index="/mall/admin/roles">角色管理</el-menu-item>
-            <el-menu-item index="/mall/admin/resources">资源管理</el-menu-item>
-          </el-sub-menu>
+        <el-menu :default-active="currentActiveMenu" :collapse="isCollapsed" :unique-opened="true" router
+          class="admin-menu">
+          <!-- 仪表盘 -->
+          <el-menu-item index="/mall/admin/dashboard">
+            <el-icon>
+              <DataBoard />
+            </el-icon>
+            <span>仪表盘</span>
+          </el-menu-item>
 
-          <el-sub-menu index="/mall/admin/product">
+          <!-- 商品管理模块 -->
+          <el-sub-menu index="product-management">
             <template #title>
               <el-icon>
                 <Goods />
               </el-icon>
               <span>商品管理</span>
             </template>
-            <el-menu-item index="/mall/admin/products">商品列表</el-menu-item>
-            <el-menu-item index="/mall/admin/products/create">添加商品</el-menu-item>
-            <el-menu-item index="/mall/admin/categories">商品分类</el-menu-item>
-          </el-sub-menu>
-
-          <el-sub-menu index="/mall/admin/order">
-            <template #title>
+            <el-menu-item index="/mall/admin/pms">
               <el-icon>
                 <List />
               </el-icon>
-              <span>订单管理</span>
-            </template>
-            <el-menu-item index="/mall/admin/orders">订单列表</el-menu-item>
+              <span>商品列表</span>
+            </el-menu-item>
+            <el-menu-item index="/mall/admin/categories">
+              <el-icon>
+                <Grid />
+              </el-icon>
+              <span>商品分类</span>
+            </el-menu-item>
+            <el-menu-item index="/mall/admin/product-attribute-categories">
+              <el-icon>
+                <Grid />
+              </el-icon>
+              <span>属性分类</span>
+            </el-menu-item>
           </el-sub-menu>
 
-          <!-- <el-menu-item index="/mall/admin/upload">
+          <!-- 订单管理模块 -->
+          <el-sub-menu index="order-management">
+            <template #title>
+              <el-icon>
+                <ShoppingCart />
+              </el-icon>
+              <span>订单管理</span>
+            </template>
+            <el-menu-item index="/mall/admin/oms">
+              <el-icon>
+                <List />
+              </el-icon>
+              <span>订单列表</span>
+            </el-menu-item>
+            <el-menu-item index="/mall/admin/return-applies">
+              <el-icon>
+                <RefreshLeft />
+              </el-icon>
+              <span>退货申请管理</span>
+            </el-menu-item>
+          </el-sub-menu>
+
+
+          <!-- 用户管理模块 -->
+          <el-sub-menu index="user-management">
+            <template #title>
+              <el-icon>
+                <User />
+              </el-icon>
+              <span>用户管理</span>
+            </template>
+            <el-menu-item index="/mall/admin/ums">
+              <el-icon>
+                <User />
+              </el-icon>
+              <span>管理员列表</span>
+            </el-menu-item>
+            <el-menu-item index="/mall/admin/roles">
+              <el-icon>
+                <Setting />
+              </el-icon>
+              <span>角色管理</span>
+            </el-menu-item>
+          </el-sub-menu>
+
+          <!-- 文件上传 -->
+          <el-menu-item index="/mall/admin/upload">
             <el-icon>
               <Upload />
             </el-icon>
-            <span>文件管理</span>
-          </el-menu-item> -->
+            <span>文件上传</span>
+          </el-menu-item>
         </el-menu>
       </div>
 
@@ -141,17 +190,57 @@ import {
   Expand,
   Goods,
   List,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  Upload
+  Upload,
+  Setting,
+  Document,
+  Menu,
+  Grid,
+  DataBoard,
+  Management,
+  Files,
+  Tools,
+  RefreshLeft
 } from '@element-plus/icons-vue';
 import { malladmin } from '@/api';
 import type { AdminInfo } from '@/api/malladmin/types';
+import useMallUserStore from '@/store/modules/mallUser';
+import { usePermission } from '@/composables/usePermission';
+import useUserStore from '@/store/modules/user';
+import { clearAllUserData } from '@/utils/logout';
 
 const router = useRouter();
 const route = useRoute();
+const mallUserStore = useMallUserStore();
+const userStore = useUserStore();
+
+// 权限管理
+const { menuTree, fetchUserMenus } = usePermission();
 
 // 响应式数据
 const isCollapsed = ref(false);
+
+// 图标映射
+const iconMap: Record<string, any> = {
+  'User': User,
+  'Goods': Goods,
+  'List': List,
+  'Upload': Upload,
+  'Setting': Setting,
+  'Document': Document,
+  'Menu': Menu,
+  'Grid': Grid,
+  'DataBoard': DataBoard,
+  'Management': Management,
+  'Files': Files,
+  'Tools': Tools,
+  'ShoppingCart': ShoppingCart,
+  'RefreshLeft': RefreshLeft
+};
+
+// 获取图标组件
+const getIconComponent = (iconName: string) => {
+  return iconMap[iconName] || Document;
+};
 const passwordDialogVisible = ref(false);
 const passwordLoading = ref(false);
 const userInfo = ref<AdminInfo>({
@@ -204,6 +293,20 @@ const breadcrumbs = computed(() => {
   }));
 });
 
+// 当前激活的菜单项
+const currentActiveMenu = computed(() => {
+  const currentPath = route.path;
+  console.log('当前路径:', currentPath);
+
+  // 如果是仪表盘页面
+  if (currentPath === '/mall/admin/dashboard' || currentPath === '/mall/admin') {
+    return '/mall/admin/dashboard';
+  }
+
+  // 其他页面直接返回当前路径
+  return currentPath;
+});
+
 // 方法
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value;
@@ -234,9 +337,12 @@ const handleLogout = async () => {
 
     await malladmin.logout();
 
-    // 清除本地存储的用户信息
-    localStorage.removeItem('admin_token');
-    sessionStorage.removeItem('admin_info');
+    // 重置store状态
+    mallUserStore.mallLogout();
+    userStore.userLogout();
+
+    // 使用统一的清理函数清除所有用户数据
+    clearAllUserData();
 
     ElMessage.success('退出登录成功');
     router.push('/mall/admin/login');
@@ -288,15 +394,24 @@ const loadUserInfo = async () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
+  // 检查是否已登录
+  const token = localStorage.getItem('admin_token');
+  if (!token) {
+    ElMessage.warning('请先登录');
+    router.push('/mall/admin/login');
+    return;
+  }
+
   // 先尝试从缓存获取用户信息
   const cachedInfo = sessionStorage.getItem('admin_info');
   if (cachedInfo) {
     userInfo.value = JSON.parse(cachedInfo);
   }
 
-  // 加载最新的用户信息
-  loadUserInfo();
+  // 加载最新的用户信息和菜单
+  await loadUserInfo();
+  await fetchUserMenus();
 });
 </script>
 

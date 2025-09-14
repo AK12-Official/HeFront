@@ -144,24 +144,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-
-interface Role {
-    id: number
-    name: string
-    description: string
-    adminCount: number
-    status: number
-    createTime: string
-    sort: number
-}
-
-interface RoleForm {
-    id?: number
-    name: string
-    description: string
-    status: number
-    sort: number
-}
+import { malladmin } from '@/api'
+import type { AdminRole, AdminRoleParams, AdminMenu, AdminResource } from '@/api/malladmin/types'
 
 interface SearchForm {
     name: string
@@ -192,7 +176,7 @@ const searchForm = reactive<SearchForm>({
 })
 
 // 表格数据
-const tableData = ref<Role[]>([])
+const tableData = ref<AdminRole[]>([])
 
 // 分页
 const pagination = reactive({
@@ -202,7 +186,7 @@ const pagination = reactive({
 })
 
 // 表单数据
-const formData = reactive<RoleForm>({
+const formData = reactive<AdminRoleParams>({
     name: '',
     description: '',
     status: 1,
@@ -210,7 +194,7 @@ const formData = reactive<RoleForm>({
 })
 
 // 当前角色（用于权限分配）
-const currentRole = ref<Role | null>(null)
+const currentRole = ref<AdminRole | null>(null)
 
 // 已选权限
 const selectedPermissions = ref<number[]>([])
@@ -239,62 +223,27 @@ const rules = {
 const fetchRoles = async () => {
     loading.value = true
     try {
-        // 模拟数据
-        const mockRoles: Role[] = [
-            {
-                id: 1,
-                name: '超级管理员',
-                description: '系统超级管理员，拥有所有权限',
-                adminCount: 1,
-                status: 1,
-                createTime: '2025-08-10 10:00:00',
-                sort: 0
-            },
-            {
-                id: 2,
-                name: '商品管理员',
-                description: '负责商品的增删改查操作',
-                adminCount: 3,
-                status: 1,
-                createTime: '2025-08-10 09:30:00',
-                sort: 1
-            },
-            {
-                id: 3,
-                name: '订单管理员',
-                description: '负责订单的处理和管理',
-                adminCount: 2,
-                status: 1,
-                createTime: '2025-08-10 09:00:00',
-                sort: 2
-            },
-            {
-                id: 4,
-                name: '客服',
-                description: '负责客户服务和售后处理',
-                adminCount: 5,
-                status: 0,
-                createTime: '2025-08-10 08:30:00',
-                sort: 3
+        const params = {
+            pageNum: pagination.current,
+            pageSize: pagination.size,
+            keyword: searchForm.name || undefined
+        }
+
+        const result = await malladmin.getRoleList(params)
+
+        if (result.code === 200) {
+            let filteredRoles = result.data.list
+
+            // 根据状态过滤
+            if (searchForm.status !== null) {
+                filteredRoles = filteredRoles.filter(role => role.status === searchForm.status)
             }
-        ]
 
-        // 根据搜索条件过滤
-        let filteredRoles = mockRoles
-        if (searchForm.name) {
-            filteredRoles = filteredRoles.filter(role =>
-                role.name.includes(searchForm.name)
-            )
+            tableData.value = filteredRoles
+            pagination.total = result.data.total
+        } else {
+            ElMessage.error(result.message || '获取角色列表失败')
         }
-        if (searchForm.status !== null) {
-            filteredRoles = filteredRoles.filter(role => role.status === searchForm.status)
-        }
-
-        pagination.total = filteredRoles.length
-        const start = (pagination.current - 1) * pagination.size
-        const end = start + pagination.size
-        tableData.value = filteredRoles.slice(start, end)
-
     } catch (error) {
         console.error('获取角色列表失败:', error)
         ElMessage.error('获取角色列表失败')
@@ -306,56 +255,38 @@ const fetchRoles = async () => {
 // 获取权限树
 const fetchPermissionTree = async () => {
     try {
-        // 模拟权限树数据
-        const mockPermissions: PermissionNode[] = [
-            {
-                id: 1,
-                name: '商品管理',
-                icon: 'ShoppingCart',
-                children: [
-                    { id: 11, name: '商品列表' },
-                    { id: 12, name: '添加商品' },
-                    { id: 13, name: '编辑商品' },
-                    { id: 14, name: '删除商品' },
-                    { id: 15, name: '商品分类' },
-                    { id: 16, name: '商品品牌' }
-                ]
-            },
-            {
-                id: 2,
-                name: '订单管理',
-                icon: 'Menu',
-                children: [
-                    { id: 21, name: '订单列表' },
-                    { id: 22, name: '订单详情' },
-                    { id: 23, name: '订单发货' },
-                    { id: 24, name: '订单退款' }
-                ]
-            },
-            {
-                id: 3,
-                name: '用户管理',
-                icon: 'User',
-                children: [
-                    { id: 31, name: '用户列表' },
-                    { id: 32, name: '用户详情' },
-                    { id: 33, name: '用户禁用' }
-                ]
-            },
-            {
-                id: 4,
-                name: '系统管理',
-                icon: 'Setting',
-                children: [
-                    { id: 41, name: '角色管理' },
-                    { id: 42, name: '权限管理' },
-                    { id: 43, name: '菜单管理' },
-                    { id: 44, name: '系统设置' }
-                ]
-            }
-        ]
+        // 调用真实API获取权限树数据
+        const result = await malladmin.getAllResourceList()
+        if (result.code === 200) {
+            // 将资源列表转换为权限树结构
+            const resources = result.data
+            const treeMap = new Map()
+            const tree: PermissionNode[] = []
 
-        permissionTree.value = mockPermissions
+            // 构建树形结构
+            resources.forEach(resource => {
+                const node: PermissionNode = {
+                    id: resource.id,
+                    name: resource.name,
+                    icon: resource.icon || 'Setting',
+                    children: []
+                }
+                treeMap.set(resource.id, node)
+            })
+
+            // 建立父子关系
+            resources.forEach(resource => {
+                if (resource.categoryId && treeMap.has(resource.categoryId)) {
+                    treeMap.get(resource.categoryId).children.push(treeMap.get(resource.id))
+                } else {
+                    tree.push(treeMap.get(resource.id))
+                }
+            })
+
+            permissionTree.value = tree
+        } else {
+            ElMessage.error(result.message || '获取权限树失败')
+        }
     } catch (error) {
         console.error('获取权限树失败:', error)
     }
@@ -389,11 +320,17 @@ const handleCurrentChange = (page: number) => {
 }
 
 // 状态变化
-const handleStatusChange = async (row: Role) => {
+const handleStatusChange = async (row: AdminRole) => {
     try {
-        // 这里应该调用实际的API
-        console.log('修改角色状态:', row.id, row.status)
-        ElMessage.success('状态修改成功')
+        const result = await malladmin.updateRoleStatus(row.id, row.status)
+
+        if (result.code === 200) {
+            ElMessage.success('状态修改成功')
+        } else {
+            ElMessage.error(result.message || '状态修改失败')
+            // 恢复原状态
+            row.status = row.status === 1 ? 0 : 1
+        }
     } catch (error) {
         console.error('状态修改失败:', error)
         ElMessage.error('状态修改失败')
@@ -415,14 +352,19 @@ const handleAdd = () => {
 }
 
 // 编辑角色
-const handleEdit = (row: Role) => {
+const handleEdit = (row: AdminRole) => {
     isEdit.value = true
-    Object.assign(formData, row)
+    Object.assign(formData, {
+        name: row.name,
+        description: row.description || '',
+        status: row.status,
+        sort: row.sort || 0
+    })
     dialogVisible.value = true
 }
 
 // 删除角色
-const handleDelete = async (row: Role) => {
+const handleDelete = async (row: AdminRole) => {
     try {
         await ElMessageBox.confirm(
             `确定要删除角色"${row.name}"吗？`,
@@ -434,25 +376,30 @@ const handleDelete = async (row: Role) => {
             }
         )
 
-        // 这里应该调用实际的删除API
-        console.log('删除角色:', row.id)
-
-        ElMessage.success('删除成功')
-        fetchRoles()
+        const result = await malladmin.batchDeleteRole([row.id])
+        if (result.code === 200) {
+            ElMessage.success('删除成功')
+            fetchRoles()
+        } else {
+            ElMessage.error(result.message || '删除失败')
+        }
     } catch {
         // 用户取消操作
     }
 }
 
 // 分配权限
-const handlePermission = async (row: Role) => {
+const handlePermission = async (row: AdminRole) => {
     currentRole.value = row
 
     // 获取角色已有权限
     try {
-        // 模拟已分配的权限
-        const mockSelectedPermissions = [11, 12, 13, 21, 22, 31]
-        selectedPermissions.value = mockSelectedPermissions
+        const result = await malladmin.getRoleMenus(row.id)
+        if (result.code === 200) {
+            selectedPermissions.value = result.data.map(menu => menu.id)
+        } else {
+            selectedPermissions.value = []
+        }
     } catch (error) {
         console.error('获取角色权限失败:', error)
         selectedPermissions.value = []
@@ -468,15 +415,31 @@ const handleSubmit = async () => {
 
         submitting.value = true
 
-        // 这里应该调用实际的API
-        console.log('保存角色:', formData)
+        // 调用真实API保存角色
+        let result
+        if (isEdit.value) {
+            // 编辑角色 - 需要获取当前编辑的角色ID
+            const currentRoleId = tableData.value.find(role =>
+                role.name === formData.name && role.description === formData.description
+            )?.id
 
-        // 模拟请求
-        await new Promise(resolve => setTimeout(resolve, 1000))
+            if (currentRoleId) {
+                result = await malladmin.updateRole(currentRoleId, formData)
+            } else {
+                ElMessage.error('无法找到要编辑的角色')
+                return
+            }
+        } else {
+            result = await malladmin.createRole(formData)
+        }
 
-        ElMessage.success(isEdit.value ? '编辑成功' : '添加成功')
-        dialogVisible.value = false
-        fetchRoles()
+        if (result.code === 200) {
+            ElMessage.success(isEdit.value ? '编辑成功' : '添加成功')
+            dialogVisible.value = false
+            fetchRoles()
+        } else {
+            ElMessage.error(result.message || '操作失败')
+        }
 
     } catch (error) {
         console.error('操作失败:', error)
@@ -495,14 +458,15 @@ const handlePermissionSubmit = async () => {
         const halfCheckedKeys = permissionTreeRef.value?.getHalfCheckedKeys() || []
         const allCheckedKeys = [...checkedKeys, ...halfCheckedKeys]
 
-        // 这里应该调用实际的API
-        console.log('分配权限:', currentRole.value?.id, allCheckedKeys)
+        // 调用真实API分配权限
+        const result = await malladmin.allocRoleMenus(currentRole.value!.id, allCheckedKeys)
 
-        // 模拟请求
-        await new Promise(resolve => setTimeout(resolve, 1000))
-
-        ElMessage.success('权限分配成功')
-        permissionDialogVisible.value = false
+        if (result.code === 200) {
+            ElMessage.success('权限分配成功')
+            permissionDialogVisible.value = false
+        } else {
+            ElMessage.error(result.message || '权限分配失败')
+        }
 
     } catch (error) {
         console.error('权限分配失败:', error)

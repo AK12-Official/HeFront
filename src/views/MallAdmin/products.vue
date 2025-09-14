@@ -27,6 +27,34 @@
             </el-select>
           </el-form-item>
 
+          <el-form-item label="品牌">
+            <el-input v-model="searchForm.brandName" placeholder="请输入品牌名称" clearable style="width: 150px" />
+          </el-form-item>
+
+          <el-form-item label="分类">
+            <el-input v-model="searchForm.categoryName" placeholder="请输入分类名称" clearable style="width: 150px" />
+          </el-form-item>
+
+          <el-form-item label="推荐状态">
+            <el-select v-model="searchForm.recommendStatus" placeholder="全部" clearable style="width: 120px">
+              <el-option label="推荐" :value="1" />
+              <el-option label="不推荐" :value="0" />
+            </el-select>
+          </el-form-item>
+
+          <el-form-item label="新品状态">
+            <el-select v-model="searchForm.newStatus" placeholder="全部" clearable style="width: 120px">
+              <el-option label="新品" :value="1" />
+              <el-option label="非新品" :value="0" />
+            </el-select>
+          </el-form-item>
+
+          <el-form-item label="价格范围">
+            <el-input v-model="searchForm.minPrice" placeholder="最低价" clearable style="width: 100px" />
+            <span style="margin: 0 8px;">-</span>
+            <el-input v-model="searchForm.maxPrice" placeholder="最高价" clearable style="width: 100px" />
+          </el-form-item>
+
           <el-form-item>
             <el-button type="primary" @click="handleSearch" :loading="loading">
               <el-icon>
@@ -88,6 +116,24 @@
             <el-tag :type="row.stock <= (row.lowStock || 10) ? 'danger' : 'success'">
               {{ row.stock }}
             </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="sale" label="销量" width="100">
+          <template #default="{ row }">
+            <span class="sale-count">{{ row.sale || 0 }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="brandName" label="品牌" width="120">
+          <template #default="{ row }">
+            <span class="brand-name">{{ row.brandName || '无' }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="productCategoryName" label="分类" width="120">
+          <template #default="{ row }">
+            <span class="category-name">{{ row.productCategoryName || '无' }}</span>
           </template>
         </el-table-column>
 
@@ -156,6 +202,10 @@
         <el-button type="success" @click="handleBatchPublish">批量上架</el-button>
         <el-button type="warning" @click="handleBatchUnpublish">批量下架</el-button>
         <el-button type="info" @click="handleBatchRecommend">批量推荐</el-button>
+        <el-button type="info" @click="handleBatchUnrecommend">取消推荐</el-button>
+        <el-button type="danger" @click="handleBatchNew">设为新品</el-button>
+        <el-button type="warning" @click="handleBatchUnnew">取消新品</el-button>
+        <el-button type="primary" @click="handleBatchVerify">批量审核</el-button>
         <el-button type="danger" @click="handleBatchDelete">批量删除</el-button>
       </div>
     </div>
@@ -181,26 +231,42 @@ const tableData = ref<AdminProduct[]>([]);
 const selectedRows = ref<AdminProduct[]>([]);
 
 // 搜索表单
-const searchForm = reactive<ProductListParams>({
+const searchForm = reactive({
   keyword: '',
   productSn: '',
-  publishStatus: undefined,
-  verifyStatus: undefined
+  publishStatus: undefined as number | undefined,
+  verifyStatus: undefined as number | undefined,
+  brandName: '',
+  categoryName: '',
+  recommendStatus: undefined as number | undefined,
+  newStatus: undefined as number | undefined,
+  minPrice: '',
+  maxPrice: ''
 });
 
 // 方法
 const loadData = async () => {
   loading.value = true;
   try {
-    const params: ProductListParams = {
+    const params = {
       pageNum: currentPage.value,
       pageSize: pageSize.value,
-      ...searchForm
+      keyword: searchForm.keyword,
+      productSn: searchForm.productSn,
+      publishStatus: searchForm.publishStatus,
+      verifyStatus: searchForm.verifyStatus,
+      brandName: searchForm.brandName,
+      categoryName: searchForm.categoryName,
+      recommendStatus: searchForm.recommendStatus,
+      newStatus: searchForm.newStatus,
+      minPrice: searchForm.minPrice ? Number(searchForm.minPrice) : undefined,
+      maxPrice: searchForm.maxPrice ? Number(searchForm.maxPrice) : undefined
     };
 
     const result = await malladmin.getProductList(params);
 
     if (result.code === 200) {
+      console.log('商品列表数据:', result.data.list);
       tableData.value = result.data.list;
       total.value = result.data.total;
     } else {
@@ -224,6 +290,12 @@ const handleReset = () => {
   searchForm.productSn = '';
   searchForm.publishStatus = undefined;
   searchForm.verifyStatus = undefined;
+  searchForm.brandName = '';
+  searchForm.categoryName = '';
+  searchForm.recommendStatus = undefined;
+  searchForm.newStatus = undefined;
+  searchForm.minPrice = '';
+  searchForm.maxPrice = '';
   currentPage.value = 1;
   loadData();
 };
@@ -244,6 +316,8 @@ const handleSelectionChange = (rows: AdminProduct[]) => {
 };
 
 const handleEdit = (row: AdminProduct) => {
+  console.log('编辑商品:', row);
+  console.log('商品ID:', row.id);
   router.push(`/mall/admin/products/edit/${row.id}`);
 };
 
@@ -318,6 +392,54 @@ const handleBatchUnpublish = async () => {
 
 const handleBatchRecommend = async () => {
   await handleBatchStatusUpdate('recommendStatus', 1, '推荐');
+};
+
+const handleBatchUnrecommend = async () => {
+  await handleBatchStatusUpdate('recommendStatus', 0, '取消推荐');
+};
+
+const handleBatchNew = async () => {
+  await handleBatchStatusUpdate('newStatus', 1, '设为新品');
+};
+
+const handleBatchUnnew = async () => {
+  await handleBatchStatusUpdate('newStatus', 0, '取消新品');
+};
+
+const handleBatchVerify = async () => {
+  try {
+    const productNames = selectedRows.value.map(row => row.name).join('、');
+    await ElMessageBox.confirm(
+      `确定要批量审核通过选中的 ${selectedRows.value.length} 个商品吗？商品名：${productNames}`,
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    );
+
+    const params: ProductBatchStatusParams = {
+      ids: selectedRows.value.map(row => row.id),
+      verifyStatus: 1,
+      detail: '批量审核通过'
+    };
+
+    const result = await malladmin.updateProductVerifyStatus(params);
+
+    if (result.code === 200) {
+      ElMessage.success('批量审核成功');
+      selectedRows.value = [];
+      loadData();
+    } else {
+      ElMessage.error(result.message || '批量审核失败');
+    }
+  } catch (error: unknown) {
+    if (error !== 'cancel') {
+      console.error('批量审核失败:', error);
+      ElMessage.error('批量审核失败');
+    }
+  }
 };
 
 const handleBatchDelete = async () => {
@@ -456,6 +578,17 @@ onMounted(() => {
       font-weight: 600;
       color: #e6a23c;
       font-size: 14px;
+    }
+
+    .sale-count {
+      color: #606266;
+      font-weight: 500;
+    }
+
+    .brand-name,
+    .category-name {
+      color: #606266;
+      font-size: 12px;
     }
   }
 

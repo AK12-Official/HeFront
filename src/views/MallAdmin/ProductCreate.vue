@@ -198,6 +198,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
+import { malladmin } from '@/api'
+import type { ProductCreateParams, ProductCategory } from '@/api/malladmin/types'
 
 interface Category {
     id: number
@@ -285,27 +287,15 @@ const albumPicList = ref([])
 // 获取分类列表
 const fetchCategories = async () => {
     try {
-        // 这里应该调用实际的API
-        categoryOptions.value = [
-            {
-                id: 1,
-                name: '手机通讯',
-                children: [
-                    { id: 101, name: '智能手机' },
-                    { id: 102, name: '手机配件' }
-                ]
-            },
-            {
-                id: 2,
-                name: '电脑办公',
-                children: [
-                    { id: 201, name: '笔记本电脑' },
-                    { id: 202, name: '台式机' }
-                ]
-            }
-        ]
+        const result = await malladmin.getProductCategoryList(0, 1, 100)
+        if (result.code === 200) {
+            categoryOptions.value = result.data.list
+        } else {
+            ElMessage.error(result.message || '获取分类列表失败')
+        }
     } catch (error) {
         console.error('获取分类列表失败:', error)
+        ElMessage.error('获取分类列表失败')
     }
 }
 
@@ -378,14 +368,41 @@ const handleSubmit = async () => {
 
         submitting.value = true
 
-        // 这里应该调用实际的创建商品API
-        console.log('创建商品:', form)
+        // 准备创建商品的参数
+        const params: ProductCreateParams = {
+            name: form.name,
+            productSn: form.productSn,
+            productCategoryId: form.productCategoryId,
+            brandId: form.brandId,
+            subTitle: form.subTitle,
+            description: form.description,
+            pic: form.pic,
+            price: form.price,
+            promotionPrice: form.promotionPrice,
+            originalPrice: form.originalPrice,
+            stock: form.stock,
+            lowStock: form.lowStock,
+            unit: form.unit,
+            weight: form.weight,
+            sort: form.sort,
+            publishStatus: form.publishStatus,
+            newStatus: form.newStatus,
+            recommandStatus: form.recommandStatus,
+            previewStatus: form.previewStatus,
+            keywords: form.keywords,
+            note: form.note,
+            deleteStatus: form.deleteStatus,
+            verifyStatus: form.verifyStatus
+        }
 
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        const result = await malladmin.createProduct(params)
 
-        ElMessage.success('商品创建成功')
-        router.push('/mall/admin/products')
+        if (result.code === 200) {
+            ElMessage.success('商品创建成功')
+            router.push('/mall/admin/pms')
+        } else {
+            ElMessage.error(result.message || '商品创建失败')
+        }
     } catch (error) {
         console.error('创建商品失败:', error)
         ElMessage.error('创建商品失败')
@@ -405,7 +422,7 @@ const handleBack = () => {
             type: 'warning'
         }
     ).then(() => {
-        router.push('/mall/admin/products')
+        router.push('/mall/admin/pms')
     }).catch(() => {
         // 取消操作
     })

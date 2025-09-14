@@ -9,6 +9,8 @@ import pinia from "./store";
 // 导入所有图标
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import useMallUserStore from '@/store/modules/mallUser';
+// 导入权限指令
+import { permission } from '@/directives/permission';
 
 const app = createApp(App);
 app.use(pinia)
@@ -22,6 +24,9 @@ app.use(router) //安装路由器对象
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
+
+// 注册权限指令
+app.directive('permission', permission);
 
 // 启动token刷新检查
 const mallUserStore = useMallUserStore();

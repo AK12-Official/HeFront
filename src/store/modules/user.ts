@@ -4,6 +4,7 @@ import { defineStore } from "pinia";
 import { ref, watch, computed } from "vue";
 import type { UserState } from "./types/types";
 import { setToken, getToken, removeToken, clearAllTokens } from "@/utils/auth";
+import { clearAllUserData } from "@/utils/logout";
 import type { LoginCodeParams, LoginPasswordParams } from "@/api/auth/types";
 
 const useUserStore = defineStore('User', () => {
@@ -212,13 +213,8 @@ const useUserStore = defineStore('User', () => {
       state.value.nickname = undefined;
       state.value.desc = undefined;
 
-      // 清除localStorage
-      clearAllTokens();
-      localStorage.removeItem('userId');
-      localStorage.removeItem('userPhone');
-      localStorage.removeItem('userNickname');
-      localStorage.removeItem('userDesc');
-      localStorage.removeItem('userScore');
+      // 使用统一的清理函数清除所有用户数据
+      clearAllUserData();
     }
   };
 

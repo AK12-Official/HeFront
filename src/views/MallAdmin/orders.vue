@@ -41,6 +41,12 @@
                         </el-icon>
                         重置
                     </el-button>
+                    <el-button type="info" @click="goToReturnApplies">
+                        <el-icon>
+                            <RefreshLeft />
+                        </el-icon>
+                        退货申请管理
+                    </el-button>
                 </el-form-item>
             </el-form>
         </div>
@@ -62,11 +68,16 @@
                     </template>
                 </el-table-column>
 
-                <el-table-column label="金额信息" width="150">
+                <el-table-column label="金额信息" width="200">
                     <template #default="{ row }">
                         <div class="amount-info">
                             <div class="total-amount">总额：¥{{ row.totalAmount }}</div>
                             <div class="pay-amount">实付：¥{{ row.payAmount }}</div>
+                            <div v-if="row.promotionAmount > 0" class="promotion-amount">优惠：¥{{ row.promotionAmount }}
+                            </div>
+                            <div v-if="row.couponAmount > 0" class="coupon-amount">券减：¥{{ row.couponAmount }}</div>
+                            <div v-if="row.integrationAmount > 0" class="integration-amount">积分：¥{{
+                                row.integrationAmount }}</div>
                         </div>
                     </template>
                 </el-table-column>
@@ -91,6 +102,14 @@
                     </template>
                 </el-table-column>
 
+                <el-table-column prop="payType" label="支付方式" width="100">
+                    <template #default="{ row }">
+                        <el-tag :type="getPayTypeType(row.payType)" size="small">
+                            {{ getPayTypeText(row.payType) }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+
                 <el-table-column label="物流信息" width="150">
                     <template #default="{ row }">
                         <div v-if="row.deliveryCompany || row.deliverySn" class="delivery-info">
@@ -107,7 +126,7 @@
                     </template>
                 </el-table-column>
 
-                <el-table-column label="操作" width="200" fixed="right">
+                <el-table-column label="操作" min-width="200" fixed="right">
                     <template #default="{ row }">
                         <el-button type="primary" size="small" @click="handleViewDetail(row)">
                             详情
@@ -168,7 +187,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Search, Refresh } from '@element-plus/icons-vue';
+import { Search, Refresh, RefreshLeft } from '@element-plus/icons-vue';
 import { malladmin } from '@/api';
 import type { AdminOrder, AdminOrderListParams, OrderCloseParams } from '@/api/malladmin/types';
 
@@ -434,6 +453,24 @@ const getStatusText = (status: number) => {
     return textMap[status] || '未知';
 };
 
+const getPayTypeType = (payType: number) => {
+    const typeMap: Record<number, string> = {
+        0: 'info',     // 未支付
+        1: 'success',  // 支付宝
+        2: 'primary'   // 微信
+    };
+    return typeMap[payType] || 'info';
+};
+
+const getPayTypeText = (payType: number) => {
+    const textMap: Record<number, string> = {
+        0: '未支付',
+        1: '支付宝',
+        2: '微信'
+    };
+    return textMap[payType] || '未知';
+};
+
 const getFullAddress = (row: AdminOrder) => {
     return `${row.receiverProvince || ''}${row.receiverCity || ''}${row.receiverRegion || ''}${row.receiverDetailAddress || ''}`;
 };
@@ -446,6 +483,10 @@ const getShortAddress = (row: AdminOrder) => {
 const formatTime = (time: string) => {
     if (!time) return '';
     return new Date(time).toLocaleString('zh-CN');
+};
+
+const goToReturnApplies = () => {
+    router.push('/mall/admin/return-applies');
 };
 
 onMounted(() => {
@@ -494,6 +535,15 @@ onMounted(() => {
                 font-size: 12px;
                 color: #e6a23c;
                 font-weight: 600;
+                margin-bottom: 2px;
+            }
+
+            .promotion-amount,
+            .coupon-amount,
+            .integration-amount {
+                font-size: 11px;
+                color: #67c23a;
+                margin-bottom: 1px;
             }
         }
 

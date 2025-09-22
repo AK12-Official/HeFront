@@ -38,9 +38,15 @@ export async function addDynamicRoutes() {
   }
 }
 
-// 路由守卫：检查管理员登录状态
+// 路由守卫：检查管理员登录状态和商城用户登录状态
 router.beforeEach((to, from, next) => {
   console.log('路由守卫 - 从:', from.path, '到:', to.path)
+
+  // 处理根路径，直接通过
+  if (to.path === '/') {
+    next();
+    return;
+  }
 
   // 如果访问后台管理相关路由
   if (to.path.startsWith('/mall/admin')) {
@@ -122,10 +128,36 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // 处理根路径重定向到商城首页
-  if (to.path === '/') {
-    next('/mall/home');
-    return;
+  // 如果访问商城相关路由（除了后台管理），检查商城用户登录状态
+  if (to.path.startsWith('/mall') && !to.path.startsWith('/mall/admin')) {
+    console.log('访问商城路由:', to.path)
+
+    // 商城公开页面，不需要登录检查
+    const publicMallRoutes = [
+      '/mall/home',
+      '/mall/login',
+      '/mall/register',
+      '/mall/product/detail',
+      '/mall/product/list'
+    ];
+
+    const isPublicRoute = publicMallRoutes.some(route =>
+      to.path === route || to.path.startsWith(route + '/')
+    );
+
+    if (isPublicRoute) {
+      console.log('访问商城公开页面，允许通过:', to.path)
+      next();
+      return;
+    }
+
+    // 需要登录的商城页面
+    const mallUserStore = useMallUserStore();
+    if (!mallUserStore.isLoggedIn) {
+      ElMessage.warning('请先登录');
+      next('/mall/login');
+      return;
+    }
   }
 
   console.log('路由守卫 - 允许通过:', to.path)
